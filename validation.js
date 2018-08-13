@@ -94,7 +94,7 @@ async function validateForJoint(objJoint, callbacks) {
 			return callbacks.ifJointError("content_hash allowed only in finished ball");
 	}
 	else { // serial
-		if (hasFieldsExcept(objUnit, ["unit", "version", "alt", "timestamp", "authors", "messages", "witness_list_unit", "witnesses", "earned_headers_commission_recipients", "last_ball", "last_ball_unit", "parent_units", "headers_commission", "payload_commission"]))
+		if (hasFieldsExcept(objUnit, ["unit", "walletId", "version", "alt", "timestamp", "authors", "messages", "witness_list_unit", "witnesses", "earned_headers_commission_recipients", "last_ball", "last_ball_unit", "parent_units", "headers_commission", "payload_commission"]))
 			return callbacks.ifUnitError("unknown fields in unit");
 
 		if (typeof objUnit.headers_commission !== "number")
@@ -124,18 +124,18 @@ async function validateForJoint(objJoint, callbacks) {
 
 
 	if (!storage.isGenesisUnit(objUnit.unit)) {
-		if (!isNonemptyArray(objUnit.parent_units))
-			return callbacks.ifUnitError("missing or empty parent units array");
+		// if (!isNonemptyArray(objUnit.parent_units))
+		// 	return callbacks.ifUnitError("missing or empty parent units array");
 
-		if (!isStringOfLength(objUnit.last_ball, constants.HASH_LENGTH))
-			return callbacks.ifUnitError("wrong length of last ball");
-		if (!isStringOfLength(objUnit.last_ball_unit, constants.HASH_LENGTH))
-			return callbacks.ifUnitError("wrong length of last ball unit");
+		// if (!isStringOfLength(objUnit.last_ball, constants.HASH_LENGTH))
+		// 	return callbacks.ifUnitError("wrong length of last ball");
+		// if (!isStringOfLength(objUnit.last_ball_unit, constants.HASH_LENGTH))
+		// 	return callbacks.ifUnitError("wrong length of last ball unit");
 	}
 
 
-	if ("witness_list_unit" in objUnit && "witnesses" in objUnit)
-		return callbacks.ifUnitError("ambiguous witnesses");
+	// if ("witness_list_unit" in objUnit && "witnesses" in objUnit)
+	// 	return callbacks.ifUnitError("ambiguous witnesses");
 
 	var arrAuthorAddresses = objUnit.authors ? objUnit.authors.map(function (author) { return author.address; }) : [];
 
@@ -154,7 +154,7 @@ async function validateForJoint(objJoint, callbacks) {
 			return callbacks.ifJointError("I'm light, can't accept stable unit " + objUnit.unit + " without proof");
 		return objJoint.unsigned
 			? callbacks.ifOkUnsigned(true)
-			: callbacks.ifOk({ sequence: 'good', arrDoubleSpendInputs: [], arrAdditionalQueries: [] }, function () { });
+			: await callbacks.ifOk({ sequence: 'good', arrDoubleSpendInputs: [], arrAdditionalQueries: [] }, function () { });
 	}
 	else {
 		if ("timestamp" in objUnit && !isPositiveInteger(objUnit.timestamp))
