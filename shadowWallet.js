@@ -1,0 +1,65 @@
+/*jslint node: true */
+"use strict";
+
+var verificationQRCode;
+var signatureCode;
+var signatureDetlCode;
+
+
+
+//生成冷钱包
+exports.getVerificationQRCode = function(address){
+
+    verificationQRCode =
+    "{\n" +
+    "    \"type\": \"shadow\",\n" +
+    "    \"name\": \"shadow\",\n" +
+    "    \"pub\": \"xpub6CV3mkvGNxLQXn8SbsuCwWDtfNY9Vb8d2EULZDCU3VgXh4YWrztq1QVyDXJ7Nja5LDu7XXzX2rQ1sd5UEaZa8iSoYfcLCbFXhmy3nwhjSzS\",\n" +
+    "    \"num\": 0,\n" +
+    "    \"random\": 5339\n" +
+    "}\n";
+
+    return verificationQRCode;
+};
+
+
+//生成授权签名
+exports.getSignatureCode = function(verificationQRCode){
+
+    signatureCode =
+        "{\n" +
+        "    \"name\": \"shadow\",\n" +
+        "    \"type\": \"sign\",\n" +
+        "    \"addr\": \"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
+        "    \"random\": 5339\n" +
+        "}\n";
+
+
+    return signatureCode;
+};
+
+//生成授权签名详情
+exports.getSignatureDetlCode = function(signatureCode){
+
+    signatureDetlCode =
+        "{\n" +
+        "    \"name\": \"shadow\",\n" +
+        "    \"type\": \"signDetl\",\n" +
+        "    \"signature\": \"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
+        "    \"random\": 5339\n" +
+        "}\n";
+
+    return signatureDetlCode;
+};
+
+
+
+//生成授权签名详情
+exports.generateShadowWallet = function(){
+    var flag = true;
+
+
+    return flag;
+};
+
+
