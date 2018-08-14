@@ -5,40 +5,40 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-// var db = require('./db');
+var db = require('./db');
 var rdm = require('crypto');
 var objectHash = require('./object_hash.js');
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
-    // db.query("SELECT definition FROM my_addresses where address = ?",
-    //     [address],
-    //     function (result) {
-    //         if(result.length == 1) {
-    //             var definition = result[0].definition;
-    //
-    //             var definitionJSN = JSON.parse(definition.toString());
-    //             var pub = definitionJSN[1].pubkey;
-    //
-    //             var random = rdm.randomBytes(4).toString("hex");
-    //
-    //             var num = 0;
-    //
-    //             verificationQRCode =
-    //                 "{\n" +
-    //                 "    \"type\":\"shadow\",\n" +
-    //                 "    \"name\":\"shadow\",\n" +
-    //                 "    \"pub\":\""+ pub +"\",\n" +
-    //                 "    \"num\":"+num+",\n" +
-    //                 "    \"random\":"+random+"\n" +
-    //                 "}\n";
-    //
-    //             return cb(verificationQRCode);
-    //         }else {
-    //             console.error("query failed~!");
-    //             return cb(false);
-    //         }
-    //     });
+    db.query("SELECT definition FROM my_addresses where address = ?",
+        [address],
+        function (result) {
+            if(result.length == 1) {
+                var definition = result[0].definition;
+
+                var definitionJSN = JSON.parse(definition.toString());
+                var pub = definitionJSN[1].pubkey;
+
+                var random = rdm.randomBytes(4).toString("hex");
+
+                var num = 0;
+
+                verificationQRCode =
+                    "{\n" +
+                    "    \"type\":\"shadow\",\n" +
+                    "    \"name\":\"shadow\",\n" +
+                    "    \"pub\":\""+ pub +"\",\n" +
+                    "    \"num\":"+num+",\n" +
+                    "    \"random\":"+random+"\n" +
+                    "}\n";
+
+                return cb(verificationQRCode);
+            }else {
+                console.error("query failed~!");
+                return cb(false);
+            }
+        });
 };
 
 //生成授权签名
