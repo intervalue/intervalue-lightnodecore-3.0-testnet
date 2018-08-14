@@ -55,6 +55,7 @@ function setDevicePrivateKey(priv_key) {
 	};
 	var new_my_device_address = objectHash.getDeviceAddress(objMyPermanentDeviceKey.pub_b64);
 	if (my_device_address && my_device_address !== new_my_device_address) {
+		return;
 		breadcrumbs.add('different device address: old ' + my_device_address + ', new ' + new_my_device_address);
 		throw Error('different device address: old ' + my_device_address + ', new ' + new_my_device_address);
 	}
