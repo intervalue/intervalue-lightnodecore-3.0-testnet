@@ -16,7 +16,7 @@ exports.getVerificationQRCode = function(address ,cb){
         function (result) {
             if(result.length == 1) {
                 pub = result[0].extended_pubkey;
-                var random = rdm.randomBytes(6).toString("hex");
+                var random = rdm.randomBytes(3).toString("hex");
 
                 verificationQRCode =
                     "{\n" +
@@ -29,7 +29,8 @@ exports.getVerificationQRCode = function(address ,cb){
 
                 return cb(verificationQRCode);
             }else {
-                return false;
+                console.error("query failed~!");
+                return cb(false);
             }
 
     });
@@ -38,7 +39,7 @@ exports.getVerificationQRCode = function(address ,cb){
 
 
 //生成授权签名
-exports.getSignatureCode = function(verificationQRCode){
+exports.getSignatureCode = function(verificationQRCode,cb){
 
 
     var random = rdm.randomBytes(6).toString("hex");
@@ -51,11 +52,11 @@ exports.getSignatureCode = function(verificationQRCode){
         "}\n";
 
 
-    return signatureCode;
+    return cb(signatureCode);
 };
 
 //生成授权签名详情
-exports.getSignatureDetlCode = function(signatureCode){
+exports.getSignatureDetlCode = function(signatureCode , cb){
 
 
     var random = rdm.randomBytes(6).toString("hex");
@@ -68,17 +69,17 @@ exports.getSignatureDetlCode = function(signatureCode){
         "    \"random\":"+random+"\n" +
         "}\n";
 
-    return signatureDetlCode;
+    return cb(signatureDetlCode);
 };
 
 
 
 //生成授权签名详情
-exports.generateShadowWallet = function(){
+exports.generateShadowWallet = function(cb){
     var flag = true;
 
 
-    return flag;
+    return cb(flag);
 };
 
 
