@@ -10,11 +10,11 @@ var rdm = require('crypto');
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
-    var pub = "1";
+    var pub ;
     db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
         [address],
         function (result) {
-            if(result == 1) {
+            if(result.length == 1) {
                 pub = result[0].extended_pubkey;
                 var random = rdm.randomBytes(6).toString("hex");
 
