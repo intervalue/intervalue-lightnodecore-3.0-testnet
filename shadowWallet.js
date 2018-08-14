@@ -14,20 +14,21 @@ exports.getVerificationQRCode = function(address ,cb){
         [address],
         function (result) {
             if(result.length == 1) {
-                var definition = result[0].extended_pubkey;
+                var definition = result[0].definition;
 
-                var definitionJSN = JSON.parse(definition);
-                var pub = definitionJSN.pubkey;
-
+                var definitionJSN = JSON.parse(definition.toString());
+                var pub = definitionJSN[1].pubkey;
 
                 var random = rdm.randomBytes(4).toString("hex");
+
+                var num = 0;
 
                 verificationQRCode =
                     "{\n" +
                     "    \"type\":\"shadow\",\n" +
                     "    \"name\":\"shadow\",\n" +
                     "    \"pub\":\""+ pub +"\",\n" +
-                    "    \"num\":0,\n" +
+                    "    \"num\":"+num+",\n" +
                     "    \"random\":"+random+"\n" +
                     "}\n";
 
@@ -37,7 +38,8 @@ exports.getVerificationQRCode = function(address ,cb){
                 return cb(false);
             }
 
-    });
+        });
+
 
 };
 
