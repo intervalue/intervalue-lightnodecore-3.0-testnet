@@ -10,12 +10,16 @@ var rdm = require('crypto');
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
-    var pub ;
-    db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
+    db.query("SELECT definition FROM my_addresses where address = ?",
         [address],
         function (result) {
             if(result.length == 1) {
-                pub = result[0].extended_pubkey;
+                var definition = result[0].extended_pubkey;
+
+                var definitionJSN = JSON.parse(definition);
+                var pub = definitionJSN.get("pubkey");
+
+
                 var random = rdm.randomBytes(4).toString("hex");
 
                 verificationQRCode =
@@ -37,9 +41,17 @@ exports.getVerificationQRCode = function(address ,cb){
 
 };
 
+function derivePubkey(xPubKey, path){
+    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
+    var hdPubKeybuf = hdPubKey.toBuffer();
+    var pubkey = hdPubKey.derive(path).publicKey.toBuffer();
+
+    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
+}
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
+
 
 
     var random = rdm.randomBytes(4).toString("hex");
