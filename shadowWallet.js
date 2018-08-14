@@ -5,43 +5,49 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-var db = require('./db');
-var crypto = require("crypto");
+// var db = require('./db');
+var rdm = require('crypto');
 
 //生成冷钱包
-exports.getVerificationQRCode = function(address){
-    var pub;
+exports.getVerificationQRCode = function(address ,cb){
+    var pub = "1";
     db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
         [address],
         function (result) {
-            if(result == 1)
+            if(result == 1) {
                 pub = result[0].extended_pubkey;
+                var random = rdm.randomBytes(6).toString("hex");
+
+                verificationQRCode =
+                    "{\n" +
+                    "    \"type\":\"shadow\",\n" +
+                    "    \"name\":\"shadow\",\n" +
+                    "    \"pub\":\""+ pub +"\",\n" +
+                    "    \"num\":0,\n" +
+                    "    \"random\":"+random+"\n" +
+                    "}\n";
+
+                return verificationQRCode;
+            }else {
+                return false;
+            }
+
     });
 
-    var random = crypto.random(6);
-
-    verificationQRCode =
-    "{\n" +
-    "    \"type\": \"shadow\",\n" +
-    "    \"name\": \"shadow\",\n" +
-    "    \"pub\": \""+ pub +"\",\n" +
-    "    \"num\": 0,\n" +
-    "    \"random\": 5339\n" +
-    "}\n";
-
-    return verificationQRCode;
 };
 
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode){
 
+
+    var random = rdm.randomBytes(6).toString("hex");
     signatureCode =
         "{\n" +
-        "    \"name\": \"shadow\",\n" +
-        "    \"type\": \"sign\",\n" +
-        "    \"addr\": \"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
-        "    \"random\": 5339\n" +
+        "    \"name\":\"shadow\",\n" +
+        "    \"type\":\"sign\",\n" +
+        "    \"addr\":\"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
+        "    \"random\":"+random+"\n" +
         "}\n";
 
 
@@ -51,12 +57,15 @@ exports.getSignatureCode = function(verificationQRCode){
 //生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode){
 
+
+    var random = rdm.randomBytes(6).toString("hex");
+
     signatureDetlCode =
         "{\n" +
-        "    \"name\": \"shadow\",\n" +
-        "    \"type\": \"signDetl\",\n" +
-        "    \"signature\": \"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
-        "    \"random\": 5339\n" +
+        "    \"name\":\"shadow\",\n" +
+        "    \"type\":\"signDetl\",\n" +
+        "    \"signature\":\"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
+        "    \"random\":"+random+"\n" +
         "}\n";
 
     return signatureDetlCode;
