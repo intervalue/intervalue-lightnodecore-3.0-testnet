@@ -7,6 +7,7 @@ var signatureDetlCode;
 
 var db = require('./db');
 var rdm = require('crypto');
+var objectHash = require('./object_hash.js');
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
@@ -37,23 +38,14 @@ exports.getVerificationQRCode = function(address ,cb){
                 console.error("query failed~!");
                 return cb(false);
             }
-
         });
-
-
 };
-
-function derivePubkey(xPubKey, path){
-    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
-    var hdPubKeybuf = hdPubKey.toBuffer();
-    var pubkey = hdPubKey.derive(path).publicKey.toBuffer();
-
-    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
-}
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
-
+    var json = JSON.parse(verificationQRCode.toString());
+    var definition = "['sign','pubkey':'"+ json.pub +"'}";
+    var address = objectHash.getChash160(definition);
 
 
     var random = rdm.randomBytes(4).toString("hex");
@@ -61,7 +53,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
         "{\n" +
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"sign\",\n" +
-        "    \"addr\":\"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
+        "    \"addr\":\""+address+"\",\n" +
         "    \"random\":"+random+"\n" +
         "}\n";
 
