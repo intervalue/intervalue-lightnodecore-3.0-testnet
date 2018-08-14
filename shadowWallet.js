@@ -5,71 +5,93 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-// var db = require('./db');
-// var crypto = require("crypto");
+var db = require('./db');
+var rdm = require('crypto');
 
 //生成冷钱包
-exports.getVerificationQRCode = function(address){
-    // var pub;
-    // db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
-    //     [address],
-    //     function (result) {
-    //         if(result == 1)
-    //             pub = result[0].extended_pubkey;
-    // });
+exports.getVerificationQRCode = function(address ,cb){
+    db.query("SELECT definition FROM my_addresses where address = ?",
+        [address],
+        function (result) {
+            if(result.length == 1) {
+                var definition = result[0].extended_pubkey;
 
-    // var random = crypto.random(6);
+                var definitionJSN = JSON.parse(definition);
+                var pub = definitionJSN.pubkey;
 
-    verificationQRCode =
-    "{\n" +
-    "    \"type\": \"shadow\",\n" +
-    "    \"name\": \"shadow\",\n" +
-    "    \"pub\": \"xpub6CV3mkvGNxLQXn8SbsuCwWDtfNY9Vb8d2EULZDCU3VgXh4YWrztq1QVyDXJ7Nja5LDu7XXzX2rQ1sd5UEaZa8iSoYfcLCbFXhmy3nwhjSzS\",\n" +
-    "    \"num\": 0,\n" +
-    "    \"random\": 5339\n" +
-    "}\n";
 
-    return verificationQRCode;
+                var random = rdm.randomBytes(4).toString("hex");
+
+                verificationQRCode =
+                    "{\n" +
+                    "    \"type\":\"shadow\",\n" +
+                    "    \"name\":\"shadow\",\n" +
+                    "    \"pub\":\""+ pub +"\",\n" +
+                    "    \"num\":0,\n" +
+                    "    \"random\":"+random+"\n" +
+                    "}\n";
+
+                return cb(verificationQRCode);
+            }else {
+                console.error("query failed~!");
+                return cb(false);
+            }
+
+    });
+
 };
 
+function derivePubkey(xPubKey, path){
+    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
+    var hdPubKeybuf = hdPubKey.toBuffer();
+    var pubkey = hdPubKey.derive(path).publicKey.toBuffer();
+
+    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
+}
 
 //生成授权签名
-exports.getSignatureCode = function(verificationQRCode){
+exports.getSignatureCode = function(verificationQRCode,cb){
 
+
+
+    var random = rdm.randomBytes(4).toString("hex");
     signatureCode =
         "{\n" +
-        "    \"name\": \"shadow\",\n" +
-        "    \"type\": \"sign\",\n" +
-        "    \"addr\": \"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
-        "    \"random\": 5339\n" +
+        "    \"name\":\"shadow\",\n" +
+        "    \"type\":\"sign\",\n" +
+        "    \"addr\":\"4VT3FOIUHX4AZZDTBJDP7EV3CGVIB3GB\",\n" +
+        "    \"random\":"+random+"\n" +
         "}\n";
 
 
-    return signatureCode;
+    return cb(signatureCode);
 };
 
 //生成授权签名详情
-exports.getSignatureDetlCode = function(signatureCode){
+exports.getSignatureDetlCode = function(signatureCode , cb){
+
+
+    var random = rdm.randomBytes(4).toString("hex");
 
     signatureDetlCode =
         "{\n" +
-        "    \"name\": \"shadow\",\n" +
-        "    \"type\": \"signDetl\",\n" +
-        "    \"signature\": \"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
-        "    \"random\": 5339\n" +
+        "    \"name\":\"shadow\",\n" +
+        "    \"type\":\"signDetl\",\n" +
+        "    \"signature\":\"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
+        "    \"random\":"+random+"\n" +
         "}\n";
 
-    return signatureDetlCode;
+    return cb(signatureDetlCode);
 };
 
 
 
 //生成授权签名详情
-exports.generateShadowWallet = function(){
+exports.generateShadowWallet = function(cb){
     var flag = true;
 
 
-    return flag;
+    return cb(flag);
 };
 
 
