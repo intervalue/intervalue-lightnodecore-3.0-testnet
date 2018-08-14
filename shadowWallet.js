@@ -16,7 +16,7 @@ exports.getVerificationQRCode = function(address ,cb){
         function (result) {
             if(result.length == 1) {
                 pub = result[0].extended_pubkey;
-                var random = rdm.randomBytes(3).toString("hex");
+                var random = rdm.randomBytes(4).toString("hex");
 
                 verificationQRCode =
                     "{\n" +
@@ -42,7 +42,7 @@ exports.getVerificationQRCode = function(address ,cb){
 exports.getSignatureCode = function(verificationQRCode,cb){
 
 
-    var random = rdm.randomBytes(6).toString("hex");
+    var random = rdm.randomBytes(4).toString("hex");
     signatureCode =
         "{\n" +
         "    \"name\":\"shadow\",\n" +
@@ -59,7 +59,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 exports.getSignatureDetlCode = function(signatureCode , cb){
 
 
-    var random = rdm.randomBytes(6).toString("hex");
+    var random = rdm.randomBytes(4).toString("hex");
 
     signatureDetlCode =
         "{\n" +
