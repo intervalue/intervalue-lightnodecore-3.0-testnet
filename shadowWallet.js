@@ -5,7 +5,7 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-var db = require('db.js');
+var db = require('./db');
 var crypto = require("crypto");
 
 //生成冷钱包
