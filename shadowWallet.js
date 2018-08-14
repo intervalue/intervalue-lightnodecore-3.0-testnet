@@ -5,26 +5,26 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-var db = require('./db');
-var crypto = require("crypto");
+// var db = require('./db');
+// var crypto = require("crypto");
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address){
-    var pub;
-    db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
-        [address],
-        function (result) {
-            if(result == 1)
-                pub = result[0].extended_pubkey;
-    });
+    // var pub;
+    // db.query("SELECT extended_pubkey FROM extended_pubkeys LEFT  JOIN  my_addresses on extended_pubkeys.wallet=my_addresses.wallet where my_addresses.address=?",
+    //     [address],
+    //     function (result) {
+    //         if(result == 1)
+    //             pub = result[0].extended_pubkey;
+    // });
 
-    var random = crypto.random(6);
+    // var random = crypto.random(6);
 
     verificationQRCode =
     "{\n" +
     "    \"type\": \"shadow\",\n" +
     "    \"name\": \"shadow\",\n" +
-    "    \"pub\": \""+ pub +"\",\n" +
+    "    \"pub\": \"xpub6CV3mkvGNxLQXn8SbsuCwWDtfNY9Vb8d2EULZDCU3VgXh4YWrztq1QVyDXJ7Nja5LDu7XXzX2rQ1sd5UEaZa8iSoYfcLCbFXhmy3nwhjSzS\",\n" +
     "    \"num\": 0,\n" +
     "    \"random\": 5339\n" +
     "}\n";
