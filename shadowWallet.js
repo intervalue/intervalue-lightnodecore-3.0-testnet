@@ -44,7 +44,8 @@ exports.getVerificationQRCode = function(address ,cb){
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
-    var definition = ["sig",{"pubkey":verificationQRCode.pub.toString()}];
+    var json = JSON.parse(verificationQRCode);
+    var definition = ["sig",{"pubkey":json.pub.toString()}];
     var address = objectHash.getChash160(definition);
 
 
