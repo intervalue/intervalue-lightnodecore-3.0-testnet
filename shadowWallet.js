@@ -65,7 +65,8 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 //生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
     var jsonStr = JSON.stringify(signatureCode);
-    var buf_to_sign = objectHash.getUnitHashToSign(objUnsignedUnit);
+
+    var buf_to_sign = objectHash.getUnitHashToSign(signatureCode);
 
     var signature = sign.sign(buf_to_sign, xPriKey);
 
