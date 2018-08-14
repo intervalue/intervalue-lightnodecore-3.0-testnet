@@ -6,8 +6,9 @@ var signatureCode;
 var signatureDetlCode;
 
 var db = require('./db');
-var rdm = require('crypto');
 var objectHash = require('./object_hash.js');
+var sign = require('./signature');
+var rdm = require('crypto');
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
@@ -43,8 +44,7 @@ exports.getVerificationQRCode = function(address ,cb){
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
-    var json = JSON.parse(verificationQRCode.toString());
-    var definition = ["sig",{"pubkey":json.pub.toString()}];
+    var definition = ["sig",{"pubkey":verificationQRCode.pub.toString()}];
     var address = objectHash.getChash160(definition);
 
 
@@ -62,8 +62,11 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 };
 
 //生成授权签名详情
-exports.getSignatureDetlCode = function(signatureCode , cb){
+exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
+    var jsonStr = JSON.stringify(signatureCode);
+    var buf_to_sign = objectHash.getUnitHashToSign(objUnsignedUnit);
 
+    var signature = sign.sign(buf_to_sign, xPriKey);
 
     var random = rdm.randomBytes(4).toString("hex");
 
@@ -71,7 +74,7 @@ exports.getSignatureDetlCode = function(signatureCode , cb){
         "{\n" +
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"signDetl\",\n" +
-        "    \"signature\":\"QPP1enI5vc6hzFigAPNCUDQYfuvNzQk6A9uhtTDGr00pJte9Fsri4FEIbLIfKni9oY1/FdPaq6lT\\r\\ny+CfO+ckyQ==\",\n" +
+        "    \"signature\":\""+signature+"\",\n" +
         "    \"random\":"+random+"\n" +
         "}\n";
 
@@ -80,8 +83,8 @@ exports.getSignatureDetlCode = function(signatureCode , cb){
 
 
 
-//生成授权签名详情
-exports.generateShadowWallet = function(cb){
+//生成热钱包
+exports.generateShadowWallet = function(signatureDetlCode,cb){
     var flag = true;
 
 
