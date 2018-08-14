@@ -17,7 +17,7 @@ exports.getVerificationQRCode = function(address ,cb){
                 var definition = result[0].extended_pubkey;
 
                 var definitionJSN = JSON.parse(definition);
-                var pub = definitionJSN.get("pubkey");
+                var pub = definitionJSN.pubkey;
 
 
                 var random = rdm.randomBytes(4).toString("hex");
