@@ -27,7 +27,7 @@ exports.getVerificationQRCode = function(address ,cb){
                     "    \"random\":"+random+"\n" +
                     "}\n";
 
-                return verificationQRCode;
+                return cb(verificationQRCode);
             }else {
                 return false;
             }
