@@ -6,7 +6,7 @@ var signatureCode;
 var signatureDetlCode;
 
 var db = require('db.js');
-
+var crypto = require("crypto");
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address){
@@ -17,6 +17,8 @@ exports.getVerificationQRCode = function(address){
             if(result == 1)
                 pub = result[0].extended_pubkey;
     });
+
+    var random = crypto.random(6);
 
     verificationQRCode =
     "{\n" +
