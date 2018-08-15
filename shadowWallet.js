@@ -16,7 +16,7 @@ var signatureCode;
 var signatureDetlCode;
 
 
-//生成冷钱包
+//冷钱包 生成热钱包
 exports.getVerificationQRCode = function(address ,cb){
     var db = require('./db');
     db.query("SELECT definition FROM my_addresses where address = ?",
@@ -49,7 +49,7 @@ exports.getVerificationQRCode = function(address ,cb){
         });
 };
 
-//生成授权签名
+//热钱包 生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
     var json;
     switch(typeof verificationQRCode) {
@@ -63,7 +63,6 @@ exports.getSignatureCode = function(verificationQRCode,cb){
             cb(false);
             break;
     }
-    //
     var definition = ["sig",{"pubkey":json.pub}];
     var address = objectHash.getChash160(definition);
 
@@ -80,7 +79,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
     return cb(signatureCode);
 };
 
-//生成授权签名详情
+//冷钱包  生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,words, cb){
     var json;
     switch(typeof signatureCode) {
@@ -125,7 +124,25 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
 //生成热钱包
 exports.generateShadowWallet = function(signatureDetlCode,cb){
-    var flag = true;
+    var json;
+    switch(typeof signatureDetlCode) {
+        case "string":
+            json = JSON.parse(signatureDetlCode);
+            break;
+        case "object":
+            json = signatureDetlCode;
+            break;
+        default:
+            cb(false);
+            break;
+    }
+
+    var sign = json.signature;
+    var pub = verificationQRCode.pub;
+
+    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
+
+    var flag = signature.verify(buf_to_sign,sign,pub);
 
 
     return cb(flag);
