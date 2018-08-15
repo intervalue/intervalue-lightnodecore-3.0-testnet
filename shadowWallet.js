@@ -1,15 +1,20 @@
 /*jslint node: true */
 "use strict";
 
-var verificationQRCode;
-var signatureCode;
-var signatureDetlCode;
 
 
 var objectHash = require('./object_hash.js');
 var sign = require('./signature');
 var crypto = require('crypto');
 var getSourceString = require('./string_utils').getSourceString;
+var Mnemonic = require('bitcore-mnemonic');
+var Bitcore = require('bitcore-lib');
+
+
+var verificationQRCode;
+var signatureCode;
+var signatureDetlCode;
+
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
@@ -76,7 +81,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 };
 
 //生成授权签名详情
-exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
+exports.getSignatureDetlCode = function(signatureCode,words, cb){
     var json;
     switch(typeof signatureCode) {
         case "string":
@@ -89,19 +94,26 @@ exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
             cb(false);
             break;
     }
-
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
-    var signature = sign.sign(buf_to_sign, xPriKey);
+
+    var mnemonic = new Mnemonic(words);
+    var xPrivKey = mnemonic.toHDPrivateKey("");
+
+
+    var path = "m/44'/0'/0'/0/0";
+    var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
+
+    var signature = sign.sign(buf_to_sign, privateKey);
 
 
     signatureDetlCode =
-        "{\n" +
-        "    \"name\":\"shadow\",\n" +
-        "    \"type\":\"signDetl\",\n" +
-        "    \"signature\":\""+signature+"\",\n" +
-        "    \"random\":\""+json.random+"\"\n" +
-        "}\n";
+        {
+          "name":"shadow",
+          "type":"signDetl",
+          "signature":""+signature+"",
+          "random":""+json.random+""
+        };
 
     return cb(signatureDetlCode);
 };
@@ -117,3 +129,10 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
 };
 
 
+function derivePubkey(xPubKey, path){
+    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
+    var hdPubKeybuf = hdPubKey.toBuffer();
+    var pubkey = hdPubKey.derive(path).publicKey.toBuffer({size:32});
+
+    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
+}
