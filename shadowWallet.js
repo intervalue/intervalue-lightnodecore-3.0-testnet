@@ -33,13 +33,13 @@ exports.getVerificationQRCode = function(address ,cb){
                 var num = 0;
 
                 verificationQRCode =
-                    "{\n" +
-                    "    \"type\":\"shadow\",\n" +
-                    "    \"name\":\"shadow\",\n" +
-                    "    \"pub\":\""+ pub +"\",\n" +
-                    "    \"num\":"+num+",\n" +
-                    "    \"random\":\""+random+"\"\n" +
-                    "}\n";
+                    {
+                        "type":"shadow",
+                        "name":"shadow",
+                        "pub":""+ pub +"",
+                        "num":num,
+                        "random":""+random+""
+                    };
 
                 return cb(verificationQRCode);
             }else {
@@ -69,12 +69,12 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 
 
     signatureCode =
-        "{\n" +
-        "    \"name\":\"shadow\",\n" +
-        "    \"type\":\"sign\",\n" +
-        "    \"addr\":\""+address+"\",\n" +
-        "    \"random\":\""+json.random+"\"\n" +
-        "}\n";
+        {
+            "name":"shadow",
+            "type":"sign",
+            "addr":""+address+"",
+            "random":""+json.random+""
+        };
 
 
     return cb(signatureCode);
