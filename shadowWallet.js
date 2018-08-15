@@ -148,11 +148,3 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     return cb(flag);
 };
 
-
-function derivePubkey(xPubKey, path){
-    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
-    var hdPubKeybuf = hdPubKey.toBuffer();
-    var pubkey = hdPubKey.derive(path).publicKey.toBuffer({size:32});
-
-    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
-}
