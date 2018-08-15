@@ -5,7 +5,7 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
-var db = require('./db');
+
 var objectHash = require('./object_hash.js');
 var sign = require('./signature');
 var crypto = require('crypto');
@@ -13,6 +13,7 @@ var getSourceString = require('./string_utils').getSourceString;
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
+    var db = require('./db');
     db.query("SELECT definition FROM my_addresses where address = ?",
         [address],
         function (result) {
@@ -52,7 +53,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
             break;
         case "object":
             json = verificationQRCode;
-            break
+            break;
         default:
             cb(false);
             break;
@@ -77,13 +78,13 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 //生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
     var json;
-    switch(typeof verificationQRCode) {
+    switch(typeof signatureCode) {
         case "string":
-            json = JSON.parse(verificationQRCode);
+            json = JSON.parse(signatureCode);
             break;
         case "object":
-            json = verificationQRCode;
-            break
+            json = signatureCode;
+            break;
         default:
             cb(false);
             break;
