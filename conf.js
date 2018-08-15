@@ -20,7 +20,7 @@ exports.port = null;
 //exports.bServeAsHub = true;
 
 // if we are a light client.  Default is full client
-//exports.bLight = true;
+exports.bLight = true;
 
 // where to send bug reports to.  Usually, it is wallet vendor's server.
 // By default, it is hub url
