@@ -57,7 +57,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
             break;
     }
     //
-    var definition = ["sig",{"pubkey":verificationQRCode.pub}];
+    var definition = ["sig",{"pubkey":json.pub}];
     var address = objectHash.getChash160(definition);
 
 
