@@ -8,7 +8,8 @@ var signatureDetlCode;
 var db = require('./db');
 var objectHash = require('./object_hash.js');
 var sign = require('./signature');
-var rdm = require('crypto');
+var crypto = require('crypto');
+var getSourceString = require('./string_utils').getSourceString;
 
 //生成冷钱包
 exports.getVerificationQRCode = function(address ,cb){
@@ -21,7 +22,7 @@ exports.getVerificationQRCode = function(address ,cb){
                 var definitionJSN = JSON.parse(definition.toString());
                 var pub = definitionJSN[1].pubkey;
 
-                var random = rdm.randomBytes(4).toString("hex");
+                var random = crypto.randomBytes(4).toString("hex");
 
                 var num = 0;
 
@@ -61,13 +62,12 @@ exports.getSignatureCode = function(verificationQRCode,cb){
     var address = objectHash.getChash160(definition);
 
 
-    var random = rdm.randomBytes(4).toString("hex");
     signatureCode =
         "{\n" +
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"sign\",\n" +
         "    \"addr\":\""+address+"\",\n" +
-        "    \"random\":\""+verificationQRCode.random+"\"\n" +
+        "    \"random\":\""+json.random+"\"\n" +
         "}\n";
 
 
@@ -76,20 +76,30 @@ exports.getSignatureCode = function(verificationQRCode,cb){
 
 //生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
-    var jsonStr = JSON.stringify(signatureCode);
+    var json;
+    switch(typeof verificationQRCode) {
+        case "string":
+            json = JSON.parse(verificationQRCode);
+            break;
+        case "object":
+            json = verificationQRCode;
+            break
+        default:
+            cb(false);
+            break;
+    }
 
-    var buf_to_sign = objectHash.getUnitHashToSign(signatureCode);
+    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
     var signature = sign.sign(buf_to_sign, xPriKey);
 
-    var random = rdm.randomBytes(4).toString("hex");
 
     signatureDetlCode =
         "{\n" +
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"signDetl\",\n" +
         "    \"signature\":\""+signature+"\",\n" +
-        "    \"random\":\""+random+"\"\n" +
+        "    \"random\":\""+json.random+"\"\n" +
         "}\n";
 
     return cb(signatureDetlCode);
