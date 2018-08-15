@@ -44,8 +44,20 @@ exports.getVerificationQRCode = function(address ,cb){
 
 //生成授权签名
 exports.getSignatureCode = function(verificationQRCode,cb){
-    // var json = JSON.parse(verificationQRCode);
-    var definition = ["sig",{"pubkey":verificationQRCode.pub.toString()}];
+    var json;
+    switch(typeof verificationQRCode) {
+        case "string":
+            json = JSON.parse(verificationQRCode);
+            break;
+        case "object":
+            json = verificationQRCode;
+            break
+        default:
+            cb(false);
+            break;
+    }
+    //
+    var definition = ["sig",{"pubkey":verificationQRCode.pub}];
     var address = objectHash.getChash160(definition);
 
 
@@ -55,7 +67,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"sign\",\n" +
         "    \"addr\":\""+address+"\",\n" +
-        "    \"random\":\""+random+"\"\n" +
+        "    \"random\":\""+verificationQRCode.random+"\"\n" +
         "}\n";
 
 
