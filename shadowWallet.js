@@ -55,7 +55,7 @@ exports.getSignatureCode = function(verificationQRCode,cb){
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"sign\",\n" +
         "    \"addr\":\""+address+"\",\n" +
-        "    \"random\":"+random+"\n" +
+        "    \"random\":\""+random+"\"\n" +
         "}\n";
 
 
@@ -77,7 +77,7 @@ exports.getSignatureDetlCode = function(signatureCode,xPriKey, cb){
         "    \"name\":\"shadow\",\n" +
         "    \"type\":\"signDetl\",\n" +
         "    \"signature\":\""+signature+"\",\n" +
-        "    \"random\":"+random+"\n" +
+        "    \"random\":\""+random+"\"\n" +
         "}\n";
 
     return cb(signatureDetlCode);
