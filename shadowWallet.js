@@ -103,16 +103,19 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-
     var signature = sign.sign(buf_to_sign, privateKey);
 
+    var path2 = "m/44'/0'/0'";
+    var privateKey2 = xPrivKey.derive(path2);
+    var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
 
     signatureDetlCode =
         {
           "name":"shadow",
           "type":"signDetl",
           "signature":""+signature+"",
-          "random":""+json.random+""
+          "random":""+json.random+"",
+          "expub":""+ xpubkey +""
         };
 
     return cb(signatureDetlCode);
