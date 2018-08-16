@@ -18,3 +18,20 @@ exports.verify = function(hash, b64_sig, b64_pub_key){
 	}
 };
 
+
+exports.recover = function(hash, b64_sig, recovery){
+    try{
+		var signature = new Buffer(b64_sig, "base64");
+		return ecdsa.recover(hash,signature,recovery);
+    }
+    catch(e){
+        console.log('recover publickey exception: '+e.toString());
+        return false;
+    }
+};
+
+
+
+
+
+
