@@ -398,14 +398,9 @@ function processHistory(objResponse, callbacks) {
 }
 
 var u_finished = true;
-var tran_bool = false;
 let tranList = null;
 let tranAddr = [];
 async function updateHistory(addresses) {
-	if (tran_bool) {
-		tran_bool = false;
-		eventBus.emit('my_transactions_became_stable');
-	}
 	if (!u_finished) {
 		return;
 	}
@@ -489,7 +484,7 @@ async function truncateTran(addresses) {
 				let b_result = await db.executeTrans(cmds);
 				if (!b_result) {
 					tranList = [];
-					tran_bool = true;
+					eventBus.emit('my_transactions_became_stable');
 				}
 			}
 			catch (e) {
@@ -509,7 +504,7 @@ async function updateTran(tran) {
 			let u_result = await db.execute("update transactions set result = 'good' where id = ?", id);
 			if (u_result.affectedRows) {
 				refreshTranList(tran);
-				tran_bool = true;
+				eventBus.emit('my_transactions_became_stable');
 			}
 		}
 		catch (e) {
@@ -533,7 +528,7 @@ async function badTran(tran) {
 			let b_result = await db.executeTrans(cmds);
 			if (!b_result) {
 				refreshTranList(tran);
-				tran_bool = true;
+				eventBus.emit('my_transactions_became_stable');
 			}
 		}
 		catch (e) {
@@ -559,7 +554,7 @@ async function insertTran(tran) {
 			let i_result = await db.executeTrans(cmds);
 			if (!i_result) {
 				refreshTranList(tran);
-				tran_bool = true;
+				eventBus.emit('my_transactions_became_stable');
 			}
 		}
 		catch (e) {
