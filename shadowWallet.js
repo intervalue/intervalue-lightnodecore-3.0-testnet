@@ -1,14 +1,13 @@
 /*jslint node: true */
 "use strict";
 
-
-
-var objectHash = require('./object_hash.js');
-var sign = require('./signature');
-var crypto = require('crypto');
 var getSourceString = require('./string_utils').getSourceString;
 var Mnemonic = require('bitcore-mnemonic');
 var Bitcore = require('bitcore-lib');
+
+var crypto = require('crypto');
+var objectHash = require('./object_hash.js');
+var signature = require('./signature');
 
 
 var verificationQRCode;
@@ -50,31 +49,30 @@ exports.getVerificationQRCode = function(address ,cb){
 };
 
 //热钱包 生成授权签名
-exports.getSignatureCode = function(verificationQRCode,cb){
-    var json;
-    switch(typeof verificationQRCode) {
-        case "string":
-            json = JSON.parse(verificationQRCode);
-            break;
-        case "object":
-            json = verificationQRCode;
-            break;
-        default:
-            cb(false);
-            break;
-    }
-    var definition = ["sig",{"pubkey":json.pub}];
-    var address = objectHash.getChash160(definition);
+exports.getSignatureCode = function(address,cb){
+    // var json;
+    // switch(typeof verificationQRCode) {
+    //     case "string":
+    //         json = JSON.parse(verificationQRCode);
+    //         break;
+    //     case "object":
+    //         json = verificationQRCode;
+    //         break;
+    //     default:
+    //         cb(false);
+    //         break;
+    // }
+    // var definition = ["sig",{"pubkey":json.pub}];
+    // var address = objectHash.getChash160(definition);
 
-
+    var random = crypto.randomBytes(4).toString("hex");
     signatureCode =
         {
             "name":"shadow",
             "type":"sign",
             "addr":""+address+"",
-            "random":""+json.random+""
+            "random":""+random+""
         };
-
 
     return cb(signatureCode);
 };
@@ -102,7 +100,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-    var signature = sign.sign(buf_to_sign, privateKey);
+    var sign_64 = signature.sign(buf_to_sign, privateKey);
 
     var path2 = "m/44'/0'/0'";
     var privateKey2 = xPrivKey.derive(path2);
@@ -112,9 +110,10 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
         {
           "name":"shadow",
           "type":"signDetl",
-          "signature":""+signature+"",
+          "signature":""+sign_64+"",
           "random":""+json.random+"",
-          "expub":""+ xpubkey +""
+          "expub":""+ xpubkey +"",
+          "addr":json.addr
         };
 
     return cb(signatureDetlCode);
@@ -136,13 +135,22 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
             cb(false);
             break;
     }
-
+    var addr = json.addr;
     var sign = json.signature;
-    var pub = verificationQRCode.pub;
+    var xpub = json.expub;
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
-    var flag = signature.verify(buf_to_sign,sign,pub);
+    var pub = signature.recover(buf_to_sign,sign,1).toString("base64");
+    var definition = ["sig",{"pubkey":pub}];
+    var address = objectHash.getChash160(definition);
+    var flag = false;
+
+    if(address == addr) {
+        flag = true;
+    }
+
+    // flag = signature.verify(buf_to_sign,sign,pub);
 
 
     return cb(flag);
