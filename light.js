@@ -399,7 +399,8 @@ function processHistory(objResponse, callbacks) {
 
 var u_finished = true;
 var tran_bool = false;
-let unitList = null;
+let tranList = null;
+let tranAddr = [];
 async function updateHistory(addresses) {
 	if (tran_bool) {
 		tran_bool = false;
@@ -425,20 +426,17 @@ async function updateHistory(addresses) {
 		if (trans == null) {
 			return;
 		}
-		if (trans.length === 0) {
-			await truncateTran();
-		}
 		else {
-			await iniUnitList();
+			await iniTranList(addresses);
 			for (var tran of trans) {
-				let unit = _.find(unitList, { unitId: tran.unitId });
-				if (unit && tran.isStable == 1 && tran.isValid == 1 && unit.isStable != 1) {
+				let my_tran = _.find(tranList, { id: tran.id });
+				if (my_tran && tran.isStable == 1 && tran.isValid == 1 && my_tran.result == 'pending') {
 					await updateTran(tran);
 				}
-				else if (unit && tran.isStable == 1 && tran.isValid == 0 && unit.isValid == 1) {
+				else if (my_tran && tran.isStable == 1 && tran.isValid == 0 && my_tran.result != 'final-bad') {
 					await badTran(tran);
 				}
-				else if (!unit && tran.isValid == 1) {
+				else if (!my_tran && tran.isValid == 1) {
 					await insertTran(tran);
 				}
 			}
@@ -450,40 +448,47 @@ async function updateHistory(addresses) {
 	finally { u_finished = true; }
 }
 
-function refreshUnitList(tran) {
-	let src_unit = _.find(unitList, { unitId: tran.unitId });
-	if (src_unit) {
-		src_unit.isStable = tran.isStable;
-		src_unit.isValid = tran.isValid;
+function refreshTranList(tran) {
+	let my_tran = _.find(tranList, { id: tran.id });
+	if (my_tran) {
+		my_tran.result = tran.isStable;
 	}
 	else {
-		src_unit = { unitId: tran.unitId, isStable: tran.isStable, isValid: tran.isValid };
-		unitList.push(src_unit);
+		my_tran = { id: tran.unitId, result: getResultFromTran(tran) };
+		tranList.push(my_tran);
 	}
 }
 
-async function iniUnitList() {
-	if (!unitList) {
-		unitList = await db.toList("select unit as unitId,is_stable as isStable, ( case when sequence = 'good' then 1 else 0 end ) as isValid from units");
+function getResultFromTran(tran) {
+	if (tran.isStable && tran.isValid) {
+		return 'good';
+	}
+	else if (tran.isStable && !tran.isValid) {
+		return 'final-bad';
+	}
+	else if (!tran.isStable) {
+		return 'pending';
 	}
 }
 
-async function truncateTran() {
-	await iniUnitList();
-	let count = unitList.length;
+async function iniTranList(addresses) {
+	if (tranAddr == [] || tranAddr != addresses || !tranList) {
+		tranAddr = addresses
+		tranList = await db.toList("select id, result from transactions where from in (?) or to in (?)", addresses, addresses);
+	}
+}
+
+async function truncateTran(addresses) {
+	await iniTranList();
+	let count = tranList.length;
 	let cmds = [];
 	if (count > 0) {
-		db.addCmd(cmds, "delete from inputs");
-		db.addCmd(cmds, "delete from outputs");
-		db.addCmd(cmds, "delete from unit_authors");
-		db.addCmd(cmds, "delete from authentifiers");
-		db.addCmd(cmds, "delete from messages");
-		db.addCmd(cmds, "delete from units");
+		db.addCmd(cmds, "delete from transactions where from in (?) or to in (?)", addresses, addresses);
 		await mutex.lock(["write"], async function (unlock) {
 			try {
 				let b_result = await db.executeTrans(cmds);
 				if (!b_result) {
-					unitList = [];
+					tranList = [];
 					tran_bool = true;
 				}
 			}
@@ -498,12 +503,12 @@ async function truncateTran() {
 }
 
 async function updateTran(tran) {
-	let unitId = tran.unitId;
+	let id = tran.id;
 	await mutex.lock(["write"], async function (unlock) {
 		try {
-			let u_result = await db.execute("update units set is_stable = 1 where unit = ?", unitId);
+			let u_result = await db.execute("update transactions set result = 'good' where id = ?", id);
 			if (u_result.affectedRows) {
-				refreshUnitList(tran);
+				refreshTranList(tran);
 				tran_bool = true;
 			}
 		}
@@ -517,28 +522,17 @@ async function updateTran(tran) {
 }
 
 async function badTran(tran) {
-	let unitId = tran.unitId;
+	let id = tran.id;
 	let cmds = [];
-	let input = await db.first("select * from inputs where unit = ?", unitId);
-	if (input) {
-		db.addCmd(cmds,
-			"UPDATE outputs SET is_spent=0 WHERE unit=? AND message_index=? AND output_index=?",
-			input.src_unit, input.src_message_index, input.src_output_index
-		);
-	}
 	db.addCmd(cmds,
-		"update units set is_stable = 1,sequence = 'final-bad' where unit = ?",
-		unitId
-	);
-	db.addCmd(cmds,
-		"update inputs set is_unique=NULL where unit = ?",
-		unitId
+		"update transactions set result = 'final-bad' where id = ?",
+		id
 	);
 	await mutex.lock(["write"], async function (unlock) {
 		try {
 			let b_result = await db.executeTrans(cmds);
 			if (!b_result) {
-				refreshUnitList(tran);
+				refreshTranList(tran);
 				tran_bool = true;
 			}
 		}
@@ -552,119 +546,19 @@ async function badTran(tran) {
 }
 
 async function insertTran(tran) {
-	let unitId = tran.unitId;
-	let unit = await hashnethelper.getUnitInfo(unitId);
-	if (!unit) {
-		return console.log("the unit can not get from net!");
-	}
-	let objUnit = unit.unit;
-	console.log("\nsaving unit " + objUnit);
-	console.log(JSON.stringify(objUnit));
+	console.log("\nsaving unit:");
+	console.log(JSON.stringify(tran));
 	var cmds = [];
+	var fields = "id, creation_date, amount, commission, from, to, result";
+	var values = "?,?,?,?,?,?,?";
+	var params = [tran.id, tran.creation_date, tran.amount,
+	tran.commission || 0, tran.from, tran.to, tran.result];
+	db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
 	await mutex.lock(["write"], async function (unlock) {
 		try {
-			var fields = "unit, version, alt, headers_commission, payload_commission, sequence, content_hash,is_stable";
-			var values = "?,?,?,?,?,?,?,?";
-			var params = [objUnit.unit, objUnit.version, objUnit.alt,
-			objUnit.headers_commission || 0, objUnit.payload_commission || 0, 'good', objUnit.content_hash, 1];
-			if (conf.bLight) {
-				fields += ", main_chain_index, creation_date";
-				values += ",?," + db.getFromUnixTime("?");
-				params.push(objUnit.main_chain_index, objUnit.timestamp);
-			}
-			db.addCmd(cmds, "INSERT INTO units (" + fields + ") VALUES (" + values + ")", ...params);
-
-			var bGenesis = storage.isGenesisUnit(objUnit.unit);
-			if (bGenesis) {
-				db.addCmd(cmds,
-					"UPDATE units SET is_on_main_chain=1, main_chain_index=0, is_stable=1, level=0, witnessed_level=0 \n\
-					WHERE unit=?", objUnit.unit);
-			}
-
-			var arrAuthorAddresses = [];
-			for (var i = 0; i < objUnit.authors.length; i++) {
-				var author = objUnit.authors[i];
-				arrAuthorAddresses.push(author.address);
-				var definition_chash = null;
-				db.addCmd(cmds, "INSERT INTO unit_authors (unit, address, definition_chash) VALUES(?,?,?)",
-					objUnit.unit, author.address, definition_chash);
-				if (bGenesis)
-					db.addCmd(cmds, "UPDATE unit_authors SET _mci=0 WHERE unit=?", objUnit.unit);
-				if (!objUnit.content_hash) {
-					for (var path in author.authentifiers) {
-						db.addCmd(cmds, "INSERT INTO authentifiers (unit, address, path, authentifier) VALUES(?,?,?,?)",
-							objUnit.unit, author.address, path, author.authentifiers[path]);
-					}
-				}
-			}
-
-			if (!objUnit.content_hash) {
-				for (var i = 0; i < objUnit.messages.length; i++) {
-					var message = objUnit.messages[i];
-
-					var text_payload = null;
-					if (message.app === "text") {
-						text_payload = message.payload;
-					}
-					else if (message.app === "data" || message.app === "profile" || message.app === "attestation" || message.app === "definition_template") {
-						text_payload = JSON.stringify(message.payload);
-					}
-					db.addCmd(cmds, "INSERT INTO messages \n\
-					(unit, message_index, app, payload_hash, payload_location, payload, payload_uri, payload_uri_hash) VALUES(?,?,?,?,?,?,?,?)",
-						objUnit.unit, i, message.app, message.payload_hash, message.payload_location, text_payload,
-						message.payload_uri, message.payload_uri_hash);
-				}
-			}
-
-			for (var i = 0; i < objUnit.messages.length; i++) {
-				var message = objUnit.messages[i];
-				var payload = message.payload;
-				var denomination = payload.denomination || 1;
-				for (var j = 0; j < payload.inputs.length; j++) {
-					var input = payload.inputs[j];
-					var type = input.type || "transfer";
-					var src_unit = (type === "transfer") ? input.unit : null;
-					var src_message_index = (type === "transfer") ? input.message_index : null;
-					var src_output_index = (type === "transfer") ? input.output_index : null;
-					var from_main_chain_index = (type === "witnessing" || type === "headers_commission") ? input.from_main_chain_index : null;
-					var to_main_chain_index = (type === "witnessing" || type === "headers_commission") ? input.to_main_chain_index : null;
-					var is_unique = 1;
-					var address = (arrAuthorAddresses.length === 1) ? arrAuthorAddresses[0] : input.address;
-					db.addCmd(cmds, "INSERT INTO inputs \n\
-				(unit, message_index, input_index, type, \n\
-				src_unit, src_message_index, src_output_index, \
-				from_main_chain_index, to_main_chain_index, \n\
-				denomination, amount, serial_number, \n\
-				asset, is_unique, address) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-						objUnit.unit, i, j, type,
-						src_unit, src_message_index, src_output_index,
-						from_main_chain_index, to_main_chain_index,
-						denomination, input.amount, input.serial_number,
-						payload.asset, is_unique, address);
-					let { addresses } = await device.getInfo();
-					if (addresses.indexOf(address) >= 0) {
-						let uobj = await db.single('select * from outputs WHERE is_spent=0 and unit=? AND message_index=? AND output_index=?', src_unit, src_message_index, src_output_index);
-						if (uobj == null) {
-							return console.log("the source unit has spent or is not in db now!");
-						}
-						db.addCmd(cmds,
-							"UPDATE outputs SET is_spent=1 WHERE unit=? AND message_index=? AND output_index=?",
-							src_unit, src_message_index, src_output_index
-						);
-					}
-				}
-				for (var j = 0; j < payload.outputs.length; j++) {
-					var output = payload.outputs[j];
-					db.addCmd(cmds,
-						"INSERT INTO outputs \n\
-					(unit, message_index, output_index, address, amount, asset, denomination, is_serial) VALUES(?,?,?,?,?,?,?,1)",
-						objUnit.unit, i, j, output.address, parseInt(output.amount), payload.asset, denomination
-					);
-				}
-			}
 			let i_result = await db.executeTrans(cmds);
 			if (!i_result) {
-				refreshUnitList(tran);
+				refreshTranList(tran);
 				tran_bool = true;
 			}
 		}
