@@ -442,7 +442,7 @@ async function updateHistory(addresses) {
 		}
 	}
 	catch (e) {
-		console.log(e);
+		console.log(e.toString());
 	}
 	finally { u_finished = true; }
 }
