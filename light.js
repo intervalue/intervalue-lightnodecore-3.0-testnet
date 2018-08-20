@@ -400,6 +400,7 @@ function processHistory(objResponse, callbacks) {
 var u_finished = true;
 let tranList = null;
 let tranAddr = [];
+let income = 0;
 async function updateHistory(addresses) {
 	if (!u_finished) {
 		return;
@@ -446,11 +447,50 @@ async function updateHistory(addresses) {
 function refreshTranList(tran) {
 	let my_tran = _.find(tranList, { id: tran.id });
 	if (my_tran) {
-		my_tran.result = tran.isStable;
+		if (tranAddr.indexOf(tran.to)) {
+			if (my_tran.result != 'good' && tran.isValid) {
+				income += tran.amount;
+			}
+			else if (my_tran.result == 'good' && !tran.isValid) {
+				income -= tran.amount;
+			}
+		}
+		else {
+			if (my_tran.result != 'final-bad' && !tran.isValid) {
+				income += tran.amount;
+				income += tran.fee;
+			}
+		}
+		my_tran.result = getResultFromTran(tran);
 	}
 	else {
-		my_tran = { id: tran.unitId, result: getResultFromTran(tran) };
-		tranList.push(my_tran);
+		my_tran = { id: tran.id, result: getResultFromTran(tran) };
+		if (tranAddr.indexOf(tran.to)) {
+			switch (my_tran.result) {
+				case 'pending':
+					break;
+				case 'good':
+					income += tran.amount;
+					break;
+				case 'final-bad':
+					break;
+			}
+		}
+		else {
+			switch (my_tran.result) {
+				case 'pending':
+					income -= tran.amount;
+					income -= tran.fee;
+					break;
+				case 'good':
+					income -= tran.amount;
+					income -= tran.fee;
+					break;
+				case 'final-bad':
+					break;
+			}
+			tranList.push(my_tran);
+		}
 	}
 }
 
@@ -469,7 +509,9 @@ function getResultFromTran(tran) {
 async function iniTranList(addresses) {
 	if (tranAddr == [] || tranAddr != addresses || !tranList) {
 		tranAddr = addresses
-		tranList = await db.toList("select id, result from transactions where from in (?) or to in (?)", addresses, addresses);
+		income = parseInt(db.single("select (select sum(amount) from transactions where to in (?) and result = 'good') - \n\
+			(select sum(amount + commission) from transactions where from in (?) and (result = 'good' || result = 'pending')) as income", addresses, addresses));
+		tranList = await db.toList("select id, result from transactions where (from in (?) or to in (?))", addresses, addresses);
 	}
 }
 
@@ -883,5 +925,6 @@ exports.prepareParentsAndLastBallAndWitnessListUnit = prepareParentsAndLastBallA
 exports.updateHistory = updateHistory;
 exports.unitList = unitList;
 exports.refreshUnitList = refreshUnitList;
-
+exports.income = income;
+exports.refreshTranList = refreshTranList;
 
