@@ -422,6 +422,9 @@ async function updateHistory(addresses) {
 		if (trans == null) {
 			return;
 		}
+		if (trans.length === 0) {
+			await truncateTran();
+		}
 		else {
 			await iniTranList(addresses);
 			for (var tran of trans) {
