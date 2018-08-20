@@ -926,8 +926,6 @@ exports.processLinkProofs = processLinkProofs;
 exports.determineIfHaveUnstableJoints = determineIfHaveUnstableJoints;
 exports.prepareParentsAndLastBallAndWitnessListUnit = prepareParentsAndLastBallAndWitnessListUnit;
 exports.updateHistory = updateHistory;
-exports.unitList = unitList;
-exports.refreshUnitList = refreshUnitList;
 exports.income = income;
 exports.refreshTranList = refreshTranList;
 
