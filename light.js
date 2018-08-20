@@ -533,7 +533,7 @@ async function truncateTran(addresses) {
 				}
 			}
 			catch (e) {
-				console.log(e);
+				console.log(e.toString());
 			}
 			finally {
 				await unlock();
@@ -553,7 +553,7 @@ async function updateTran(tran) {
 			}
 		}
 		catch (e) {
-			console.log(e);
+			console.log(e.toString());
 		}
 		finally {
 			await unlock();
@@ -577,7 +577,7 @@ async function badTran(tran) {
 			}
 		}
 		catch (e) {
-			console.log(e);
+			console.log(e.toString());
 		}
 		finally {
 			await unlock();
@@ -603,7 +603,7 @@ async function insertTran(tran) {
 			}
 		}
 		catch (e) {
-			console.log(e);
+			console.log(e.toString());
 		}
 		finally {
 			await unlock();
