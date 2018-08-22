@@ -68,6 +68,30 @@ function setDevicePrivateKey(priv_key) {
 		loginToHub();
 }
 
+
+function setDevicePublicKey(pub_b64){
+    breadcrumbs.add("setDevicePrivateKey");
+    var bChanged = true;
+    // objMyPermanentDeviceKey = {
+    //     pub_b64: pub_b64
+    // };
+    var new_my_device_address = objectHash.getDeviceAddress(pub_b64);
+    if (my_device_address && my_device_address !== new_my_device_address){
+        breadcrumbs.add('different device address: old '+my_device_address+', new '+new_my_device_address);
+        throw Error('different device address: old '+my_device_address+', new '+new_my_device_address);
+    }
+    breadcrumbs.add("same device addresses: "+new_my_device_address);
+    my_device_address = new_my_device_address;
+    // this temp pubkey package signs my permanent key and is actually used only if I'm my own hub.
+    // In this case, there are no intermediaries and TLS already provides perfect forward security
+    // network.setMyDeviceProps(my_device_address, createTempPubkeyPackage(pub_b64));
+    if (bChanged)
+        loginToHub();
+}
+
+
+
+
 function checkDeviceAddress() {
 	if (!objMyPermanentDeviceKey)
 		return;
@@ -771,6 +795,7 @@ exports.isValidPubKey = isValidPubKey;
 exports.genPrivKey = genPrivKey;
 
 exports.setDevicePrivateKey = setDevicePrivateKey;
+exports.setDevicePublicKey = setDevicePublicKey;
 exports.setTempKeys = setTempKeys;
 exports.setDeviceAddress = setDeviceAddress;
 exports.setNewDeviceAddress = setNewDeviceAddress;
