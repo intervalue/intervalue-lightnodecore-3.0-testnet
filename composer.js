@@ -125,6 +125,42 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 	composeContentJoint(from_address, "asset_attestors", { asset: asset, attestors: arrNewAttestors }, signer, callbacks);
 }
 
+async function writeTran(params, handleResult) {
+	var creation_date = creation_date = Math.round(Date.now() / 1000);
+	var obj = { from: params.from_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
+	obj.fee = objectLength.getTotalPayloadSize(objUnit);
+	if (light.income < obj.fee + obj.amount) {
+		return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+	}
+	var buf_to_sign = objectHash.getUnitHashToSign(obj);
+	var address = await params.findAddressForJoint(params.change_address);
+	var privKeyBuf = params.getSignerWithLocalPrivateKey(address.account, address.is_change, address_index);
+	var id = ecdsaSig.sign(buf_to_sign, privKeyBuf);
+	obj.id = id;
+	var network = require('./network.js');
+	let result = await network.sendTransaction(obj);
+	if (result) {
+		return handleResult(result);
+	}
+	else {
+		await mutex.lock(["write"], async function (unlock) {
+			try {
+				await db.execute("insert into transactions (id,creation_date,amount,commission,from,to) values (?,?,?,?,?,?)",
+					obj.id, obj.creation_date, obj.amount, obj.fee, obj.from, obj.to);
+				light.refreshTranList(obj);
+				params.handleResult('', obj.id);
+			}
+			catch (e) {
+				console.log(e.toString());
+				params.handleResult(e.toString());
+			}
+			finally {
+				await unlock();
+			}
+		});
+	}
+}
+
 /*
 	params.signing_addresses must sign the message but they do not necessarily pay 
 	params.paying_addresses pay for byte outputs and commissions
@@ -1259,3 +1295,4 @@ exports.composeAndSavePaymentJoint = composeAndSavePaymentJoint;
 exports.composeAndSaveMinimalJointForJoint = composeAndSaveMinimalJointForJoint;
 exports.generateBlinding = generateBlinding;
 exports.getMessageIndexByPayloadHash = getMessageIndexByPayloadHash;
+exports.writeTran = writeTran;

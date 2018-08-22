@@ -56,7 +56,7 @@ class HashnetHelper {
                         let b_result = await db.executeTrans(cmds);
                     }
                     catch (e) {
-                        console.log(e);
+                        console.log(e.toString());
                     }
                     finally {
                         await unlock();
@@ -70,7 +70,7 @@ class HashnetHelper {
             }
         }
         catch (e) {
-            console.log(e);
+            console.log(e.toString());
             return [];
         }
     }
@@ -83,7 +83,7 @@ class HashnetHelper {
                     await db.execute("delete from my_witnesses where address = ?", localfullnode.ip + ':' + localfullnode.httpPort);
                 }
                 catch (e) {
-                    console.log(e);
+                    console.log(e.toString());
                 }
                 finally {
                     await unlock();

@@ -652,6 +652,18 @@ function emitNewPublicPaymentReceived(payer_device_address, objUnit) { // curren
 	});
 }
 
+async function findAddressForJoint(address) {
+	let row = await db.first(
+		"SELECT wallet, account, is_change, address_index \n\
+		FROM my_addresses JOIN wallets USING(wallet) \n\
+		WHERE address=? ", address);
+	return {
+		wallet: row.wallet,
+		account: row.account,
+		is_change: row.is_change,
+		address_index: row.address_index
+	};
+}
 
 function findAddress(address, signing_path, callbacks, fallback_remote_device_address) {
 	db.query(
@@ -1326,39 +1338,13 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 }
 
 async function sendMultiPayment(opts, handleResult) {
+	opts.findAddressForJoint = findAddressForJoint;
 	let deviceInfo = await device.getInfo();
 	if (deviceInfo.addresses.indexOf(opts.to_address) >= 0) {
 		return handleResult("to_address and from_address is same"
 		);
 	}
-	var asset = opts.asset;
-	if (asset === 'base')
-		asset = null;
-	var wallet = opts.wallet;
-	var arrPayingAddresses = opts.paying_addresses;
-	var fee_paying_wallet = opts.fee_paying_wallet;
-	var arrSigningAddresses = opts.signing_addresses || [];
-	var to_address = opts.to_address;
-	var amount = opts.amount;
-	var bSendAll = opts.send_all;
-	var change_address = opts.change_address;
-	var arrSigningDeviceAddresses = opts.arrSigningDeviceAddresses;
-	var recipient_device_address = opts.recipient_device_address;
-	var recipient_device_addresses = opts.recipient_device_addresses;
-	var signWithLocalPrivateKey = opts.signWithLocalPrivateKey;
 
-	var base_outputs = opts.base_outputs;
-	var asset_outputs = opts.asset_outputs;
-	var messages = opts.messages;
-
-	if (!wallet && !arrPayingAddresses)
-		throw Error("neither wallet id nor paying addresses");
-	if (wallet && arrPayingAddresses)
-		throw Error("both wallet id and paying addresses");
-	if ((to_address || amount) && (base_outputs || asset_outputs))
-		throw Error('to_address and outputs at the same time');
-	if (!asset && asset_outputs)
-		throw Error('base asset and asset outputs');
 	if (amount) {
 		if (typeof amount !== 'number')
 			throw Error('amount must be a number');
@@ -1366,300 +1352,7 @@ async function sendMultiPayment(opts, handleResult) {
 			throw Error('amount must be positive');
 	}
 
-	if (recipient_device_address === device.getMyDeviceAddress())
-		recipient_device_address = null;
-
-	var estimated_amount = amount;
-	if (!estimated_amount && asset_outputs)
-		estimated_amount = asset_outputs.reduce(function (acc, output) { return acc + output.amount; }, 0);
-	if (estimated_amount && !asset)
-		estimated_amount += TYPICAL_FEE;
-
-	readFundedAndSigningAddresses(
-		asset, wallet || arrPayingAddresses, estimated_amount, opts.spend_unconfirmed || 'own', fee_paying_wallet,
-		arrSigningAddresses, arrSigningDeviceAddresses,
-		function (arrFundedAddresses, arrBaseFundedAddresses, arrAllSigningAddresses) {
-
-			if (arrFundedAddresses.length === 0)
-				return handleResult("There are no funded addresses");
-			if (asset && arrBaseFundedAddresses.length === 0)
-				return handleResult("No bytes to pay fees");
-
-			var signer = getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey);
-
-			// if we have any output with text addresses / not intervalue addresses (e.g. email) - generate new addresses and return them
-			var assocMnemonics = {}; // return all generated wallet mnemonics to caller in callback
-			var assocPaymentsByEmail = {}; // wallet mnemonics to send by emails
-			var assocAddresses = {};
-			var prefix = "textcoin:";
-			function generateNewMnemonicIfNoAddress(output_asset, outputs) {
-				var generated = 0;
-				outputs.forEach(function (output) {
-					if (output.address.indexOf(prefix) !== 0)
-						return false;
-
-					var address = output.address.slice(prefix.length);
-					var strMnemonic = assocMnemonics[output.address] || "";
-					var mnemonic = new Mnemonic(strMnemonic.replace(/-/g, " "));
-					if (!strMnemonic) {
-						while (!Mnemonic.isValid(mnemonic.toString()))
-							mnemonic = new Mnemonic();
-						strMnemonic = mnemonic.toString().replace(/ /g, "-");
-					}
-					if (!opts.do_not_email && ValidationUtils.isValidEmail(address)) {
-						assocPaymentsByEmail[address] = { mnemonic: strMnemonic, amount: output.amount, asset: output_asset };
-					}
-					assocMnemonics[output.address] = strMnemonic;
-					var pubkey = mnemonic.toHDPrivateKey().derive("m/44'/0'/0'/0/0").publicKey.toBuffer().toString("base64");
-					assocAddresses[output.address] = objectHash.getChash160(["sig", { "pubkey": pubkey }]);
-					output.address = assocAddresses[output.address];
-					generated++;
-				});
-				return generated;
-			}
-			if (to_address) {
-				var to_address_output = { address: to_address, amount: amount };
-				var cnt = generateNewMnemonicIfNoAddress(asset, [to_address_output]);
-				if (cnt) to_address = to_address_output.address;
-			}
-			if (base_outputs) generateNewMnemonicIfNoAddress(null, base_outputs);
-			if (asset_outputs) generateNewMnemonicIfNoAddress(asset, asset_outputs);
-
-			var params = {
-				available_paying_addresses: arrFundedAddresses, // forces 'minimal' for payments from shared addresses too, it doesn't hurt
-				signing_addresses: arrAllSigningAddresses,
-				spend_unconfirmed: opts.spend_unconfirmed || 'own',
-				messages: messages,
-				signer: signer,
-				callbacks: {
-					ifNotEnoughFunds: function (err) {
-						handleResult(err);
-					},
-					ifError: function (err) {
-						handleResult(err);
-					},
-					preCommitCb: function (conn, objJoint, cb) {
-						var i = 0;
-						if (Object.keys(assocMnemonics).length) {
-							for (var to in assocMnemonics) {
-								conn.query("INSERT INTO sent_mnemonics (unit, address, mnemonic, textAddress) VALUES (?, ?, ?, ?)", [objJoint.unit.unit, assocAddresses[to], assocMnemonics[to], to.slice(prefix.length)],
-									function () {
-										if (++i == Object.keys(assocMnemonics).length) { // stored all mnemonics
-											cb();
-										}
-									});
-							}
-						} else
-							cb();
-					},
-					// for asset payments, 2nd argument is array of chains of private elements
-					// for base asset, 2nd argument is assocPrivatePayloads which is null
-					ifOk: function (objJoint, arrChainsOfRecipientPrivateElements, arrChainsOfCosignerPrivateElements) {
-						network.broadcastJoint(objJoint);
-						if (!arrChainsOfRecipientPrivateElements) { // send notification about public payment
-							if (recipient_device_address)
-								walletGeneral.sendPaymentNotification(recipient_device_address, objJoint.unit.unit);
-							if (recipient_device_addresses)
-								recipient_device_addresses.forEach(function (r_device_address) {
-									walletGeneral.sendPaymentNotification(r_device_address, objJoint.unit.unit);
-								});
-						}
-
-						if (Object.keys(assocPaymentsByEmail).length) { // need to send emails
-							var sent = 0;
-							for (var email in assocPaymentsByEmail) {
-								var objPayment = assocPaymentsByEmail[email];
-								sendTextcoinEmail(email, opts.email_subject, objPayment.amount, objPayment.asset, objPayment.mnemonic);
-								if (++sent == Object.keys(assocPaymentsByEmail).length)
-									handleResult(null, objJoint.unit.unit, assocMnemonics);
-							}
-						} else {
-							handleResult(null, objJoint.unit.unit, assocMnemonics);
-						}
-					}
-				}
-			};
-
-			// textcoin claim fees are paid by the sender
-			var indivisibleAssetFeesByAddress = [];
-			var addFeesToParams = function (objAsset) {
-				// iterate over all generated textcoin addresses
-				for (var orig_address in assocAddresses) {
-					var new_address = assocAddresses[orig_address];
-					var _addAssetFees = function () {
-						var asset_fees = objAsset && objAsset.fixed_denominations ? indivisibleAssetFeesByAddress[new_address] : constants.TEXTCOIN_ASSET_CLAIM_FEE;
-						if (!params.base_outputs) params.base_outputs = [];
-						var base_output = _.find(params.base_outputs, function (output) { return output.address == new_address });
-						if (base_output)
-							base_output.amount += asset_fees;
-						else
-							params.base_outputs.push({ address: new_address, amount: asset_fees });
-					}
-
-					// first calculate fees for textcoins in (bytes) outputs 
-					var output = _.find(params.outputs, function (output) { return output.address == new_address });
-					if (output) {
-						output.amount += constants.TEXTCOIN_CLAIM_FEE;
-					}
-
-					// second calculate fees for textcoins in base_outputs 
-					output = _.find(params.base_outputs, function (output) { return output.address == new_address });
-					if (output) {
-						output.amount += constants.TEXTCOIN_CLAIM_FEE;
-					}
-
-					// then check for textcoins in asset_outputs
-					output = _.find(params.asset_outputs, function (output) { return output.address == new_address });
-					if (output) {
-						_addAssetFees();
-					}
-
-					// finally check textcoins in to_address
-					if (new_address == params.to_address) {
-						if (objAsset) {
-							delete params.to_address;
-							delete params.amount;
-							params.asset_outputs = [{ address: new_address, amount: amount }];
-							_addAssetFees();
-						} else {
-							params.amount += constants.TEXTCOIN_CLAIM_FEE;
-						}
-					}
-				}
-			}
-
-			if (asset) {
-				if (bSendAll)
-					throw Error('send_all with asset');
-				params.asset = asset;
-				params.available_fee_paying_addresses = arrBaseFundedAddresses;
-				if (to_address) {
-					params.to_address = to_address;
-					params.amount = amount; // in asset units
-				}
-				else {
-					params.asset_outputs = asset_outputs;
-					params.base_outputs = base_outputs; // only destinations, without the change
-				}
-				params.change_address = change_address;
-				storage.readAsset(db, asset, null, function (err, objAsset) {
-					if (err)
-						throw Error(err);
-
-					if (objAsset.is_private) {
-						var saveMnemonicsPreCommit = params.callbacks.preCommitCb;
-						// save messages in outbox before committing
-						params.callbacks.preCommitCb = function (conn, objJoint, arrChainsOfRecipientPrivateElements, arrChainsOfCosignerPrivateElements, cb) {
-							if (!arrChainsOfRecipientPrivateElements || !arrChainsOfCosignerPrivateElements)
-								throw Error('no private elements');
-							var sendToRecipients = function (cb2) {
-								if (recipient_device_address) {
-									walletGeneral.sendPrivatePayments(recipient_device_address, arrChainsOfRecipientPrivateElements, false, conn, cb2);
-								}
-								else if (Object.keys(assocAddresses).length > 0) {
-									var mnemonic = assocMnemonics[Object.keys(assocMnemonics)[0]]; // TODO: assuming only one textcoin here
-									if (typeof opts.getPrivateAssetPayloadSavePath === "function") {
-										opts.getPrivateAssetPayloadSavePath(function (fullPath, cordovaPathObj) {
-											if (!fullPath && (!cordovaPathObj || !cordovaPathObj.fileName)) {
-												return cb2("no file path provided for storing private payload");
-											}
-											storePrivateAssetPayload(fullPath, cordovaPathObj, mnemonic, arrChainsOfRecipientPrivateElements, function (err) {
-												if (err)
-													throw Error(err);
-												saveMnemonicsPreCommit(conn, objJoint, cb2);
-											});
-										});
-									} else {
-										throw Error("no getPrivateAssetPayloadSavePath provided");
-									}
-								}
-								else { // paying to another wallet on the same device
-									forwardPrivateChainsToOtherMembersOfOutputAddresses(arrChainsOfRecipientPrivateElements, conn, cb2);
-								}
-							};
-							var sendToCosigners = function (cb2) {
-								if (wallet)
-									walletDefinedByKeys.forwardPrivateChainsToOtherMembersOfWallets(arrChainsOfCosignerPrivateElements, [wallet], conn, cb2);
-								else // arrPayingAddresses can be only shared addresses
-									forwardPrivateChainsToOtherMembersOfSharedAddresses(arrChainsOfCosignerPrivateElements, arrPayingAddresses, null, false, conn, cb2);
-							};
-							async.series([sendToRecipients, sendToCosigners], cb);
-						};
-					}
-
-					async.series([
-						function (cb) { // calculate fees for indivisible asset
-							if (!Object.keys(assocAddresses).length || !objAsset.fixed_denominations) { // skip this step if no textcoins and for divisible assets
-								cb();
-								return;
-							}
-							params.tolerance_plus = 0;
-							params.tolerance_minus = 0;
-							var old_callbacks = params.callbacks;
-							params.callbacks = {
-								ifOk: function (objJoint, assocPrivatePayloads, unlock) {
-									for (var orig_address in assocAddresses) {
-										var new_address = assocAddresses[orig_address];
-										var asset_messages_to_address = _.filter(objJoint.unit.messages, function (m) {
-											return m.app === "payment" && _.get(m, 'payload.asset') === asset && (_.get(m, 'payload.outputs[0].address') === new_address || _.get(m, 'payload.outputs[1].address') === new_address);
-										});
-										indivisibleAssetFeesByAddress[new_address] = constants.TEXTCOIN_ASSET_CLAIM_HEADER_FEE + asset_messages_to_address.length * constants.TEXTCOIN_ASSET_CLAIM_MESSAGE_FEE + Object.keys(assocPrivatePayloads).length * constants.TEXTCOIN_PRIVATE_ASSET_CLAIM_MESSAGE_FEE + constants.TEXTCOIN_ASSET_CLAIM_BASE_MSG_FEE;
-									}
-									// inject into ifOk an assert to check for correct number of payloads picked
-									_.assign(params.callbacks, old_callbacks, {
-										ifOk: function (objJoint, assocPrivatePayloads2, unlock) {
-											if (Object.keys(assocPrivatePayloads).length != Object.keys(assocPrivatePayloads2).length)
-												throw new Error("assocPrivatePayloads length differs from dry-run, incorrect fees calculated: " + Object.keys(assocPrivatePayloads) + " != " + Object.keys(assocPrivatePayloads2));
-											old_callbacks.ifOk(objJoint, assocPrivatePayloads2, unlock);
-										}
-									});
-									unlock();
-									cb();
-								},
-								ifError: function (err) {
-									old_callbacks.ifError(err);
-									cb(err);
-								},
-								ifNotEnoughFunds: function (err) {
-									old_callbacks.ifNotEnoughFunds(err);
-									cb(err);
-								}
-							}
-							indivisibleAsset.composeMinimalIndivisibleAssetPaymentJoint(params);
-						},
-						function (cb) { // add fees
-							addFeesToParams(objAsset);
-							cb();
-						},
-						function (cb) { // send payment
-							if (objAsset.fixed_denominations) { // indivisible
-								params.tolerance_plus = 0;
-								params.tolerance_minus = 0;
-								indivisibleAsset.composeAndSaveMinimalIndivisibleAssetPaymentJoint(params);
-							}
-							else { // divisible
-								divisibleAsset.composeAndSaveMinimalDivisibleAssetPaymentJoint(params);
-							}
-							cb();
-						}
-					]);
-				});
-			}
-			else { // base asset
-				if (bSendAll) {
-					params.send_all = bSendAll;
-					params.outputs = [{ address: to_address, amount: 0 }];
-				}
-				else {
-					params.outputs = to_address ? [{ address: to_address, amount: amount }] : (base_outputs || []);
-					params.outputs.push({ address: change_address, amount: 0 });
-					addFeesToParams();
-				}
-				composer.composeAndSaveMinimalJointForJoint(params);
-			}
-
-		}
-	);
+	await composer.writeTran(opts, handleResult);
 }
 
 
