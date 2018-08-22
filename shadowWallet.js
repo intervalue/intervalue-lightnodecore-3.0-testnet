@@ -153,7 +153,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     // flag = signature.verify(buf_to_sign,sign,pub);
 
 
-    createWallet(xpub, function(){
+    createWallet(xpub,addr, function(){
         console.log("创建成功");
     });
 
@@ -164,25 +164,30 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
 //交易签名
 
 //創建錢包
-function createWallet(strXPubKey, onDone){
+function createWallet(strXPubKey ,addr, onDone){
 
 
     // var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
     //
-    var device = require('intervaluecore/device.js');
-    device.setDevicePublicKey(strXPubKey); // we need device address before creating a wallet
+    var device = require('./device.js');
+    // device.setDevicePublicKey(strXPubKey); // we need device address before creating a wallet
     //
     // var strXPubKey = Bitcore.HDPublicKey(xPrivKey.derive("m/44'/0'/0'")).toString();
     //
     // console.log(strXPubKey);
-
+    var wallet = crypto.createHash("sha256").update(strXPubKey, "utf8").digest("base64");
+    var account = 0;
+    var arrDefinitionTemplate = ["sig", { pubkey: '$pubkey@' + device.getMyDeviceAddress() }];
 
     var walletDefinedByKeys = require('./wallet_defined_by_keys.js');
 
     // we pass isSingleAddress=false because this flag is meant to be forwarded to cosigners and headless wallet doesn't support multidevice
-    walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
-        walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
-            onDone();
-        });
-    });
+
+    walletDefinedByKeys.addWallet(wallet,strXPubKey ,account,arrDefinitionTemplate,onDone);
+
+    // walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
+    //     walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
+    //         onDone();
+    //     });
+    // });
 }
