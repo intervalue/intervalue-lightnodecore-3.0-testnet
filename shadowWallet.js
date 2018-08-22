@@ -15,7 +15,7 @@ var signatureCode;
 var signatureDetlCode;
 
 
-//冷钱包 生成热钱包
+//冷钱包 生成热钱包（接口暂时没用）
 exports.getVerificationQRCode = function(address ,cb){
     var db = require('./db');
     db.query("SELECT definition FROM my_addresses where address = ?",
@@ -153,6 +153,36 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     // flag = signature.verify(buf_to_sign,sign,pub);
 
 
+    createWallet(xpub, function(){
+        console.log("创建成功");
+    });
+
     return cb(flag);
 };
 
+
+//交易签名
+
+//創建錢包
+function createWallet(strXPubKey, onDone){
+
+
+    // var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
+    //
+    var device = require('intervaluecore/device.js');
+    device.setDevicePublicKey(strXPubKey); // we need device address before creating a wallet
+    //
+    // var strXPubKey = Bitcore.HDPublicKey(xPrivKey.derive("m/44'/0'/0'")).toString();
+    //
+    // console.log(strXPubKey);
+
+
+    var walletDefinedByKeys = require('./wallet_defined_by_keys.js');
+
+    // we pass isSingleAddress=false because this flag is meant to be forwarded to cosigners and headless wallet doesn't support multidevice
+    walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
+        walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
+            onDone();
+        });
+    });
+}
