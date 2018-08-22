@@ -22,16 +22,17 @@ function getBase64Hash(obj) {
 }
 
 
-function getNakedUnit(objUnit){
+function getNakedUnit(objUnit) {
 	var objNakedUnit = _.cloneDeep(objUnit);
 	delete objNakedUnit.unit;
 	delete objNakedUnit.headers_commission;
 	delete objNakedUnit.payload_commission;
 	delete objNakedUnit.main_chain_index;
 	delete objNakedUnit.timestamp;
+	delete objNakedUnit.author;
 	//delete objNakedUnit.last_ball_unit;
-	if (objNakedUnit.messages){
-		for (var i=0; i<objNakedUnit.messages.length; i++){
+	if (objNakedUnit.messages) {
+		for (var i = 0; i < objNakedUnit.messages.length; i++) {
 			delete objNakedUnit.messages[i].payload;
 			delete objNakedUnit.messages[i].payload_uri;
 		}
@@ -41,7 +42,7 @@ function getNakedUnit(objUnit){
 	return objNakedUnit;
 }
 
-function getUnitContentHash(objUnit){
+function getUnitContentHash(objUnit) {
 	return getBase64Hash(getNakedUnit(objUnit));
 }
 
@@ -52,13 +53,13 @@ function getUnitHash(objUnit) {
 		content_hash: getUnitContentHash(objUnit),
 		version: objUnit.version,
 		alt: objUnit.alt,
-		authors: objUnit.authors.map(function(author){ return {address: author.address}; }) // already sorted
+		authors: objUnit.authors.map(function (author) { return { address: author.address }; }) // already sorted
 	};
 	if (objUnit.witness_list_unit)
 		objStrippedUnit.witness_list_unit = objUnit.witness_list_unit;
 	else
 		objStrippedUnit.witnesses = objUnit.witnesses;
-	if (objUnit.parent_units){
+	if (objUnit.parent_units) {
 		objStrippedUnit.parent_units = objUnit.parent_units;
 		objStrippedUnit.last_ball = objUnit.last_ball;
 		objStrippedUnit.last_ball_unit = objUnit.last_ball_unit;
@@ -68,8 +69,8 @@ function getUnitHash(objUnit) {
 
 function getUnitHashToSign(objUnit) {
 	var objNakedUnit = getNakedUnit(objUnit);
-	for (var i=0; i<objNakedUnit.authors.length; i++)
-		delete objNakedUnit.authors[i].authentifiers;
+	// for (var i=0; i<objNakedUnit.authors.length; i++)
+	// 	delete objNakedUnit.authors[i].authentifiers;
 	return crypto.createHash("sha256").update(getSourceString(objNakedUnit), "utf8").digest();
 }
 
@@ -91,8 +92,8 @@ function getJointHash(objJoint) {
 	return crypto.createHash("sha256").update(JSON.stringify(objJoint), "utf8").digest("base64");
 }
 
-function cleanNulls(obj){
-	Object.keys(obj).forEach(function(key){
+function cleanNulls(obj) {
+	Object.keys(obj).forEach(function (key) {
 		if (obj[key] === null)
 			delete obj[key];
 	});
@@ -104,7 +105,7 @@ function cleanNulls(obj){
 // Note that 0 is not a member of base32 alphabet, which makes device addresses easily distinguishable from payment addresses 
 // but still selectable by double-click.  Stripping the leading 0 will not produce a payment address that the device owner knows a private key for,
 // because payment address is derived by c-hashing the definition object, while device address is produced from raw public key.
-function getDeviceAddress(b64_pubkey){
+function getDeviceAddress(b64_pubkey) {
 	return ('0' + getChash160(b64_pubkey));
 }
 

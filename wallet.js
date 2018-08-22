@@ -654,10 +654,11 @@ function emitNewPublicPaymentReceived(payer_device_address, objUnit) { // curren
 
 async function findAddressForJoint(address) {
 	let row = await db.first(
-		"SELECT wallet, account, is_change, address_index \n\
+		"SELECT wallet, account, is_change, address_index,definition \n\
 		FROM my_addresses JOIN wallets USING(wallet) \n\
 		WHERE address=? ", address);
 	return {
+		definition: JSON.parse(row.definition),
 		wallet: row.wallet,
 		account: row.account,
 		is_change: row.is_change,
@@ -1339,19 +1340,17 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 
 async function sendMultiPayment(opts, handleResult) {
 	opts.findAddressForJoint = findAddressForJoint;
-	let deviceInfo = await device.getInfo();
-	if (deviceInfo.addresses.indexOf(opts.to_address) >= 0) {
+	if (opts.change_address == opts.to_address) {
 		return handleResult("to_address and from_address is same"
 		);
 	}
 
-	if (amount) {
-		if (typeof amount !== 'number')
+	if (opts.amount) {
+		if (typeof opts.amount !== 'number')
 			throw Error('amount must be a number');
-		if (amount < 0)
+		if (opts.amount < 0)
 			throw Error('amount must be positive');
 	}
-
 	await composer.writeTran(opts, handleResult);
 }
 
