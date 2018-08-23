@@ -400,7 +400,8 @@ function processHistory(objResponse, callbacks) {
 var u_finished = true;
 let tranList = null;
 let tranAddr = [];
-let income = 0;
+let stable = 0;
+let pending = 0;
 async function updateHistory(addresses) {
 	if (!u_finished) {
 		return;
@@ -452,16 +453,16 @@ function refreshTranList(tran) {
 	if (my_tran) {
 		if (tranAddr.indexOf(tran.to)) {
 			if (my_tran.result != 'good' && tran.isValid) {
-				income += tran.amount;
+				stable += tran.amount;
 			}
 			else if (my_tran.result == 'good' && !tran.isValid) {
-				income -= tran.amount;
+				stable -= tran.amount;
 			}
 		}
 		else {
 			if (my_tran.result != 'final-bad' && !tran.isValid) {
-				income += tran.amount;
-				income += tran.fee;
+				stable += tran.amount;
+				stable += tran.fee;
 			}
 		}
 		my_tran.result = getResultFromTran(tran);
@@ -473,7 +474,7 @@ function refreshTranList(tran) {
 				case 'pending':
 					break;
 				case 'good':
-					income += tran.amount;
+					stable += tran.amount;
 					break;
 				case 'final-bad':
 					break;
@@ -482,12 +483,12 @@ function refreshTranList(tran) {
 		else {
 			switch (my_tran.result) {
 				case 'pending':
-					income -= tran.amount;
-					income -= tran.fee;
+					stable -= tran.amount;
+					stable -= tran.fee;
 					break;
 				case 'good':
-					income -= tran.amount;
-					income -= tran.fee;
+					stable -= tran.amount;
+					stable -= tran.fee;
 					break;
 				case 'final-bad':
 					break;
@@ -512,8 +513,8 @@ function getResultFromTran(tran) {
 async function iniTranList(addresses) {
 	if (tranAddr == [] || tranAddr != addresses || !tranList) {
 		tranAddr = addresses
-		income = parseInt(db.single("select (select sum(amount) from transactions where to in (?) and result = 'good') - \n\
-			(select sum(amount + commission) from transactions where from in (?) and (result = 'good' || result = 'pending')) as income", addresses, addresses));
+		stable = parseInt(db.single("select (select sum(amount) from transactions where to in (?) and result = 'good') - \n\
+			(select sum(amount + commission) from transactions where from in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
 		tranList = await db.toList("select id, result from transactions where (from in (?) or to in (?))", addresses, addresses);
 	}
 }
@@ -926,6 +927,7 @@ exports.processLinkProofs = processLinkProofs;
 exports.determineIfHaveUnstableJoints = determineIfHaveUnstableJoints;
 exports.prepareParentsAndLastBallAndWitnessListUnit = prepareParentsAndLastBallAndWitnessListUnit;
 exports.updateHistory = updateHistory;
-exports.income = income;
+exports.stable = stable;
+exports.pending = pending;
 exports.refreshTranList = refreshTranList;
 

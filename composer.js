@@ -131,7 +131,7 @@ async function writeTran(params, handleResult) {
 	var address = await params.findAddressForJoint(params.change_address);
 	obj.author = address.definition;
 	obj.fee = objectLength.getTotalPayloadSize(obj);
-	if (light.income < obj.fee + obj.amount) {
+	if (light.stable < obj.fee + obj.amount) {
 		return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
 	}
 	var buf_to_sign = objectHash.getUnitHashToSign(obj);
