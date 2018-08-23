@@ -156,7 +156,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     if(address == addr) {
         cb(json);
     }else
-        cn(false);
+        cb(false);
 
 
 
