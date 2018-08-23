@@ -145,6 +145,13 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var sign = json.signature;
     var xpub = json.expub;
     var pubkey = json.pubkey;
+    var result = {
+        'addr':addr,
+        'sign':sign,
+        'xpub':xpub,
+        'pubkey':pubkey
+    };
+
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
@@ -154,7 +161,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     // var flag = false;
 
     if(address == addr) {
-        cb(json);
+        cb(result);
     }else
         cb(false);
 
