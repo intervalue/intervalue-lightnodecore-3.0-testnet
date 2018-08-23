@@ -14,6 +14,7 @@ var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
+var RANDOM;
 
 //冷钱包 生成热钱包（接口暂时没用）
 exports.getVerificationQRCode = function(address ,cb){
@@ -65,13 +66,16 @@ exports.getSignatureCode = function(address,cb){
     // var definition = ["sig",{"pubkey":json.pub}];
     // var address = objectHash.getChash160(definition);
 
-    var random = crypto.randomBytes(4).toString("hex");
+    RANDOM = crypto.randomBytes(4).toString("hex");
+    // random = 'ac4ca8';
+    console.log(RANDOM);
     signatureCode =
         {
             "name":"shadow",
             "type":"sign",
             "addr":""+address+"",
-            "random":""+random+""
+            // "random":""+RANDOM+""
+            "random":RANDOM
         };
 
     return cb(signatureCode);
@@ -93,7 +97,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
     }
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
-
+    console.log(buf_to_sign.toString("hex"));
     var mnemonic = new Mnemonic(words);
     var xPrivKey = mnemonic.toHDPrivateKey("");
 
@@ -141,6 +145,8 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
             cb(false);
             break;
     }
+    var random = json.random;
+
     var addr = json.addr;
     var sign = json.signature;
     var xpub = json.expub;
@@ -155,14 +161,17 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
-    var pub = signature.recover(buf_to_sign,sign,1).toString("base64");
-    var definition = ["sig",{"pubkey":pub}];
-    var address = objectHash.getChash160(definition);
+    var pub1 = signature.recover(buf_to_sign,sign,1).toString("base64");
+    var pub2 = signature.recover(buf_to_sign,sign,0).toString("base64");
+    var definition1 = ["sig",{"pubkey":pub1}];
+    var definition2 = ["sig",{"pubkey":pub2}];
+    var address1 = objectHash.getChash160(definition1);
+    var address2 = objectHash.getChash160(definition2);
     // var flag = false;
 
-    if(address == addr) {
+    if(address1 === addr  || address2 == addr) {
         cb(result);
-    }else
+    } else
         cb(false);
 
 
@@ -204,7 +213,6 @@ exports.getWallets = function (cb) {
 
 
 
-//交易签名
 
 
 
