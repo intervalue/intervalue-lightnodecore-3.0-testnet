@@ -11,6 +11,10 @@ var _ = require('lodash');
 var localfullnodes = [];
 class HashnetHelper {
     static async buildSingleLocalfullnode() {
+        if (device.walletChanged) {
+            device.walletChanged = false;
+            await HashnetHelper.initialLocalfullnodeList();
+        }
         if (localfullnodes.length === 0) {
             let list = await db.toList('select * from my_witnesses');
             if (list.length > 0) {
@@ -36,8 +40,19 @@ class HashnetHelper {
         }
     }
 
-    static initialLocalfullnodeList() {
+    static async initialLocalfullnodeList() {
         localfullnodes = [];
+        await mutex.lock(["write"], async function (unlock) {
+            try {
+                await db.execute('delete from my_witnesses');
+            }
+            catch (e) {
+                console.log(e.toString());
+            }
+            finally {
+                await unlock();
+            }
+        });
     }
     static async getLocalfullnodeList(pubKey) {
         try {
