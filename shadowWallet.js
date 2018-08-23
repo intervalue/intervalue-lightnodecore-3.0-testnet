@@ -151,19 +151,19 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var pub = signature.recover(buf_to_sign,sign,1).toString("base64");
     var definition = ["sig",{"pubkey":pub}];
     var address = objectHash.getChash160(definition);
-    var flag = false;
+    // var flag = false;
 
     if(address == addr) {
-        flag = true;
-    }
+        cb(json);
+    }else
+        cn(false);
 
-    // flag = signature.verify(buf_to_sign,sign,pub);
 
 
-    createWallet(xpub,addr,pubkey, function(){
-        console.log("创建成功");
-        return cb(flag);
-    });
+    // createWallet(xpub,addr,pubkey, function(){
+    //     console.log("创建成功");
+    //     return cb(flag);
+    // });
 };
 
 
@@ -199,10 +199,6 @@ exports.getWallets = function (cb) {
 
 //交易签名
 
-//創建錢包
-// function createWallet(strXPubKey ,addr, onDone){
-//
-// }
 
 
 function createWallet(strXPubKey ,addr ,pubkey,onDone){
@@ -244,61 +240,3 @@ function createWallet(strXPubKey ,addr ,pubkey,onDone){
 
 
 
-
-
-
-
-//TODO TEST
-var _ = require('lodash');
-function getDeviceAddresses(arrWalletDefinitionTemplate) {
-    return _.uniq(_.values(getDeviceAddressesBySigningPaths(arrWalletDefinitionTemplate)));
-}
-
-
-function getDeviceAddressesBySigningPaths(arrWalletDefinitionTemplate) {
-    function evaluate(arr, path) {
-        var op = arr[0];
-        var args = arr[1];
-        if (!args)
-            return;
-        var prefix = '$pubkey@';
-        switch (op) {
-            case 'sig':
-                if (!args.pubkey || args.pubkey.substr(0, prefix.length) !== prefix)
-                    return;
-                var device_address = args.pubkey.substr(prefix.length);
-                assocDeviceAddressesBySigningPaths[path] = device_address;
-                break;
-            case 'hash':
-                if (!args.hash || args.hash.substr(0, prefix.length) !== prefix)
-                    return;
-                var device_address = args.hash.substr(prefix.length);
-                assocDeviceAddressesBySigningPaths[path] = device_address;
-                break;
-            case 'or':
-            case 'and':
-                for (var i = 0; i < args.length; i++)
-                    evaluate(args[i], path + '.' + i);
-                break;
-            case 'r of set':
-                if (!ValidationUtils.isNonemptyArray(args.set))
-                    return;
-                for (var i = 0; i < args.set.length; i++)
-                    evaluate(args.set[i], path + '.' + i);
-                break;
-            case 'weighted and':
-                if (!ValidationUtils.isNonemptyArray(args.set))
-                    return;
-                for (var i = 0; i < args.set.length; i++)
-                    evaluate(args.set[i].value, path + '.' + i);
-                break;
-            case 'address':
-            case 'definition template':
-                throw Error(op + " not supported yet");
-            // all other ops cannot reference device address
-        }
-    }
-    var assocDeviceAddressesBySigningPaths = {};
-    evaluate(arrWalletDefinitionTemplate, 'r');
-    return assocDeviceAddressesBySigningPaths;
-}
