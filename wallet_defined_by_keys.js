@@ -844,3 +844,4 @@ exports.deleteWalletFromUI = deleteWalletFromUI;
 exports.derivePubkey = derivePubkey;
 exports.issueAddress = issueAddress;
 exports.createWallet = createWallet;
+exports.recordAddress = recordAddress;

@@ -106,6 +106,8 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
     var privateKey2 = xPrivKey.derive(path2);
     var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
 
+    var pubkey = derivePubkey(xpubkey ,"m/0/0");
+
     signatureDetlCode =
         {
           "name":"shadow",
@@ -113,12 +115,16 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
           "signature":""+sign_64+"",
           "random":""+json.random+"",
           "expub":""+ xpubkey +"",
-          "addr":json.addr
+          "addr":json.addr,
+          "pubkey":pubkey
         };
 
     return cb(signatureDetlCode);
 };
-
+function derivePubkey(xPubKey, path) {
+    var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
+    return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
+}
 
 
 //生成热钱包
@@ -138,6 +144,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var addr = json.addr;
     var sign = json.signature;
     var xpub = json.expub;
+    var pubkey = json.pubkey;
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
@@ -153,7 +160,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     // flag = signature.verify(buf_to_sign,sign,pub);
 
 
-    createWallet(xpub,addr, function(){
+    createWallet(xpub,addr,pubkey, function(){
         console.log("创建成功");
         return cb(flag);
     });
@@ -198,7 +205,7 @@ exports.getWallets = function (cb) {
 // }
 
 
-function createWallet(strXPubKey ,addr, onDone){
+function createWallet(strXPubKey ,addr ,pubkey,onDone){
 
     // var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
     //
@@ -212,8 +219,9 @@ function createWallet(strXPubKey ,addr, onDone){
     var account = 0;
     var arrDefinitionTemplate = ["sig", { "pubkey": '$pubkey@0'+addr }];
 
+    var arrDefinition = ["sig", { "pubkey":pubkey}];
 
-    var assocDeviceAddressesBySigningPaths = getDeviceAddresses(arrDefinitionTemplate);
+    // var assocDeviceAddressesBySigningPaths = getDeviceAddresses(arrDefinitionTemplate);
 
 
 
@@ -221,7 +229,10 @@ function createWallet(strXPubKey ,addr, onDone){
 
     // we pass isSingleAddress=false because this flag is meant to be forwarded to cosigners and headless wallet doesn't support multidevice
 
-    walletDefinedByKeys.createWallet(wallet,strXPubKey ,account,arrDefinitionTemplate,wallet,null,onDone);
+    walletDefinedByKeys.createWallet(strXPubKey ,account,arrDefinitionTemplate,wallet,null,function (rs) {
+        walletDefinedByKeys.recordAddress(wallet,0,0,addr,arrDefinition);
+        onDone();
+    });
 
     // walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
     //     walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
