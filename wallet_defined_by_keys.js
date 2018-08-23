@@ -843,4 +843,4 @@ exports.readCosigners = readCosigners;
 exports.deleteWalletFromUI = deleteWalletFromUI;
 exports.derivePubkey = derivePubkey;
 exports.issueAddress = issueAddress;
-exports.addWallet = addWallet;
+exports.createWallet = createWallet;
