@@ -210,7 +210,7 @@ function createWallet(strXPubKey ,addr, onDone){
     // console.log(strXPubKey);
     var wallet = crypto.createHash("sha256").update(strXPubKey, "utf8").digest("base64");
     var account = 0;
-    var arrDefinitionTemplate = ["sig", { "pubkey": '$pubkey@' + "0"+addr }];
+    var arrDefinitionTemplate = ["sig", { "pubkey": '$pubkey@0'+addr }];
 
 
     var assocDeviceAddressesBySigningPaths = getDeviceAddresses(arrDefinitionTemplate);
@@ -221,7 +221,7 @@ function createWallet(strXPubKey ,addr, onDone){
 
     // we pass isSingleAddress=false because this flag is meant to be forwarded to cosigners and headless wallet doesn't support multidevice
 
-    walletDefinedByKeys.createWallet(wallet,strXPubKey ,account,arrDefinitionTemplate,onDone);
+    walletDefinedByKeys.createWallet(wallet,strXPubKey ,account,arrDefinitionTemplate,wallet,null,onDone);
 
     // walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
     //     walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
