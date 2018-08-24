@@ -833,3 +833,4 @@ exports.getHubWs = getHubWs;
 exports.getInfo = getInfo;
 exports.setWalletId = setWalletId;
 exports.walletChanged = walletChanged;
+exports.addresses = addresses;
