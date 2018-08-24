@@ -25,7 +25,7 @@ var breadcrumbs = require('./breadcrumbs.js');
 var balances = require('./balances');
 var Mnemonic = require('bitcore-mnemonic');
 var inputs = require('./inputs.js');
-
+var light = require('./light.js');
 var message_counter = 0;
 var assocLastFailedAssetMetadataTimestamps = {};
 var ASSET_METADATA_RETRY_PERIOD = 3600 * 1000;
@@ -859,6 +859,7 @@ function fetchAssetMetadata(asset, handleMetadata) {
 }
 
 function readTransactionHistory(opts, handleHistory) {
+	return handleHistory(light.tranList);
 	var asset = opts.asset && (opts.asset !== "base") ? opts.asset : null;
 	if (opts.wallet && opts.address || !opts.wallet && !opts.address)
 		throw Error('invalid wallet and address params');

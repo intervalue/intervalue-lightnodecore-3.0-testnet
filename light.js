@@ -454,6 +454,7 @@ function refreshTranList(tran) {
 		if (tranAddr.indexOf(tran.to)) {
 			if (my_tran.result != 'good' && tran.isValid) {
 				stable += tran.amount;
+				pending -= tran.amount;
 			}
 			else if (my_tran.result == 'good' && !tran.isValid) {
 				stable -= tran.amount;
@@ -463,6 +464,8 @@ function refreshTranList(tran) {
 			if (my_tran.result != 'final-bad' && !tran.isValid) {
 				stable += tran.amount;
 				stable += tran.fee;
+				pending -= tran.amount;
+				pending -= tran.fee;
 			}
 		}
 		my_tran.result = getResultFromTran(tran);
@@ -472,6 +475,7 @@ function refreshTranList(tran) {
 		if (tranAddr.indexOf(tran.to)) {
 			switch (my_tran.result) {
 				case 'pending':
+					pending += tran.amount;
 					break;
 				case 'good':
 					stable += tran.amount;
@@ -485,6 +489,8 @@ function refreshTranList(tran) {
 				case 'pending':
 					stable -= tran.amount;
 					stable -= tran.fee;
+					pending += tran.amount;
+					pending += tran.fee;
 					break;
 				case 'good':
 					stable -= tran.amount;
@@ -513,9 +519,11 @@ function getResultFromTran(tran) {
 async function iniTranList(addresses) {
 	if (tranAddr == [] || tranAddr != addresses || !tranList) {
 		tranAddr = addresses
-		stable = parseInt(db.single("select (select sum(amount) from transactions where to in (?) and result = 'good') - \n\
-			(select sum(amount + commission) from transactions where from in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
-		tranList = await db.toList("select id, result from transactions where (from in (?) or to in (?))", addresses, addresses);
+		stable = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
+			(select sum(amount + fee) from transactions where addressFrom in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
+		pending = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
+			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
+		tranList = await db.toList("select id, result from transactions where (addressFrom in (?) or addressTo in (?))", addresses, addresses);
 	}
 }
 
@@ -524,7 +532,7 @@ async function truncateTran(addresses) {
 	let count = tranList.length;
 	let cmds = [];
 	if (count > 0) {
-		db.addCmd(cmds, "delete from transactions where from in (?) or to in (?)", addresses, addresses);
+		db.addCmd(cmds, "delete from transactions where addressFrom in (?) or addressTo in (?)", addresses, addresses);
 		await mutex.lock(["write"], async function (unlock) {
 			try {
 				let b_result = await db.executeTrans(cmds);
@@ -590,10 +598,10 @@ async function insertTran(tran) {
 	console.log("\nsaving unit:");
 	console.log(JSON.stringify(tran));
 	var cmds = [];
-	var fields = "id, creation_date, amount, commission, from, to, result";
+	var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result";
 	var values = "?,?,?,?,?,?,?";
 	var params = [tran.id, tran.creation_date, tran.amount,
-	tran.commission || 0, tran.from, tran.to, tran.result];
+	tran.fee || 0, tran.from, tran.to, getResultFromTran(tran)];
 	db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
 	await mutex.lock(["write"], async function (unlock) {
 		try {
@@ -930,4 +938,4 @@ exports.updateHistory = updateHistory;
 exports.stable = stable;
 exports.pending = pending;
 exports.refreshTranList = refreshTranList;
-
+exports.tranList = tranList;

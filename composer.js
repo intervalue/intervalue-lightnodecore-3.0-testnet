@@ -131,7 +131,7 @@ async function writeTran(params, handleResult) {
 	var address = await params.findAddressForJoint(params.change_address);
 	obj.author = address.definition;
 	obj.fee = objectLength.getTotalPayloadSize(obj);
-	if (light.stable < obj.fee + obj.amount) {
+	if (light < obj.fee + obj.amount) {
 		return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
 	}
 	var buf_to_sign = objectHash.getUnitHashToSign(obj);
@@ -147,7 +147,7 @@ async function writeTran(params, handleResult) {
 	else {
 		await mutex.lock(["write"], async function (unlock) {
 			try {
-				await db.execute("insert into transactions (id,creation_date,amount,commission,from_address,to_address) values (?,?,?,?,?,?)",
+				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
 					obj.id, obj.creation_date, obj.amount, obj.fee, obj.from, obj.to);
 				light.refreshTranList(obj);
 				params.handleResult('', obj.id);
