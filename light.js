@@ -473,6 +473,7 @@ function refreshTranList(tran) {
 	else {
 		my_tran = { id: tran.id, creation_date: tran.creation_date, amount: tran.amount, fee: tran.fee, addressFrom: tran.addressFrom, addressTo: tran.addressTo, result: getResultFromTran(tran) };
 		if (tranAddr.indexOf(tran.to)) {
+			my_tran.action = 'received';
 			switch (my_tran.result) {
 				case 'pending':
 					pending += tran.amount;
@@ -481,11 +482,14 @@ function refreshTranList(tran) {
 					stable += tran.amount;
 					break;
 				case 'final-bad':
+					my_tran.action = 'received';
 					break;
 			}
 		}
 		else {
+			my_tran.action = 'sent';
 			switch (my_tran.result) {
+
 				case 'pending':
 					stable -= tran.amount;
 					stable -= tran.fee;
@@ -497,6 +501,7 @@ function refreshTranList(tran) {
 					stable -= tran.fee;
 					break;
 				case 'final-bad':
+					my_tran.action = 'received';
 					break;
 			}
 			tranList.push(my_tran);
@@ -523,7 +528,8 @@ async function iniTranList(addresses) {
 			(select sum(amount + fee) from transactions where addressFrom in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
 		pending = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
 			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
-		tranList = await db.toList("select * from transactions where (addressFrom in (?) or addressTo in (?))", addresses, addresses);
+		tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
+		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
 	}
 }
 
