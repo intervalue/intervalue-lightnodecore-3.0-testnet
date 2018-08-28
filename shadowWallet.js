@@ -10,44 +10,11 @@ var objectHash = require('./object_hash.js');
 var signature = require('./signature');
 
 
-var verificationQRCode;
 var signatureCode;
 var signatureDetlCode;
 
 var RANDOM;
 
-//冷钱包 生成热钱包（废弃接口）
-exports.getVerificationQRCode = function(address ,cb){
-    var db = require('./db');
-    db.query("SELECT definition FROM my_addresses where address = ?",
-        [address],
-        function (result) {
-            if(result.length == 1) {
-                var definition = result[0].definition;
-
-                var definitionJSN = JSON.parse(definition.toString());
-                var pub = definitionJSN[1].pubkey;
-
-                var random = crypto.randomBytes(4).toString("hex");
-
-                var num = 0;
-
-                verificationQRCode =
-                    {
-                        "type":"shadow",
-                        "name":"shadow",
-                        "pub":""+ pub +"",
-                        "num":num,
-                        "random":""+random+""
-                    };
-
-                return cb(verificationQRCode);
-            }else {
-                console.error("query failed~!");
-                return cb(false);
-            }
-        });
-};
 
 //热钱包 生成授权签名
 exports.getSignatureCode = function(address,cb){
@@ -172,10 +139,6 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
 
 
 
-    // createWallet(xpub,addr,pubkey, function(){
-    //     console.log("创建成功");
-    //     return cb(flag);
-    // });
 };
 
 
@@ -207,46 +170,6 @@ exports.getWallets = function (cb) {
 
 
 
-
-
-
-
-
-function createWallet(strXPubKey ,addr ,pubkey,onDone){
-
-    // var devicePrivKey = xPrivKey.derive("m/1'").privateKey.bn.toBuffer({size:32});
-    //
-    // var device = require('./device.js');
-    // device.setDevicePublicKey(strXPubKey); // we need device address before creating a wallet
-    //
-    // var strXPubKey = Bitcore.HDPublicKey(xPrivKey.derive("m/44'/0'/0'")).toString();
-    //
-    // console.log(strXPubKey);
-    var wallet = crypto.createHash("sha256").update(strXPubKey, "utf8").digest("base64");
-    var account = 0;
-    var arrDefinitionTemplate = ["sig", { "pubkey": '$pubkey@0'+addr }];
-
-    var arrDefinition = ["sig", { "pubkey":pubkey}];
-
-    // var assocDeviceAddressesBySigningPaths = getDeviceAddresses(arrDefinitionTemplate);
-
-
-
-    var walletDefinedByKeys = require('./wallet_defined_by_keys.js');
-
-    // we pass isSingleAddress=false because this flag is meant to be forwarded to cosigners and headless wallet doesn't support multidevice
-
-    walletDefinedByKeys.createWallet(strXPubKey ,account,arrDefinitionTemplate,wallet,null,function (rs) {
-        walletDefinedByKeys.recordAddress(wallet,0,0,addr,arrDefinition);
-        onDone();
-    });
-
-    // walletDefinedByKeys.createWalletByDevices(strXPubKey, 0, 1, [], 'any walletName', false, function(wallet_id){
-    //     walletDefinedByKeys.issueNextAddress(wallet_id, 0, function(addressInfo){
-    //         onDone();
-    //     });
-    // });
-}
 
 
 
