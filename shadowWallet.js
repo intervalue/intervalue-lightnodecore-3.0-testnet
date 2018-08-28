@@ -20,21 +20,23 @@ var RANDOM;
 exports.getSignatureCode = function(address,cb){
 
     RANDOM = crypto.randomBytes(4).toString("hex");
-    // random = 'ac4ca8';
     console.log(RANDOM);
-    // var db = require("./db");
-    // db.query("",[],function () {
-    //
-    // });
-    signatureCode =
-        {
-            "name":"shadow",
-            "type":"sign",
-            "addr":""+address+"",
-            "random":RANDOM
-        };
+    var db = require("./db");
+    db.query("select count(1) as t from my_addresses where address = ?",[address],function (rs) {
+        if(rs[0].t == 0) {
+            signatureCode =
+                {
+                    "name":"shadow",
+                    "type":"sign",
+                    "addr":""+address+"",
+                    "random":RANDOM
+                };
+            return cb(signatureCode);
+        }else {
+            return cb("wallet exists");
+        }
+    });
 
-    return cb(signatureCode);
 };
 
 //冷钱包  生成授权签名详情
