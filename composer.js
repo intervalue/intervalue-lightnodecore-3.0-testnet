@@ -126,7 +126,7 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 }
 
 async function writeTran(params, handleResult) {
-	var creation_date = creation_date = Math.round(Date.now() / 1000);
+	var creation_date = Math.round(Date.now() / 1000);
 	var obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
 	var address = await params.findAddressForJoint(params.change_address);
 	obj.author = address.definition;
