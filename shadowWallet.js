@@ -16,12 +16,16 @@ var signatureDetlCode;
 var RANDOM;
 
 
-//热钱包 生成授权签名
+//热钱包 生成授权签名-扫描地址
 exports.getSignatureCode = function(address,cb){
 
     RANDOM = crypto.randomBytes(4).toString("hex");
     // random = 'ac4ca8';
     console.log(RANDOM);
+    // var db = require("./db");
+    // db.query("",[],function () {
+    //
+    // });
     signatureCode =
         {
             "name":"shadow",
@@ -35,9 +39,6 @@ exports.getSignatureCode = function(address,cb){
 
 //冷钱包  生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,words, cb){
-    if(!RANDOM) {
-        return cb("random failed");
-    }
     var json;
     switch(typeof signatureCode) {
         case "string":
@@ -50,9 +51,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
             cb(false);
             break;
     }
-    if(RANDOM != json.random) {
-        return cb("random failed");
-    }
+
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
     console.log(buf_to_sign.toString("hex"));
