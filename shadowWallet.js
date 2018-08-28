@@ -16,7 +16,7 @@ var signatureDetlCode;
 
 var RANDOM;
 
-//冷钱包 生成热钱包（接口暂时没用）
+//冷钱包 生成热钱包（废弃接口）
 exports.getVerificationQRCode = function(address ,cb){
     var db = require('./db');
     db.query("SELECT definition FROM my_addresses where address = ?",
@@ -51,20 +51,6 @@ exports.getVerificationQRCode = function(address ,cb){
 
 //热钱包 生成授权签名
 exports.getSignatureCode = function(address,cb){
-    // var json;
-    // switch(typeof verificationQRCode) {
-    //     case "string":
-    //         json = JSON.parse(verificationQRCode);
-    //         break;
-    //     case "object":
-    //         json = verificationQRCode;
-    //         break;
-    //     default:
-    //         cb(false);
-    //         break;
-    // }
-    // var definition = ["sig",{"pubkey":json.pub}];
-    // var address = objectHash.getChash160(definition);
 
     RANDOM = crypto.randomBytes(4).toString("hex");
     // random = 'ac4ca8';
@@ -74,7 +60,6 @@ exports.getSignatureCode = function(address,cb){
             "name":"shadow",
             "type":"sign",
             "addr":""+address+"",
-            // "random":""+RANDOM+""
             "random":RANDOM
         };
 
@@ -83,6 +68,9 @@ exports.getSignatureCode = function(address,cb){
 
 //冷钱包  生成授权签名详情
 exports.getSignatureDetlCode = function(signatureCode,words, cb){
+    if(!RANDOM) {
+        return cb("random failed");
+    }
     var json;
     switch(typeof signatureCode) {
         case "string":
@@ -94,6 +82,9 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
         default:
             cb(false);
             break;
+    }
+    if(RANDOM != json.random) {
+        return cb("random failed");
     }
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
@@ -133,6 +124,9 @@ function derivePubkey(xPubKey, path) {
 
 //生成热钱包
 exports.generateShadowWallet = function(signatureDetlCode,cb){
+    if(!RANDOM) {
+        return cb("random failed");
+    }
     var json;
     switch(typeof signatureDetlCode) {
         case "string":
@@ -145,7 +139,9 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
             cb(false);
             break;
     }
-    var random = json.random;
+    if(RANDOM != json.random) {
+        return cb("random failed");
+    }
 
     var addr = json.addr;
     var sign = json.signature;
