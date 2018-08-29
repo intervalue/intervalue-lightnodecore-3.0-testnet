@@ -412,13 +412,13 @@ function readCosigners(wallet, handleCosigners) {
 		[wallet],
 		function (rows) {
 			rows.forEach(function (row) {
-				if (row.device_address === device.getMyDeviceAddress()) {
+				if (row.device_address === device.uPMyHotDeviceAddress()) {
 					if (row.name !== null)
 						throw Error("found self in correspondents");
 					row.me = true;
 				}
-				else if (row.name === null)
-					throw Error("cosigner not found among correspondents, cosigner=" + row.device_address + ", my=" + device.getMyDeviceAddress());
+				//else if (row.name === null)
+					//throw Error("cosigner not found among correspondents, cosigner=" + row.device_address + ", my=" + device.getMyDeviceAddress());
 			});
 			handleCosigners(rows);
 		}
