@@ -39,12 +39,12 @@ function getMyDevicePubKey() {
 
 function getMyDeviceAddress() {
     if (!my_device_address) throw Error('my_device_address not defined');
-    if (typeof window !== 'undefined' && window && window.cordova) checkDeviceAddress();
+    // if (typeof window !== 'undefined' && window && window.cordova) checkDeviceAddress();
     return my_device_address;
 }
 
 function uPMyHotDeviceAddress(walletId) {
-    db.query("SELECT device_address FROM extended_pubkeys ", function(rows) {
+    db.query("SELECT device_address FROM extended_pubkeys ", function (rows) {
         setMyHotDeviceAddress(rows[0].device_address);
     });
 }
@@ -54,7 +54,7 @@ function setMyHotDeviceAddress(addr) {
 }
 function getMyHotDeviceAddress() {
 
-    if(!my_Hot_device_address)
+    if (!my_Hot_device_address)
         throw Error('My_device_address not defined');
     return my_Hot_device_address;
 
