@@ -16,7 +16,11 @@ var signatureDetlCode;
 var RANDOM;
 
 
-//热钱包 生成授权签名-扫描地址
+/**
+ * 热钱包 生成授权签名-扫描地址
+ * @param address
+ * @param cb
+ */
 exports.getSignatureCode = function(address,cb){
 
     RANDOM = crypto.randomBytes(4).toString("hex");
@@ -39,7 +43,13 @@ exports.getSignatureCode = function(address,cb){
 
 };
 
-//冷钱包  生成授权签名详情
+/**
+ * 冷钱包  生成授权签名详情
+ * @param signatureCode
+ * @param words
+ * @param cb
+ * @returns {*}
+ */
 exports.getSignatureDetlCode = function(signatureCode,words, cb){
     var json;
     switch(typeof signatureCode) {
@@ -90,7 +100,12 @@ function derivePubkey(xPubKey, path) {
 }
 
 
-//生成热钱包
+/**
+ * //生成热钱包
+ * @param signatureDetlCode
+ * @param cb
+ * @returns {*}
+ */
 exports.generateShadowWallet = function(signatureDetlCode,cb){
     if(!RANDOM) {
         return cb("random failed");
@@ -121,8 +136,6 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
         'xpub':xpub,
         'pubkey':pubkey
     };
-
-
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
     var pub1 = signature.recover(buf_to_sign,sign,1).toString("base64");
@@ -134,12 +147,10 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     // var flag = false;
 
     if(address1 === addr  || address2 == addr) {
+        RANDOM = '';
         cb(result);
     } else
         cb(false);
-
-
-
 };
 
 
@@ -169,8 +180,33 @@ exports.getWallets = function (cb) {
 };
 
 
+exports.getRradingUnit = function (opts ,cb) {
+
+    if (opts.change_address == opts.to_address) {
+        return handleResult("to_address and from_address is same"
+        );
+    }
+
+    if (opts.amount) {
+        if (typeof opts.amount !== 'number')
+            throw Error('amount must be a number');
+        if (opts.amount < 0)
+            throw Error('amount must be positive');
+    }
+
+    var objectLength = require("./object_length.js");
+
+    var authorized_signature = opts;
+    var isHot = opts.ishot;
+
+    RANDOM = crypto.randomBytes(4).toString("hex");
+    authorized_signature["random"] = RANDOM;
+    authorized_signature["type"] = "trading";
 
 
+
+    cb(authorized_signature);
+};
 
 
 
