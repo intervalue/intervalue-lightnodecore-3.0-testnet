@@ -179,8 +179,13 @@ exports.getWallets = function (cb) {
     });
 };
 
-
-exports.getRradingUnit = function (opts ,cb) {
+/**
+ * 热钱包生成授权签名
+ * @param opts
+ * @param cb
+ * @returns {*}
+ */
+exports.getTradingUnit = function (opts ,cb) {
 
     if (opts.change_address == opts.to_address) {
         return handleResult("to_address and from_address is same"
@@ -199,15 +204,79 @@ exports.getRradingUnit = function (opts ,cb) {
     var authorized_signature = opts;
     var isHot = opts.ishot;
 
-    RANDOM = crypto.randomBytes(4).toString("hex");
-    authorized_signature["random"] = RANDOM;
     authorized_signature["type"] = "trading";
 
-
+    var h = crypto.createHash("md5");
+    h.update(authorized_signature);
+    var md5 = h.digest("hex");
+    // authorized_signature["md5"] = h.digest("hex");
 
     cb(authorized_signature);
 };
 
+/**
+ *  冷钱包进行签名
+ * @param opts
+ * @param words
+ * @param cb
+ * @returns {Promise<void>}
+ */
+exports.signTradingUnit = async function (opts ,words ,cb) {
+    opts.findAddressForJoint = findAddressForJoint;
+
+    var creation_date = Math.round(Date.now() / 1000);
+    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
+    var address = await opts.findAddressForJoint(opts.change_address);
+
+    var objectLength = require("./object_length.js");
+
+    obj.author = address.definition;
+    obj.fee = objectLength.getTotalPayloadSize(obj);
+
+    var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
 
+    var mnemonic = new Mnemonic(words);
+    var xPrivKey = mnemonic.toHDPrivateKey("");
 
+
+    var path = "m/44'/0'/0'/0/0";
+    var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
+    var sign_64 = signature.sign(buf_to_sign, privateKey);
+
+    var path2 = "m/44'/0'/0'";
+    var privateKey2 = xPrivKey.derive(path2);
+    var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
+
+    var pubkey = derivePubkey(xpubkey ,"m/0/0");
+
+    var flag = signature.verify(buf_to_sign,sign_64,pubkey);
+
+    if(flag) {
+        cb(sign_64);
+    } else {
+        cb(false);
+    }
+
+};
+
+
+exports.sendMultiPayment = function () {
+
+
+};
+
+
+async function findAddressForJoint(address) {
+    let row = await db.first(
+        "SELECT wallet, account, is_change, address_index,definition \n\
+        FROM my_addresses JOIN wallets USING(wallet) \n\
+        WHERE address=? ", address);
+    return {
+        definition: JSON.parse(row.definition),
+        wallet: row.wallet,
+        account: row.account,
+        is_change: row.is_change,
+        address_index: row.address_index
+    };
+}
