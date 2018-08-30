@@ -179,8 +179,11 @@ exports.getWallets = function (cb) {
     });
 };
 
+
+
+
 /**
- * 热钱包生成授权签名
+ * 热钱包生成交易授权签名
  * @param opts
  * @param cb
  * @returns {*}
@@ -199,12 +202,28 @@ exports.getTradingUnit = function (opts ,cb) {
             throw Error('amount must be positive');
     }
 
-    var objectLength = require("./object_length.js");
 
-    var authorized_signature = opts;
     var isHot = opts.ishot;
 
+    var light = require('./light.js');
+    var objectLength = require("./object_length.js");
+    var creation_date = Math.round(Date.now() / 1000);
+
+    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
+
+    obj.fee = objectLength.getTotalPayloadSize(obj);
+
+    if (light < obj.fee + obj.amount) {
+        return cb("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+    }
+
+
+    var authorized_signature = obj;
+
+
     authorized_signature["type"] = "trading";
+
+
 
     var h = crypto.createHash("md5");
     h.update(authorized_signature);
@@ -262,7 +281,6 @@ exports.signTradingUnit = async function (opts ,words ,cb) {
 
 
 exports.sendMultiPayment = function () {
-
 
 };
 
