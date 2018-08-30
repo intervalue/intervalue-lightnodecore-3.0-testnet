@@ -221,13 +221,15 @@ exports.getTradingUnit = function (opts ,cb) {
     var authorized_signature = obj;
 
 
-    authorized_signature["type"] = "trading";
-
-
-
     var h = crypto.createHash("md5");
-    h.update(authorized_signature);
+    h.update(JSON.stringify(authorized_signature));
     var md5 = h.digest("hex");
+
+    authorized_signature["type"] = "trading";
+    authorized_signature["md5"] = md5;
+
+
+
     // authorized_signature["md5"] = h.digest("hex");
 
     cb(authorized_signature);
