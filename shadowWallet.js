@@ -292,7 +292,7 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
     alert("obj" +JSON.stringify(obj));
     var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.form[0].address],function (row) {
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.from[0].address],function (row) {
 
         alert(1111111);
 
@@ -305,17 +305,18 @@ exports.signTradingUnit = function (opts ,words ,cb) {
                 address_index: row[0].address_index
             };
 
-            alert("definition" +JSON.stringify(obj.definition));
+            alert("definition" +JSON.stringify(JSON.stringify(obj)));
 
 
-            var objectLength = require("./object_length.js");
+            // var objectLength = require("./object_length.js");
 
-            obj.author = address.definition;
-            obj.fee = objectLength.getTotalPayloadSize(obj);
+            // obj.author = address.definition;
+            // obj.fee = objectLength.getTotalPayloadSize(obj);
 
             var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
 
+            //签名
             var mnemonic = new Mnemonic(words);
             var xPrivKey = mnemonic.toHDPrivateKey("");
 
