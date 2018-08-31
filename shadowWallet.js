@@ -275,7 +275,7 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
     alert("obj" +JSON.stringify(obj));
     var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",opts.change_address,function (row) {
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.change_address],function (row) {
 
         if(row.length > 0) {
             var address = {
