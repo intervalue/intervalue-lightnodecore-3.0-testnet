@@ -276,49 +276,67 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 };
 
 async function  sign(opts ,words ,cb) {
-    opts.findAddressForJoint = findAddressForJoint;
 
     var creation_date = Math.round(Date.now() / 1000);
     var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
 
 
-    var address = await opts.findAddressForJoint(opts.change_address);
+    var db = require("./db");
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",opts.change_address,function (row) {
 
-    var objectLength = require("./object_length.js");
-
-    obj.author = address.definition;
-    obj.fee = objectLength.getTotalPayloadSize(obj);
-
-    var buf_to_sign = objectHash.getUnitHashToSign(obj);
-
-
-    var mnemonic = new Mnemonic(words);
-    var xPrivKey = mnemonic.toHDPrivateKey("");
-
-
-    var path = "m/44'/0'/0'/0/0";
-    var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-    var signature = signature.sign(buf_to_sign, privateKey);
-
-    var path2 = "m/44'/0'/0'";
-    var privateKey2 = xPrivKey.derive(path2);
-    var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
-
-    var pubkey = derivePubkey(xpubkey ,"m/0/0");
-
-    var flag = signature.verify(buf_to_sign,signature,pubkey);
+        if(row.length > 0) {
+            var address = {
+                definition: JSON.parse(row[0].definition),
+                wallet: row[0].wallet,
+                account: row[0].account,
+                is_change: row[0].is_change,
+                address_index: row[0].address_index
+            };
 
 
 
-    opts.type = "sign";
-    opts.name = "isHot";
-    opts.signature = signature;
+            var objectLength = require("./object_length.js");
 
-    if(flag) {
-        cb(opts);
-    } else {
-        cb("signature failed");
-    }
+            obj.author = address.definition;
+            obj.fee = objectLength.getTotalPayloadSize(obj);
+
+            var buf_to_sign = objectHash.getUnitHashToSign(obj);
+
+
+            var mnemonic = new Mnemonic(words);
+            var xPrivKey = mnemonic.toHDPrivateKey("");
+
+
+            var path = "m/44'/0'/0'/0/0";
+            var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
+            var signature = signature.sign(buf_to_sign, privateKey);
+
+            var path2 = "m/44'/0'/0'";
+            var privateKey2 = xPrivKey.derive(path2);
+            var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
+
+            var pubkey = derivePubkey(xpubkey ,"m/0/0");
+
+            var flag = signature.verify(buf_to_sign,signature,pubkey);
+
+
+
+            opts.type = "sign";
+            opts.name = "isHot";
+            opts.signature = signature;
+
+            if(flag) {
+                cb(opts);
+            } else {
+                cb("signature failed");
+            }
+        }
+
+
+
+    });
+
+
 }
 
 
@@ -328,7 +346,7 @@ exports.sendMultiPayment = function () {
 
 
 async function findAddressForJoint(address) {
-    var db = require("./db");
+
     let row = await db.first(
         "SELECT wallet, account, is_change, address_index,definition \n\
         FROM my_addresses JOIN wallets USING(wallet) \n\
