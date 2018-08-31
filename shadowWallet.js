@@ -270,13 +270,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
             break;
     }
 
-    sign(opts ,words ,cb);
-
-
-};
-
-function  sign(opts ,words ,cb) {
-
     var creation_date = Math.round(Date.now() / 1000);
     var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
 
@@ -292,8 +285,6 @@ function  sign(opts ,words ,cb) {
                 is_change: row[0].is_change,
                 address_index: row[0].address_index
             };
-
-
 
             var objectLength = require("./object_length.js");
 
@@ -330,12 +321,11 @@ function  sign(opts ,words ,cb) {
             }
         }
 
-
-
     });
 
 
-}
+
+};
 
 
 exports.sendMultiPayment = function () {
