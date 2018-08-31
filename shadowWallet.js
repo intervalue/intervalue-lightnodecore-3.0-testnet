@@ -275,7 +275,7 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
 };
 
-async function  sign(opts ,words ,cb) {
+function  sign(opts ,words ,cb) {
 
     var creation_date = Math.round(Date.now() / 1000);
     var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
@@ -318,8 +318,6 @@ async function  sign(opts ,words ,cb) {
             var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
             var flag = signature.verify(buf_to_sign,signature,pubkey);
-
-
 
             opts.type = "sign";
             opts.name = "isHot";
