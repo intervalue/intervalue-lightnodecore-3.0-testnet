@@ -270,7 +270,12 @@ exports.signTradingUnit = async function (opts ,words ,cb) {
             break;
     }
 
+    sign(opts ,words ,cb);
 
+
+};
+
+async function  sign(opts ,words ,cb) {
     opts.findAddressForJoint = findAddressForJoint;
 
     var creation_date = Math.round(Date.now() / 1000);
@@ -312,8 +317,7 @@ exports.signTradingUnit = async function (opts ,words ,cb) {
     } else {
         cb("signature failed");
     }
-
-};
+}
 
 
 exports.sendMultiPayment = function () {
