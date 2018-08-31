@@ -256,7 +256,7 @@ exports.getTradingUnit = function (opts ,cb) {
  * @param cb
  * @returns {Promise<void>}
  */
-exports.signTradingUnit = async function (opts ,words ,cb) {
+exports.signTradingUnit = function (opts ,words ,cb) {
 
     switch(typeof opts) {
         case "string":
