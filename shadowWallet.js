@@ -190,6 +190,20 @@ exports.getWallets = function (cb) {
  */
 exports.getTradingUnit = function (opts ,cb) {
 
+    switch(typeof opts) {
+        case "string":
+            opts = JSON.parse(signatureDetlCode);
+            break;
+        case "object":
+            opts = opts;
+            break;
+        default:
+            cb(false);
+            break;
+    }
+
+
+
     if (opts.change_address == opts.to_address) {
         return handleResult("to_address and from_address is same"
         );
@@ -214,7 +228,7 @@ exports.getTradingUnit = function (opts ,cb) {
     obj.fee = objectLength.getTotalPayloadSize(obj);
 
     if (light < obj.fee + obj.amount) {
-        return cb("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+        return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
     }
 
 
@@ -225,9 +239,9 @@ exports.getTradingUnit = function (opts ,cb) {
     h.update(JSON.stringify(authorized_signature));
     var md5 = h.digest("hex");
 
-    authorized_signature["type"] = "trading";
-    authorized_signature["md5"] = md5;
-
+    authorized_signature.type = "trading";
+    authorized_signature.md5 = md5;
+    authorized_signature.name = "isHot";
 
 
     // authorized_signature["md5"] = h.digest("hex");
@@ -243,6 +257,20 @@ exports.getTradingUnit = function (opts ,cb) {
  * @returns {Promise<void>}
  */
 exports.signTradingUnit = async function (opts ,words ,cb) {
+
+    switch(typeof opts) {
+        case "string":
+            opts = JSON.parse(signatureDetlCode);
+            break;
+        case "object":
+            opts = opts;
+            break;
+        default:
+            cb(false);
+            break;
+    }
+
+
     opts.findAddressForJoint = findAddressForJoint;
 
     var creation_date = Math.round(Date.now() / 1000);
