@@ -269,13 +269,30 @@ exports.signTradingUnit = function (opts ,words ,cb) {
             cb(false);
             break;
     }
+    var name = opts.name;
+    var md5 = opts.md5;
+    var type = opts.trading;
+    opts.name = undefined;
+    opts.md5 = undefined;
+    opts.trading = undefined;
 
-    var creation_date = Math.round(Date.now() / 1000);
-    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
+    var obj = opts;
+
+    var md5 = crypto.createHash("md5");
+
+    md5.update(JSON.stringify(md5));
+
+    var result = md5.digest("hex");
+
+    if( result != md5) {
+        alert(false);
+    }
+    alert(true);
+
 
     alert("obj" +JSON.stringify(obj));
     var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.change_address],function (row) {
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.form[0].address],function (row) {
 
         alert(1111111);
 
