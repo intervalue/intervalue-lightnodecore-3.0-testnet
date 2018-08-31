@@ -291,7 +291,7 @@ exports.signTradingUnit = async function (opts ,words ,cb) {
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-    var sign_64 = signature.sign(buf_to_sign, privateKey);
+    var signature = signature.sign(buf_to_sign, privateKey);
 
     var path2 = "m/44'/0'/0'";
     var privateKey2 = xPrivKey.derive(path2);
@@ -299,12 +299,18 @@ exports.signTradingUnit = async function (opts ,words ,cb) {
 
     var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
-    var flag = signature.verify(buf_to_sign,sign_64,pubkey);
+    var flag = signature.verify(buf_to_sign,signature,pubkey);
+
+
+
+    opts.type = "sign";
+    opts.name = "isHot";
+    opts.signature = signature;
 
     if(flag) {
-        cb(sign_64);
+        cb(opts);
     } else {
-        cb(false);
+        cb("signature failed");
     }
 
 };
