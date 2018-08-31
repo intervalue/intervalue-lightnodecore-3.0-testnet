@@ -273,7 +273,7 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var creation_date = Math.round(Date.now() / 1000);
     var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
 
-
+    alert("obj" +JSON.stringify(obj));
     var db = require("./db");
     db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",opts.change_address,function (row) {
 
@@ -285,6 +285,9 @@ exports.signTradingUnit = function (opts ,words ,cb) {
                 is_change: row[0].is_change,
                 address_index: row[0].address_index
             };
+
+            alert("definition" +JSON.stringify(obj.definition));
+
 
             var objectLength = require("./object_length.js");
 
@@ -302,6 +305,9 @@ exports.signTradingUnit = function (opts ,words ,cb) {
             var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
             var signature = signature.sign(buf_to_sign, privateKey);
 
+            alert("signature" + signature);
+
+
             var path2 = "m/44'/0'/0'";
             var privateKey2 = xPrivKey.derive(path2);
             var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
@@ -309,6 +315,8 @@ exports.signTradingUnit = function (opts ,words ,cb) {
             var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
             var flag = signature.verify(buf_to_sign,signature,pubkey);
+
+            alert("flag"+flag);
 
             opts.type = "sign";
             opts.name = "isHot";
