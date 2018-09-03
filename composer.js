@@ -124,55 +124,60 @@ function composeAssetDefinitionJoint(from_address, asset_definition, signer, cal
 function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer, callbacks) {
 	composeContentJoint(from_address, "asset_attestors", { asset: asset, attestors: arrNewAttestors }, signer, callbacks);
 }
-
+//发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
-    var isHot = params.isHot;
-    var obj;
-    var sigunature;
-    console.log(JSON.stringify(params));
-    if(isHot != 1) {
-        var creation_date = Math.round(Date.now() / 1000);
-        obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
-        var address = await params.findAddressForJoint(params.change_address);
-        obj.author = address.definition;
-        obj.fee = objectLength.getTotalPayloadSize(obj);
-        //TODO 测试   if (light.stable < obj.fee + obj.amount) {
-        if (light < obj.fee + obj.amount) {
-            return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
-        }
-        var buf_to_sign = objectHash.getUnitHashToSign(obj);
-        var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
-        sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
+	var isHot = params.isHot;
+	var obj;
+	var sigunature;
+	console.log(JSON.stringify(params));
+	if (isHot != 1) {
+		var creation_date = Math.round(Date.now() / 1000);
+		obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
+		var address = await params.findAddressForJoint(params.change_address);
+		obj.author = address.definition;
+		obj.fee = objectLength.getTotalPayloadSize(obj);
+		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
+		if (light < obj.fee + obj.amount) {
+			return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+		}
+		//获取签名的BUF
+		var buf_to_sign = objectHash.getUnitHashToSign(obj);
+		//获取签名的私钥
+		var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
+		//通过私钥进行签名
+		sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
 
-    }else {
-    	alert(2);
-        delete params.isHot;
-        delete params.type;
-        delete params.name;
-        delete params.md5;
-        sigunature = params.signature;
+	} else {
+		alert(2);
+		delete params.isHot;
+		delete params.type;
+		delete params.name;
+		delete params.md5;
+		sigunature = params.signature;
 
-        alert(JSON.stringify(params));
-        obj = params;
-    }
-	var buf_to_sign = objectHash.getUnitHashToSign(obj);
-	var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
-
-
-	var id = ecdsaSig.sign(buf_to_sign, privKeyBuf);
-	id = crypto.createHash("sha256").update(id, "utf8").digest("base64");
-	obj.id = id;
+		alert(JSON.stringify(params));
+		obj = params;
+	}
+	obj.sigunature = sigunature;
+	//通过签名获取ID(44位)
+	obj.id = crypto.createHash("sha256").update(sigunature, "utf8").digest("base64");
 	var network = require('./network.js');
+	//往共识网发送交易
 	let result = await network.sendTransaction(obj);
 	if (result) {
+		//如果发送失败，则马上返回到界面
 		return handleResult(result);
 	}
 	else {
+		//通过队列进行数据库更新
 		await mutex.lock(["write"], async function (unlock) {
 			try {
+				//更新数据库
 				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
 					obj.id, obj.creation_date, obj.amount, obj.fee, obj.from, obj.to);
+				//更新列表
 				light.refreshTranList(obj);
+				//返回到界面
 				handleResult('', obj.id);
 			}
 			catch (e) {
@@ -180,6 +185,7 @@ async function writeTran(params, handleResult) {
 				handleResult(e.toString());
 			}
 			finally {
+				//解锁队列
 				await unlock();
 			}
 		});
