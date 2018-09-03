@@ -125,38 +125,52 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 	composeContentJoint(from_address, "asset_attestors", { asset: asset, attestors: arrNewAttestors }, signer, callbacks);
 }
 
+//往共识网发送交易并更新数据库
 async function writeTran(params, handleResult) {
+	//时间戳
 	var creation_date = Math.round(Date.now() / 1000);
+	//构建交易JSON
 	var obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
 	var address = await params.findAddressForJoint(params.change_address);
 	obj.author = address.definition;
+	//计算交易的费用
 	obj.fee = objectLength.getTotalPayloadSize(obj);
+	//判断可用余额是否够用，不够的话需要返回。
 	if (light < obj.fee + obj.amount) {
 		return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
 	}
+	//构建用来签名的BUF
 	var buf_to_sign = objectHash.getUnitHashToSign(obj);
+	//构建用来签名的PRIKEY
 	var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
-	var id = ecdsaSig.sign(buf_to_sign, privKeyBuf);
-	id = crypto.createHash("sha256").update(id, "utf8").digest("base64");
-	obj.id = id;
+	//用PRIKEY进行签名
+	obj.signature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
+	//用签名来构造ID(长度44)
+	obj.id = crypto.createHash("sha256").update(obj.signature, "utf8").digest("base64");
 	var network = require('./network.js');
+	//往共识网发送交易
 	let result = await network.sendTransaction(obj);
 	if (result) {
+		//如果交易失败，需要及时返回
 		return handleResult(result);
 	}
 	else {
+		//用队列的方式更新数据库
 		await mutex.lock(["write"], async function (unlock) {
 			try {
 				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
 					obj.id, obj.creation_date, obj.amount, obj.fee, obj.from, obj.to);
+				//更新列表
 				light.refreshTranList(obj);
 				params.handleResult('', obj.id);
 			}
 			catch (e) {
+				//数据库插入失败，需要及时返回
 				console.log(e.toString());
 				params.handleResult(e.toString());
 			}
 			finally {
+				//解锁事务队列
 				await unlock();
 			}
 		});
