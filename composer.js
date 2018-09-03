@@ -128,6 +128,8 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 async function writeTran(params, handleResult) {
     var isHot = params.isHot;
     var obj;
+    var sigunature;
+    console.log(JSON.stringify(params));
     if(isHot != 1) {
         var creation_date = Math.round(Date.now() / 1000);
         obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
@@ -138,13 +140,19 @@ async function writeTran(params, handleResult) {
         if (light < obj.fee + obj.amount) {
             return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
         }
+        var buf_to_sign = objectHash.getUnitHashToSign(obj);
+        var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
+        sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
 
     }else {
+    	alert(2);
         delete params.isHot;
         delete params.type;
         delete params.name;
         delete params.md5;
+        sigunature = params.signature;
 
+        alert(JSON.stringify(params));
         obj = params;
     }
 	var buf_to_sign = objectHash.getUnitHashToSign(obj);

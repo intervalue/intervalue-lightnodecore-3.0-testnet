@@ -7,7 +7,7 @@ var Bitcore = require('bitcore-lib');
 
 var crypto = require('crypto');
 var objectHash = require('./object_hash.js');
-var signature = require('./signature');
+var ecdsaSig = require('./signature');
 
 
 var signatureCode;
@@ -73,7 +73,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-    var sign_64 = signature.sign(buf_to_sign, privateKey);
+    var sign_64 = ecdsaSig.sign(buf_to_sign, privateKey);
 
     var path2 = "m/44'/0'/0'";
     var privateKey2 = xPrivKey.derive(path2);
@@ -138,8 +138,8 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     };
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
 
-    var pub1 = signature.recover(buf_to_sign,sign,1).toString("base64");
-    var pub2 = signature.recover(buf_to_sign,sign,0).toString("base64");
+    var pub1 = ecdsaSig.recover(buf_to_sign,sign,1).toString("base64");
+    var pub2 = ecdsaSig.recover(buf_to_sign,sign,0).toString("base64");
     var definition1 = ["sig",{"pubkey":pub1}];
     var definition2 = ["sig",{"pubkey":pub2}];
     var address1 = objectHash.getChash160(definition1);
@@ -183,7 +183,7 @@ exports.getWallets = function (cb) {
 
 
 
-var light = require("./light");
+// var light = require("./light");
 /**
  * 热钱包生成交易授权签名
  * @param opts
@@ -228,9 +228,9 @@ exports.getTradingUnit = function (opts ,cb) {
     // if (light.stable < obj.fee + obj.amount) {
     //     return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
     // }
-    if(light < obj.fee + obj.amount){
-        return cb("not enough spendable funds from " + opts.to_address + " for " + (obj.fee + obj.amount));
-    }
+    // if(light < obj.fee + obj.amount){
+    //     return cb("not enough spendable funds from " + opts.to_address + " for " + (obj.fee + obj.amount));
+    // }
 
 
     var db = require("./db");
@@ -294,20 +294,20 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
     var obj = opts;
 
-    var md5 = crypto.createHash("md5");
+    var h = crypto.createHash("md5");
 
-    md5.update(JSON.stringify(md5));
+    h.update(JSON.stringify(obj));
 
-    var result = md5.digest("hex");
+    var result = h.digest("hex");
 
     if( result != md5) {
-        alert(false);
+        // alert(false);
     }
-    alert(true);
+    // alert(true);
+    // alert("obj" +JSON.stringify(obj));
+    console.log("obj" +JSON.stringify(obj));
 
-    alert("obj" +JSON.stringify(obj));
-
-    alert(1111111);
+    // alert(1111111);
 
     var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
@@ -320,9 +320,11 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-    var signature = signature.sign(buf_to_sign, privateKey);
+    var signature = ecdsaSig.sign(buf_to_sign, privateKey);
 
-    alert("signature" + signature);
+    // alert("signature" + signature);
+
+    console.log(signature);
 
 
     var path2 = "m/44'/0'/0'";
@@ -331,9 +333,11 @@ exports.signTradingUnit = function (opts ,words ,cb) {
 
     var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
-    var flag = signature.verify(buf_to_sign,signature,pubkey);
+    var flag = ecdsaSig.verify(buf_to_sign,signature,pubkey);
 
-    alert("flag"+flag);
+    // alert("flag"+flag);
+    console.log(flag);
+
 
     opts.type = "sign";
     opts.name = "isHot";
@@ -355,18 +359,3 @@ exports.sendMultiPayment = function () {
 
 };
 
-
-async function findAddressForJoint(address) {
-
-    let row = await db.first(
-        "SELECT wallet, account, is_change, address_index,definition \n\
-        FROM my_addresses JOIN wallets USING(wallet) \n\
-        WHERE address=? ", address);
-    return {
-        definition: JSON.parse(row.definition),
-        wallet: row.wallet,
-        account: row.account,
-        is_change: row.is_change,
-        address_index: row.address_index
-    };
-}
