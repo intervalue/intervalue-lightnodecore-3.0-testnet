@@ -129,7 +129,6 @@ async function writeTran(params, handleResult) {
 	var isHot = params.isHot;
 	var obj;
 	var sigunature;
-	console.log(JSON.stringify(params));
 	if (isHot != 1) {
 		var creation_date = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
@@ -148,16 +147,12 @@ async function writeTran(params, handleResult) {
 		var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
 		//通过私钥进行签名
 		sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
-
 	} else {
-		alert(2);
 		delete params.isHot;
 		delete params.type;
 		delete params.name;
 		delete params.md5;
 		sigunature = params.signature;
-
-		alert(JSON.stringify(params));
 		obj = params;
 	}
 	obj.sigunature = sigunature;
