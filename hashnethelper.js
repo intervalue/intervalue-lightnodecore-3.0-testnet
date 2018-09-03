@@ -49,7 +49,6 @@ class HashnetHelper {
     //初始化局部全节点列表，列表和数据库中都进行清空。
     static async initialLocalfullnodeList() {
         localfullnodes = [];
-        //用队列的方式进行数据库更新
         await mutex.lock(["write"], async function (unlock) {
             try {
                 await db.execute('delete from my_witnesses');
@@ -58,6 +57,7 @@ class HashnetHelper {
                 console.log(e.toString());
             }
             finally {
+                //解锁事务队列
                 await unlock();
             }
         });
@@ -85,6 +85,7 @@ class HashnetHelper {
                         console.log(e.toString());
                     }
                     finally {
+                        //解锁事务队列
                         await unlock();
                     }
                 });
@@ -114,6 +115,7 @@ class HashnetHelper {
                     console.log(e.toString());
                 }
                 finally {
+                    //解锁事务队列
                     await unlock();
                 }
             });
@@ -158,6 +160,7 @@ class HashnetHelper {
             return result;
         }
         catch (e) {
+            //处理失效的局部全节点
             if (localfullnode) {
                 await HashnetHelper.reloadLocalfullnode(localfullnode);
             }
@@ -176,6 +179,7 @@ class HashnetHelper {
             return result ? JSON.parse(result) : [];
         }
         catch (e) {
+            //处理失效的局部全节点
             if (localfullnode) {
                 await HashnetHelper.reloadLocalfullnode(localfullnode);
             }
@@ -194,6 +198,7 @@ class HashnetHelper {
             return result ? JSON.parse(result) : null;
         }
         catch (e) {
+            //处理失效的局部全节点
             if (localfullnode) {
                 await HashnetHelper.reloadLocalfullnode(localfullnode);
             }

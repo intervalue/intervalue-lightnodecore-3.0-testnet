@@ -397,20 +397,30 @@ function processHistory(objResponse, callbacks) {
 
 }
 
+//判断上次拉取/更新交易列表是否完成
 var u_finished = true;
+//交易记录列表
 let tranList = null;
+//钱包收款地址
 let tranAddr = [];
+//可用余额
 let stable = 0;
+//待确认余额
 let pending = 0;
 async function updateHistory(addresses) {
+	//如果上次updateHistory还没完成，则返回，否则继续往下走
 	if (!u_finished) {
 		return;
 	}
+	//将u_finished设置为false，表示正在进行交易记录更新
 	u_finished = false;
+	//存储此次交易记录的数组
 	let trans = null;
 	try {
 		for (var address of addresses) {
+			//从共识网拉取交易记录
 			let result = await hashnethelper.getTransactionHistory(address);
+			//如果交易记录不为空，需要加入到待处理的数组中。
 			if (result != null) {
 				if (trans == null) {
 					trans = [];
@@ -420,22 +430,28 @@ async function updateHistory(addresses) {
 				}
 			}
 		}
+		//如果为NULL，则表示访问共识网有问题，返回。
 		if (trans == null) {
 			return;
 		}
+		//如果交易记录长度为零，需要清空本地的交易记录。
 		if (trans.length === 0) {
 			await truncateTran();
 		}
 		else {
+			//初始化交易列表
 			await iniTranList(addresses);
 			for (var tran of trans) {
 				let my_tran = _.find(tranList, { id: tran.id });
+				//本地存在交易记录，状态是待确认，需要进行状态的更新。
 				if (my_tran && tran.isStable == 1 && tran.isValid == 1 && my_tran.result == 'pending') {
 					await updateTran(tran);
 				}
+				//本地存在交易记录，共识网判定交易非法，需要更新交易状态到本地
 				else if (my_tran && tran.isStable == 1 && tran.isValid == 0 && my_tran.result != 'final-bad') {
 					await badTran(tran);
 				}
+				//本地不存在此交易记录，需往本地插入交易记录
 				else if (!my_tran && tran.isValid == 1) {
 					await insertTran(tran);
 				}
@@ -445,13 +461,18 @@ async function updateHistory(addresses) {
 	catch (e) {
 		console.log(e.toString());
 	}
+	//此次交易记录更新完毕，重置标志位。
 	finally { u_finished = true; }
 }
 
+//刷新本地交易记录列表
 function refreshTranList(tran) {
 	let my_tran = _.find(tranList, { id: tran.id });
+	//如果交易记录存在
 	if (my_tran) {
+		//交易的接收方
 		if (tranAddr.indexOf(tran.to)) {
+			//更新余额和待确认金额
 			if (my_tran.result != 'good' && tran.isValid) {
 				stable += tran.amount;
 				pending -= tran.amount;
@@ -460,19 +481,25 @@ function refreshTranList(tran) {
 				stable -= tran.amount;
 			}
 		}
+		//交易的发送方
 		else {
 			if (my_tran.result != 'final-bad' && !tran.isValid) {
+				//更新余额和待确认金额
 				stable += tran.amount;
 				stable += tran.fee;
 				pending -= tran.amount;
 				pending -= tran.fee;
 			}
 		}
+		//更新交易记录的状态
 		my_tran.result = getResultFromTran(tran);
 	}
 	else {
+		//如果本地不存在记录，需要插入新的记录到列表中
 		my_tran = { id: tran.id, creation_date: tran.creation_date, amount: tran.amount, fee: tran.fee, addressFrom: tran.addressFrom, addressTo: tran.addressTo, result: getResultFromTran(tran) };
+		//如果是交易的接收方
 		if (tranAddr.indexOf(tran.to)) {
+			//更新余额和待确认金额
 			my_tran.action = 'received';
 			switch (my_tran.result) {
 				case 'pending':
@@ -487,6 +514,7 @@ function refreshTranList(tran) {
 			}
 		}
 		else {
+			//交易的发送方
 			my_tran.action = 'sent';
 			switch (my_tran.result) {
 
@@ -504,11 +532,12 @@ function refreshTranList(tran) {
 					my_tran.action = 'received';
 					break;
 			}
+			//往列表中插入记录
 			tranList.push(my_tran);
 		}
 	}
 }
-
+//通过交易的状态返回数据库中状态的值
 function getResultFromTran(tran) {
 	if (tran.isStable && tran.isValid) {
 		return 'good';
@@ -520,30 +549,36 @@ function getResultFromTran(tran) {
 		return 'pending';
 	}
 }
-
+//钱包启动后初始化余额、待确认、交易列表
 async function iniTranList(addresses) {
 	if (tranAddr == [] || tranAddr != addresses || !tranList) {
-		tranAddr = addresses
+		tranAddr = addresses;
+		//余额
 		stable = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
 			(select sum(amount + fee) from transactions where addressFrom in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
+		//待确认
 		pending = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
 			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
+		//交易列表
 		tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
 	}
 }
-
+//将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
 async function truncateTran(addresses) {
 	await iniTranList();
 	let count = tranList.length;
 	let cmds = [];
 	if (count > 0) {
 		db.addCmd(cmds, "delete from transactions where addressFrom in (?) or addressTo in (?)", addresses, addresses);
+		//用队列的方式更新数据库
 		await mutex.lock(["write"], async function (unlock) {
 			try {
 				let b_result = await db.executeTrans(cmds);
 				if (!b_result) {
+					//清空列表
 					tranList = [];
+					//更新界面
 					eventBus.emit('my_transactions_became_stable');
 				}
 			}
@@ -551,19 +586,24 @@ async function truncateTran(addresses) {
 				console.log(e.toString());
 			}
 			finally {
+				//解锁事务队列
 				await unlock();
 			}
 		});
 	}
 }
-
+//更新已有交易记录的状态
 async function updateTran(tran) {
 	let id = tran.id;
+	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
 		try {
+			//更新数据库
 			let u_result = await db.execute("update transactions set result = 'good' where id = ?", id);
 			if (u_result.affectedRows) {
+				//更新列表
 				refreshTranList(tran);
+				//更新界面
 				eventBus.emit('my_transactions_became_stable');
 			}
 		}
@@ -571,11 +611,12 @@ async function updateTran(tran) {
 			console.log(e.toString());
 		}
 		finally {
+			//解锁事务队列
 			await unlock();
 		}
 	});
 }
-
+//失败的交易
 async function badTran(tran) {
 	let id = tran.id;
 	let cmds = [];
@@ -583,11 +624,15 @@ async function badTran(tran) {
 		"update transactions set result = 'final-bad' where id = ?",
 		id
 	);
+	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
 		try {
+			//更新数据库
 			let b_result = await db.executeTrans(cmds);
 			if (!b_result) {
+				//更新列表
 				refreshTranList(tran);
+				//刷新界面
 				eventBus.emit('my_transactions_became_stable');
 			}
 		}
@@ -595,11 +640,13 @@ async function badTran(tran) {
 			console.log(e.toString());
 		}
 		finally {
+			//解锁事务队列
 			await unlock();
 		}
 	});
 }
 
+//新增一条交易记录
 async function insertTran(tran) {
 	console.log("\nsaving unit:");
 	console.log(JSON.stringify(tran));
@@ -609,11 +656,15 @@ async function insertTran(tran) {
 	var params = [tran.id, tran.creation_date, tran.amount,
 	tran.fee || 0, tran.from, tran.to, getResultFromTran(tran)];
 	db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
+	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
 		try {
+			//更新数据库
 			let i_result = await db.executeTrans(cmds);
 			if (!i_result) {
+				//更新列表
 				refreshTranList(tran);
+				//刷新列表
 				eventBus.emit('my_transactions_became_stable');
 			}
 		}
@@ -621,6 +672,7 @@ async function insertTran(tran) {
 			console.log(e.toString());
 		}
 		finally {
+			//解锁事务队列
 			await unlock();
 		}
 	});
