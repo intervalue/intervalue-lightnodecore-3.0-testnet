@@ -856,3 +856,4 @@ exports.uPMyHotDeviceAddress = uPMyHotDeviceAddress;
 exports.getMyHotDeviceAddress = getMyHotDeviceAddress;
 exports.setMyHotDeviceAddress = setMyHotDeviceAddress;
 exports.addresses = addresses;
+exports.my_device_hashnetseed_url = my_device_hashnetseed_url;
