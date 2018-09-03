@@ -138,7 +138,7 @@ async function writeTran(params, handleResult) {
 		obj.author = address.definition;
 		obj.fee = objectLength.getTotalPayloadSize(obj);
 		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
-		if (light < obj.fee + obj.amount) {
+		if (light.stable < obj.fee + obj.amount) {
 			return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
 		}
 		//获取签名的BUF
