@@ -183,7 +183,7 @@ exports.getWallets = function (cb) {
 
 
 
-// var light = require("./light");
+var light = require("./light");
 /**
  * 热钱包生成交易授权签名
  * @param opts
@@ -225,13 +225,9 @@ exports.getTradingUnit = function (opts ,cb) {
 
     obj.fee = objectLength.getTotalPayloadSize(obj);
 
-    // if (light.stable < obj.fee + obj.amount) {
-    //     return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
-    // }
-    // if(light < obj.fee + obj.amount){
-    //     return cb("not enough spendable funds from " + opts.to_address + " for " + (obj.fee + obj.amount));
-    // }
-
+    if (light.stable < obj.fee + obj.amount) {
+        return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
+    }
 
     var db = require("./db");
     db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.from[0].address],function (row) {
@@ -258,7 +254,6 @@ exports.getTradingUnit = function (opts ,cb) {
         authorized_signature.md5 = md5;
         authorized_signature.name = "isHot";
 
-        alert(JSON.stringify(authorized_signature));
         cb(authorized_signature);
     });
 
@@ -303,11 +298,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     if( result != md5) {
         alert(false);
     }
-    alert(true);
-    alert("obj" +JSON.stringify(obj));
-    console.log("obj" +JSON.stringify(obj));
-
-    alert(1111111);
 
     var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
@@ -322,9 +312,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
     var signature = ecdsaSig.sign(buf_to_sign, privateKey);
 
-    alert("signature" + signature);
-
-    console.log(signature);
 
 
     var path2 = "m/44'/0'/0'";
@@ -334,9 +321,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
     var flag = ecdsaSig.verify(buf_to_sign,signature,pubkey);
-
-    // alert("flag"+flag);
-    console.log(flag);
 
 
     opts.type = "sign";
