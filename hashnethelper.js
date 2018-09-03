@@ -8,14 +8,19 @@ const secrethelper = require("./secrethelper.js");
 var db = require('./db.js');
 var mutex = require('./mutex.js');
 var _ = require('lodash');
+//运行时存放局部全节点列表
 var localfullnodes = [];
+//与共识网交互的类
 class HashnetHelper {
+    //返回一个局部全节点，供调用。
     static async buildSingleLocalfullnode() {
+        //判断钱包是否切换了，如果是，则重新初始化局部全节点列表。
         if (device.walletChanged) {
             device.walletChanged = false;
             await HashnetHelper.initialLocalfullnodeList();
         }
         if (localfullnodes.length === 0) {
+            //从数据库中拉取局部全节点列表
             let list = await db.toList('select * from my_witnesses');
             if (list.length > 0) {
                 for (var l of list) {
@@ -25,11 +30,13 @@ class HashnetHelper {
                 }
             }
             else {
+                //从种子节点处获取局部全节点列表
                 let { pubKey } = await device.getInfo();
                 localfullnodes = await HashnetHelper.getLocalfullnodeList(pubKey);
             }
         }
         if (localfullnodes.length > 0) {
+            //从列表中随机挑选一个局部全节点。
             let localfullnode = localfullnodes[secrethelper.random(0, localfullnodes.length - 1)];
             console.log("get localfullnode:" + JSON.stringify(localfullnode));
             return localfullnode;
@@ -39,9 +46,10 @@ class HashnetHelper {
             return null;
         }
     }
-
+    //初始化局部全节点列表，列表和数据库中都进行清空。
     static async initialLocalfullnodeList() {
         localfullnodes = [];
+        //用队列的方式进行数据库更新
         await mutex.lock(["write"], async function (unlock) {
             try {
                 await db.execute('delete from my_witnesses');
@@ -54,6 +62,7 @@ class HashnetHelper {
             }
         });
     }
+    //从种子节点获取局部全节点列表
     static async getLocalfullnodeList(pubKey) {
         try {
             let localfullnodeList = await webHelper.httpPost(device.my_device_hashnetseed_url + '/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
@@ -61,11 +70,13 @@ class HashnetHelper {
             if (localfullnodeList) {
                 localfullnodeList = JSON.parse(localfullnodeList);
                 let cmds = [];
+                //清空数据库中的局部全节点列表，将拉取到的新的局部全节点列表放入其中。
                 db.addCmd(cmds, "delete from my_witnesses");
                 for (var i = 0; i < localfullnodeList.length; i++) {
                     db.addCmd(cmds, "INSERT " + db.getIgnore() + " INTO my_witnesses ( address ) values (?)",
                         localfullnodeList[i].ip + ':' + localfullnodeList[i].httpPort);
                 }
+                //用队列的方式进行数据库更新
                 await mutex.lock(["write"], async function (unlock) {
                     try {
                         let b_result = await db.executeTrans(cmds);
@@ -80,6 +91,7 @@ class HashnetHelper {
                 return localfullnodeList;
             }
             else {
+                //如果没有拉取到，则返回空数组。
                 console.log("got no localfullnodeList");
                 return [];
             }
@@ -89,10 +101,11 @@ class HashnetHelper {
             return [];
         }
     }
-
+    //局部全节点访问失败，从局部全节点列表和数据库中进行删除
     static async reloadLocalfullnode(localfullnode) {
         if (localfullnode) {
             _.pull(localfullnodes, localfullnode);
+            //用队列的方式进行数据库更新
             await mutex.lock(["write"], async function (unlock) {
                 try {
                     await db.execute("delete from my_witnesses where address = ?", localfullnode.ip + ':' + localfullnode.httpPort);
@@ -105,6 +118,7 @@ class HashnetHelper {
                 }
             });
         }
+        //如果局部全节点列表个数小于3个，需要重新初始化局部全节点列表。
         if (localfullnodes.length < 3) {
             let { pubKey } = await device.getInfo();
             let localfullnodeList = await HashnetHelper.getLocalfullnodeList(pubKey);
@@ -113,7 +127,7 @@ class HashnetHelper {
             }
         }
     }
-
+    //发送交易，会尝试3次
     static async sendMessage(unit, retry) {
         let result = '';
         retry = retry || 3;
@@ -128,8 +142,9 @@ class HashnetHelper {
         }
         return await HashnetHelper.sendMessageTry(unit);
     }
-
+    //直接调用共识网的发送交易接口
     static async sendMessageTry(unit) {
+        //获取局部全节点
         let localfullnode = await HashnetHelper.buildSingleLocalfullnode();
         try {
             if (!localfullnode) {
@@ -149,9 +164,9 @@ class HashnetHelper {
             return 'network error,please try again.';
         }
     }
-
+    //获取交易记录
     static async getTransactionHistory(address) {
-
+        //获取局部全节点
         let localfullnode = await HashnetHelper.buildSingleLocalfullnode();
         try {
             if (!localfullnode) {
@@ -186,11 +201,11 @@ class HashnetHelper {
         }
     }
 }
-
+//组装访问共识网的url
 let getUrl = (localfullnode, suburl) => {
     return 'http://' + localfullnode.ip + ':' + localfullnode.httpPort + suburl;
 }
-
+//组装往共识网发送数据的对象
 let buildData = (data) => {
     return { data: JSON.stringify(data) };
 }
