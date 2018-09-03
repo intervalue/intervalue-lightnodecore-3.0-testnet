@@ -182,6 +182,8 @@ exports.getWallets = function (cb) {
 
 
 
+
+var light = require("./light");
 /**
  * 热钱包生成交易授权签名
  * @param opts
@@ -202,11 +204,8 @@ exports.getTradingUnit = function (opts ,cb) {
             break;
     }
 
-
-
     if (opts.change_address == opts.to_address) {
-        return handleResult("to_address and from_address is same"
-        );
+        return cb("to_address and from_address is same");
     }
 
     if (opts.amount) {
@@ -219,7 +218,6 @@ exports.getTradingUnit = function (opts ,cb) {
 
     var isHot = opts.ishot;
 
-    var light = require('./light.js');
     var objectLength = require("./object_length.js");
     var creation_date = Math.round(Date.now() / 1000);
 
@@ -230,23 +228,40 @@ exports.getTradingUnit = function (opts ,cb) {
     // if (light.stable < obj.fee + obj.amount) {
     //     return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
     // }
+    if(light.stable < obj.fee + obj.amount){
+        return cb("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+    }
 
 
-    var authorized_signature = obj;
+    var db = require("./db");
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.from[0].address],function (row) {
+        var address;
 
+        if(row.length > 0) {
+            var address = {
+                definition: JSON.parse(row[0].definition),
+                wallet: row[0].wallet,
+                account: row[0].account,
+                is_change: row[0].is_change,
+                address_index: row[0].address_index
+            };
+        }
+        obj.author = address.definition;
 
-    var h = crypto.createHash("md5");
-    h.update(JSON.stringify(authorized_signature));
-    var md5 = h.digest("hex");
+        var authorized_signature = obj;
 
-    authorized_signature.type = "trading";
-    authorized_signature.md5 = md5;
-    authorized_signature.name = "isHot";
+        var h = crypto.createHash("md5");
+        h.update(JSON.stringify(authorized_signature));
+        var md5 = h.digest("hex");
 
+        authorized_signature.type = "trading";
+        authorized_signature.md5 = md5;
+        authorized_signature.name = "isHot";
 
-    // authorized_signature["md5"] = h.digest("hex");
+        alert(JSON.stringify(obj));
+        cb(authorized_signature);
+    });
 
-    cb(authorized_signature);
 };
 
 /**
@@ -271,10 +286,11 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     }
     var name = opts.name;
     var md5 = opts.md5;
-    var type = opts.trading;
-    opts.name = undefined;
-    opts.md5 = undefined;
-    opts.trading = undefined;
+    var type = opts.type;
+
+    delete opts.name;
+    delete opts.md5;
+    delete opts.type;
 
     var obj = opts;
 
@@ -289,67 +305,46 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     }
     alert(true);
 
-
     alert("obj" +JSON.stringify(obj));
-    var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.from[0].address],function (row) {
 
-        alert(1111111);
+    alert(1111111);
 
-        if(row.length > 0) {
-            var address = {
-                definition: JSON.parse(row[0].definition),
-                wallet: row[0].wallet,
-                account: row[0].account,
-                is_change: row[0].is_change,
-                address_index: row[0].address_index
-            };
-
-            alert("definition" +JSON.stringify(JSON.stringify(obj)));
+    var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
 
-            // var objectLength = require("./object_length.js");
 
-            // obj.author = address.definition;
-            // obj.fee = objectLength.getTotalPayloadSize(obj);
-
-            var buf_to_sign = objectHash.getUnitHashToSign(obj);
+    //签名
+    var mnemonic = new Mnemonic(words);
+    var xPrivKey = mnemonic.toHDPrivateKey("");
 
 
-            //签名
-            var mnemonic = new Mnemonic(words);
-            var xPrivKey = mnemonic.toHDPrivateKey("");
+    var path = "m/44'/0'/0'/0/0";
+    var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
+    var signature = signature.sign(buf_to_sign, privateKey);
+
+    alert("signature" + signature);
 
 
-            var path = "m/44'/0'/0'/0/0";
-            var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
-            var signature = signature.sign(buf_to_sign, privateKey);
+    var path2 = "m/44'/0'/0'";
+    var privateKey2 = xPrivKey.derive(path2);
+    var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
 
-            alert("signature" + signature);
+    var pubkey = derivePubkey(xpubkey ,"m/0/0");
 
+    var flag = signature.verify(buf_to_sign,signature,pubkey);
 
-            var path2 = "m/44'/0'/0'";
-            var privateKey2 = xPrivKey.derive(path2);
-            var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
+    alert("flag"+flag);
 
-            var pubkey = derivePubkey(xpubkey ,"m/0/0");
+    opts.type = "sign";
+    opts.name = "isHot";
+    opts.signature = signature;
 
-            var flag = signature.verify(buf_to_sign,signature,pubkey);
+    if(flag) {
+        cb(opts);
+    } else {
+        cb("signature failed");
+    }
 
-            alert("flag"+flag);
-
-            opts.type = "sign";
-            opts.name = "isHot";
-            opts.signature = signature;
-
-            if(flag) {
-                cb(opts);
-            } else {
-                cb("signature failed");
-            }
-        }
-
-    });
 
 
 
