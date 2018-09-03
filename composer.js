@@ -132,6 +132,8 @@ async function writeTran(params, handleResult) {
 	console.log(JSON.stringify(params));
 	if (isHot != 1) {
 		var creation_date = Math.round(Date.now() / 1000);
+		//isStable代表交易是否发送成功
+		//isValid代表交易是否在共识网验证通过
 		obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
 		var address = await params.findAddressForJoint(params.change_address);
 		obj.author = address.definition;
