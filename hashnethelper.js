@@ -49,6 +49,7 @@ class HashnetHelper {
     //初始化局部全节点列表，列表和数据库中都进行清空。
     static async initialLocalfullnodeList() {
         localfullnodes = [];
+        //用队列的方式更新数据库
         await mutex.lock(["write"], async function (unlock) {
             try {
                 await db.execute('delete from my_witnesses');
@@ -65,6 +66,7 @@ class HashnetHelper {
     //从种子节点获取局部全节点列表
     static async getLocalfullnodeList(pubKey) {
         try {
+            //从种子节点那里拉取局部全节点列表
             let localfullnodeList = await webHelper.httpPost(device.my_device_hashnetseed_url + '/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
             // let localfullnodeList = await webHelper.httpPost('http://132.124.218.43:20002/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
             if (localfullnodeList) {
@@ -155,7 +157,7 @@ class HashnetHelper {
             console.log("sending unit:");
             unit = JSON.stringify(unit);
             console.log(unit);
-
+            //往共识网发送交易
             let result = await webHelper.httpPost(getUrl(localfullnode, '/sendMessage/'), null, buildData({ unit }));
             return result;
         }
@@ -175,6 +177,7 @@ class HashnetHelper {
             if (!localfullnode) {
                 throw new Error('network error, please try again.');
             }
+            //从共识网拉取交易记录
             let result = await webHelper.httpPost(getUrl(localfullnode, '/getTransactionHistory/'), null, buildData({ address }));
             return result ? JSON.parse(result) : [];
         }
