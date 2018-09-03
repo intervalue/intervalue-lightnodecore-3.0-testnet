@@ -22,7 +22,6 @@ var RANDOM;
  * @param cb
  */
 exports.getSignatureCode = function(address,cb){
-
     RANDOM = crypto.randomBytes(4).toString("hex");
     console.log(RANDOM);
     var db = require("./db");
@@ -30,10 +29,10 @@ exports.getSignatureCode = function(address,cb){
         if(rs[0].t == 0) {
             signatureCode =
                 {
-                    "name":"shadow",
-                    "type":"sign",
-                    "addr":""+address+"",
-                    "random":RANDOM
+                    name:"shadow",
+                    type:"sign",
+                    addr:""+address+"",
+                    random:RANDOM
                 };
             return cb(signatureCode);
         }else {
@@ -83,13 +82,13 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     signatureDetlCode =
         {
-          "name":"shadow",
-          "type":"signDetl",
-          "signature":""+sign_64+"",
-          "random":""+json.random+"",
-          "expub":""+ xpubkey +"",
-          "addr":json.addr,
-          "pubkey":pubkey
+          name:"shadow",
+          type:"signDetl",
+          signature:""+sign_64+"",
+          random:""+json.random+"",
+          expub:""+ xpubkey +"",
+          addr:json.addr,
+          pubkey:pubkey
         };
 
     return cb(signatureDetlCode);
@@ -101,7 +100,7 @@ function derivePubkey(xPubKey, path) {
 
 
 /**
- * //生成热钱包
+ * 热钱包  生成热钱包
  * @param signatureDetlCode
  * @param cb
  * @returns {*}
