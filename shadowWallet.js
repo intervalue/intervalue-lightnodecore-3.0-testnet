@@ -228,13 +228,13 @@ exports.getTradingUnit = function (opts ,cb) {
     // if (light.stable < obj.fee + obj.amount) {
     //     return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
     // }
-    if(light.stable < obj.fee + obj.amount){
-        return cb("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
+    if(light < obj.fee + obj.amount){
+        return cb("not enough spendable funds from " + opts.to_address + " for " + (obj.fee + obj.amount));
     }
 
 
     var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[opts.from[0].address],function (row) {
+    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.from[0].address],function (row) {
         var address;
 
         if(row.length > 0) {
@@ -258,7 +258,7 @@ exports.getTradingUnit = function (opts ,cb) {
         authorized_signature.md5 = md5;
         authorized_signature.name = "isHot";
 
-        alert(JSON.stringify(obj));
+        alert(JSON.stringify(authorized_signature));
         cb(authorized_signature);
     });
 
