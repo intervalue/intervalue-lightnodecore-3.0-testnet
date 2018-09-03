@@ -1341,20 +1341,24 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 
 //发送交易
 async function sendMultiPayment(opts, handleResult) {
-	opts.findAddressForJoint = findAddressForJoint;
-	//判断发送方是否等于接收方，不允许发送给自己
-	if (opts.change_address == opts.to_address) {
-		return handleResult("to_address and from_address is same"
-		);
-	}
-	//判断金额是否正常
-	if (opts.amount) {
-		if (typeof opts.amount !== 'number')
-			throw Error('amount must be a number');
-		if (opts.amount <= 0)
-			throw Error('amount must be positive');
-	}
-	//往共识网发送交易并更新数据库
+	if(opts.isHot == 1) {
+
+	}else {
+		opts.findAddressForJoint = findAddressForJoint;
+		//判断发送方是否等于接收方，不允许发送给自己
+		if (opts.change_address == opts.to_address) {
+			return handleResult("to_address and from_address is same"
+			);
+		}
+		//判断金额是否正常
+		if (opts.amount) {
+			if (typeof opts.amount !== 'number')
+				throw Error('amount must be a number');
+			if (opts.amount <= 0)
+				throw Error('amount must be positive');
+		}
+		//往共识网发送交易并更新数据库
+    }
 	await composer.writeTran(opts, handleResult);
 }
 
