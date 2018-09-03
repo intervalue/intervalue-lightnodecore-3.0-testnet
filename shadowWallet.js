@@ -301,13 +301,13 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var result = h.digest("hex");
 
     if( result != md5) {
-        // alert(false);
+        alert(false);
     }
-    // alert(true);
-    // alert("obj" +JSON.stringify(obj));
+    alert(true);
+    alert("obj" +JSON.stringify(obj));
     console.log("obj" +JSON.stringify(obj));
 
-    // alert(1111111);
+    alert(1111111);
 
     var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
@@ -322,7 +322,7 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
     var signature = ecdsaSig.sign(buf_to_sign, privateKey);
 
-    // alert("signature" + signature);
+    alert("signature" + signature);
 
     console.log(signature);
 
