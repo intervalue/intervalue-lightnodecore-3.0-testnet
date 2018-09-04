@@ -20,6 +20,7 @@ var RANDOM;
  * 热钱包 生成授权签名-扫描地址
  * @param address
  * @param cb
+ * @returns
  */
 exports.getSignatureCode = function(address,cb){
     RANDOM = crypto.randomBytes(4).toString("hex");
@@ -31,7 +32,7 @@ exports.getSignatureCode = function(address,cb){
                 {
                     name:"shadow",
                     type:"sign",
-                    addr:""+address+"",
+                    addr:address,
                     random:RANDOM
                 };
             return cb(signatureCode);
@@ -39,11 +40,10 @@ exports.getSignatureCode = function(address,cb){
             return cb("wallet exists");
         }
     });
-
 };
 
 /**
- * 冷钱包  生成授权签名详情
+ * 冷钱包  进行授权签名
  * @param signatureCode
  * @param words
  * @param cb
@@ -65,7 +65,6 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
 
-    console.log(buf_to_sign.toString("hex"));
     var mnemonic = new Mnemonic(words);
     var xPrivKey = mnemonic.toHDPrivateKey("");
 
@@ -84,15 +83,15 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
         {
           name:"shadow",
           type:"signDetl",
-          signature:""+sign_64+"",
-          random:""+json.random+"",
-          expub:""+ xpubkey +"",
+          signature:sign_64,
+          random:json.random,
+          expub:xpubkey +'',
           addr:json.addr,
           pubkey:pubkey
         };
-
     return cb(signatureDetlCode);
 };
+
 function derivePubkey(xPubKey, path) {
     var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
     return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
@@ -129,6 +128,7 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var sign = json.signature;
     var xpub = json.expub;
     var pubkey = json.pubkey;
+
     var result = {
         'addr':addr,
         'sign':sign,
@@ -143,13 +143,12 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var definition2 = ["sig",{"pubkey":pub2}];
     var address1 = objectHash.getChash160(definition1);
     var address2 = objectHash.getChash160(definition2);
-    // var flag = false;
 
     if(address1 === addr  || address2 == addr) {
         RANDOM = '';
         cb(result);
     } else
-        cb(false);
+        cb("validation failed");
 };
 
 
@@ -207,12 +206,10 @@ exports.getTradingUnit = function (opts ,cb) {
         return cb("to_address and from_address is same");
     }
 
-    if (opts.amount) {
-        if (typeof opts.amount !== 'number')
-            throw Error('amount must be a number');
-        if (opts.amount < 0)
-            throw Error('amount must be positive');
-    }
+    if (typeof opts.amount !== 'number')
+        return cb('amount must be a number');
+    if (opts.amount < 0)
+        return cb('amount must be positive');
 
 
     var isHot = opts.ishot;
@@ -233,27 +230,28 @@ exports.getTradingUnit = function (opts ,cb) {
         var address;
 
         if(row.length > 0) {
-            var address = {
+            address = {
                 definition: JSON.parse(row[0].definition),
                 wallet: row[0].wallet,
                 account: row[0].account,
                 is_change: row[0].is_change,
                 address_index: row[0].address_index
             };
+            obj.author = address.definition;
+
+            var authorized_signature = obj;
+
+            var h = crypto.createHash("md5");
+            h.update(JSON.stringify(authorized_signature));
+            var md5 = h.digest("hex");
+
+            authorized_signature.type = "trading";
+            authorized_signature.md5 = md5;
+            authorized_signature.name = "isHot";
+
+            cb(authorized_signature);
         }
-        obj.author = address.definition;
 
-        var authorized_signature = obj;
-
-        var h = crypto.createHash("md5");
-        h.update(JSON.stringify(authorized_signature));
-        var md5 = h.digest("hex");
-
-        authorized_signature.type = "trading";
-        authorized_signature.md5 = md5;
-        authorized_signature.name = "isHot";
-
-        cb(authorized_signature);
     });
 
 };
@@ -295,12 +293,10 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var result = h.digest("hex");
 
     if( result != md5) {
-        alert(false);
+        return cb("validation failed");
     }
 
     var buf_to_sign = objectHash.getUnitHashToSign(obj);
-
-
 
     //签名
     var mnemonic = new Mnemonic(words);
@@ -310,8 +306,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
     var signature = ecdsaSig.sign(buf_to_sign, privateKey);
-
-
 
     var path2 = "m/44'/0'/0'";
     var privateKey2 = xPrivKey.derive(path2);
@@ -331,14 +325,6 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     } else {
         cb("signature failed");
     }
-
-
-
-
 };
 
-
-exports.sendMultiPayment = function () {
-
-};
 
