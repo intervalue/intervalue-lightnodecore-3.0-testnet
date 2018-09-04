@@ -124,6 +124,7 @@ function composeAssetDefinitionJoint(from_address, asset_definition, signer, cal
 function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer, callbacks) {
 	composeContentJoint(from_address, "asset_attestors", { asset: asset, attestors: arrNewAttestors }, signer, callbacks);
 }
+
 //发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
 	var isHot = params.isHot;

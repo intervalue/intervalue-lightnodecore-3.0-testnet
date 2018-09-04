@@ -1342,7 +1342,7 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 //发送交易
 async function sendMultiPayment(opts, handleResult) {
 	if(opts.isHot == 1) {
-
+		//不做处理
 	}else {
 		opts.findAddressForJoint = findAddressForJoint;
 		//判断发送方是否等于接收方，不允许发送给自己
@@ -1351,14 +1351,13 @@ async function sendMultiPayment(opts, handleResult) {
 			);
 		}
 		//判断金额是否正常
-		if (opts.amount) {
-			if (typeof opts.amount !== 'number')
-				throw Error('amount must be a number');
-			if (opts.amount <= 0)
-				throw Error('amount must be positive');
-		}
-		//往共识网发送交易并更新数据库
+		if (typeof opts.amount !== 'number')
+			return handleResult('amount must be a number');
+		if (opts.amount <= 0)
+			return handleResult('amount must be positive');
+
     }
+    //往共识网发送交易并更新数据库
 	await composer.writeTran(opts, handleResult);
 }
 
