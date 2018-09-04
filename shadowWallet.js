@@ -221,7 +221,9 @@ exports.getTradingUnit = function (opts ,cb) {
 
     obj.fee = objectLength.getTotalPayloadSize(obj);
 
-    if (light.stable < obj.fee + obj.amount) {
+
+    //TODO test
+    if (light < obj.fee + obj.amount) {
         return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
     }
 
