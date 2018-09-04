@@ -1357,6 +1357,7 @@ async function sendMultiPayment(opts, handleResult) {
 			return handleResult('amount must be positive');
 
     }
+    alert('发送交易1');
     //往共识网发送交易并更新数据库
 	await composer.writeTran(opts, handleResult);
 }

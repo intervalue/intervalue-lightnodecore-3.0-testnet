@@ -127,6 +127,7 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 
 //发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
+    alert('开始发送数据2');
 	var isHot = params.isHot;
 	var obj;
 	var sigunature;
