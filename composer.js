@@ -129,6 +129,8 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 async function writeTran(params, handleResult) {
     alert('开始发送数据2');
 	var isHot = params.isHot;
+	alert(isHot);
+
 	var obj;
 	var sigunature;
 	if (isHot != 1) {
@@ -156,6 +158,7 @@ async function writeTran(params, handleResult) {
 		delete params.md5;
 		sigunature = params.signature;
 		obj = params;
+		alert(JSON.stringify(obj));
 	}
 	obj.sigunature = sigunature;
 	//通过签名获取ID(44位)
