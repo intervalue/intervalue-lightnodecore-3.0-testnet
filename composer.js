@@ -138,8 +138,8 @@ async function writeTran(params, handleResult) {
 		var address = await params.findAddressForJoint(params.change_address);
 		obj.author = address.definition;
 		obj.fee = objectLength.getTotalPayloadSize(obj);
-		//TODO 测试   if (light < obj.fee + obj.amount) {
-		if (light.stable < obj.fee + obj.amount) {
+		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
+		if (light < obj.fee + obj.amount) {
 			return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
 		}
 		//获取签名的BUF
@@ -159,10 +159,15 @@ async function writeTran(params, handleResult) {
 	obj.sigunature = sigunature;
 	//通过签名获取ID(44位)
 	obj.id = crypto.createHash("sha256").update(sigunature, "utf8").digest("base64");
-	var network = require('./network.js');
+	// var network = require('./network.js');
 	//往共识网发送交易
-	let result = await network.sendTransaction(obj);
-	if (result) {
+	// let result = await network.sendTransaction(obj);
+
+    //TODO test
+    alert(JSON.stringify(obj));
+    var result = '';
+
+    if (result) {
 		//如果发送失败，则马上返回到界面
 		return handleResult(result);
 	}
