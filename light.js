@@ -509,7 +509,7 @@ function refreshTranList(tran) {
 					stable += tran.amount;
 					break;
 				case 'final-bad':
-					my_tran.action = 'received';
+					my_tran.action = 'invalid';
 					break;
 			}
 		}
@@ -529,7 +529,7 @@ function refreshTranList(tran) {
 					stable -= tran.fee;
 					break;
 				case 'final-bad':
-					my_tran.action = 'received';
+					my_tran.action = 'invalid';
 					break;
 			}
 			//往列表中插入记录
