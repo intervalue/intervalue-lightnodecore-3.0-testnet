@@ -1342,7 +1342,7 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 //发送交易
 async function sendMultiPayment(opts, handleResult) {
 	alert(0);
-	if(opts.isHot == 1) {
+	if(opts.name == "isHot") {
 		//不做处理
 		alert(1);
 	}else {

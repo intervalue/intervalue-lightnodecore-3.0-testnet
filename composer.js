@@ -128,12 +128,12 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 //发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
     alert('开始发送数据2');
-	var isHot = params.isHot;
+	var isHot = params.name;
 	alert(isHot);
 
 	var obj;
 	var sigunature;
-	if (isHot != 1) {
+	if (isHot != "isHot") {
 		var creation_date = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
 		//isValid代表交易是否在共识网验证通过
