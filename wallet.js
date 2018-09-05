@@ -1341,10 +1341,8 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 
 //发送交易
 async function sendMultiPayment(opts, handleResult) {
-	alert(0);
 	if(opts.name == "isHot") {
 		//不做处理
-		alert(1);
 	}else {
 		opts.findAddressForJoint = findAddressForJoint;
 		//判断发送方是否等于接收方，不允许发送给自己
@@ -1359,7 +1357,6 @@ async function sendMultiPayment(opts, handleResult) {
 			return handleResult('amount must be positive');
 
     }
-    alert('发送交易1');
     //往共识网发送交易并更新数据库
 	await composer.writeTran(opts, handleResult);
 }

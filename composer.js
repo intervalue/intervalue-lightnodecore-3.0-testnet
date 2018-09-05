@@ -127,10 +127,7 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 
 //发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
-    alert('开始发送数据2');
 	var isHot = params.name;
-	alert(isHot);
-
 	var obj;
 	var sigunature;
 	if (isHot != "isHot") {
@@ -157,7 +154,6 @@ async function writeTran(params, handleResult) {
 		delete params.md5;
 		sigunature = params.signature;
 		obj = params;
-		alert(JSON.stringify(obj));
 	}
 	obj.sigunature = sigunature;
 	//通过签名获取ID(44位)
@@ -166,17 +162,13 @@ async function writeTran(params, handleResult) {
 	//往共识网发送交易
 	// let result = await network.sendTransaction(obj);
 
-    //TODO test
-    alert(JSON.stringify(obj));
     var result = '';
 
     if (result) {
 		//如果发送失败，则马上返回到界面
-		alert("失败返回");
 		return handleResult(result);
 	}
 	else {
-		alert("成功，开始入库");
 		//通过队列进行数据库更新
 		await mutex.lock(["write"], async function (unlock) {
 			try {
