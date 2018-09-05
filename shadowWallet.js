@@ -215,9 +215,9 @@ exports.getTradingUnit = function (opts ,cb) {
     var isHot = opts.ishot;
 
     var objectLength = require("./object_length.js");
-    var creation_date = Math.round(Date.now() / 1000);
+    var creationDate = Math.round(Date.now() / 1000);
 
-    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creation_date, isStable: 1, isValid: 0 };
+    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creationDate};
 
     obj.fee = objectLength.getTotalPayloadSize(obj);
 

@@ -131,10 +131,10 @@ async function writeTran(params, handleResult) {
 	var obj;
 	var sigunature;
 	if (isHot != "isHot") {
-		var creation_date = Math.round(Date.now() / 1000);
+		var creationDate = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
 		//isValid代表交易是否在共识网验证通过
-		obj = { from: params.change_address, to: params.to_address, amount: params.amount, creation_date, isStable: 1, isValid: 0 };
+		obj = { from: params.change_address, to: params.to_address, amount: params.amount, creationDate};
 		var address = await params.findAddressForJoint(params.change_address);
 		obj.author = address.definition;
 		obj.fee = objectLength.getTotalPayloadSize(obj);
@@ -174,8 +174,10 @@ async function writeTran(params, handleResult) {
 			try {
 				//更新数据库
 				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
-					obj.id, obj.creation_date, obj.amount, obj.fee, obj.from, obj.to);
+					obj.id, obj.creationDate, obj.amount, obj.fee, obj.from, obj.to);
 				//更新列表
+                obj.isStable = 1;
+                obj.isValid = 0;
 				light.refreshTranList(obj);
 				//返回到界面
 				alert("交易完成个");
