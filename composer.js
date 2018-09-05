@@ -129,15 +129,17 @@ function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer
 async function writeTran(params, handleResult) {
 	var isHot = params.name;
 	var obj;
-	var sigunature;
+	var signature;
 	if (isHot != "isHot") {
-		var creationDate = Math.round(Date.now() / 1000);
+		var timestamp = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
 		//isValid代表交易是否在共识网验证通过
-		obj = { from: params.change_address, to: params.to_address, amount: params.amount, creationDate};
+		obj = { sendAddress: params.change_address, receiveAddress: params.to_address, amount: params.amount, timestamp};
 		var address = await params.findAddressForJoint(params.change_address);
-		obj.author = address.definition;
+		obj.pubkey = address.definition[1].pubkey;
 		obj.fee = objectLength.getTotalPayloadSize(obj);
+		obj.type = 1;
+
 		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
 		if (light < obj.fee + obj.amount) {
 			return handleResult("not enough spendable funds from " + params.to_address + " for " + (obj.fee + obj.amount));
@@ -147,22 +149,25 @@ async function writeTran(params, handleResult) {
 		//获取签名的私钥
 		var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
 		//通过私钥进行签名
-		sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
+        signature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
 	} else {
 		delete params.type;
 		delete params.name;
 		delete params.md5;
-		sigunature = params.signature;
+        signature = params.signature;
 		obj = params;
 	}
-	obj.sigunature = sigunature;
-	//通过签名获取ID(44位)
-	obj.id = crypto.createHash("sha256").update(sigunature, "utf8").digest("base64");
+	obj.signature = signature;
+	alert(JSON.stringify(obj));
+
 	// var network = require('./network.js');
 	//往共识网发送交易
 	// let result = await network.sendTransaction(obj);
 
     var result = '';
+
+    //通过签名获取ID(44位)
+    obj.id = crypto.createHash("sha256").update(signature, "utf8").digest("base64");
 
     if (result) {
 		//如果发送失败，则马上返回到界面
@@ -174,7 +179,7 @@ async function writeTran(params, handleResult) {
 			try {
 				//更新数据库
 				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
-					obj.id, obj.creationDate, obj.amount, obj.fee, obj.from, obj.to);
+					obj.id, obj.timestamp, obj.amount, obj.fee, obj.sendAddress, obj.receiveAddress);
 				//更新列表
                 obj.isStable = 1;
                 obj.isValid = 0;

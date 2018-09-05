@@ -215,9 +215,9 @@ exports.getTradingUnit = function (opts ,cb) {
     var isHot = opts.ishot;
 
     var objectLength = require("./object_length.js");
-    var creationDate = Math.round(Date.now() / 1000);
+    var timestamp = Math.round(Date.now() / 1000);
 
-    var obj = { from: opts.change_address, to: opts.to_address, amount: opts.amount, creationDate};
+    var obj = { sendAddress: opts.change_address, receiveAddress: opts.to_address, amount: opts.amount, timestamp};
 
     obj.fee = objectLength.getTotalPayloadSize(obj);
 
@@ -239,7 +239,8 @@ exports.getTradingUnit = function (opts ,cb) {
                 is_change: row[0].is_change,
                 address_index: row[0].address_index
             };
-            obj.author = address.definition;
+            obj.pubkey = address.definition[1].pubkey;
+            obj.type = 1;
 
             var authorized_signature = obj;
 
