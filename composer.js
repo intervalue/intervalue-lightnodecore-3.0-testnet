@@ -152,7 +152,6 @@ async function writeTran(params, handleResult) {
 		//通过私钥进行签名
 		sigunature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
 	} else {
-		delete params.isHot;
 		delete params.type;
 		delete params.name;
 		delete params.md5;
@@ -173,9 +172,11 @@ async function writeTran(params, handleResult) {
 
     if (result) {
 		//如果发送失败，则马上返回到界面
+		alert("失败返回");
 		return handleResult(result);
 	}
 	else {
+		alert("成功，开始入库");
 		//通过队列进行数据库更新
 		await mutex.lock(["write"], async function (unlock) {
 			try {
