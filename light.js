@@ -436,7 +436,7 @@ async function updateHistory(addresses) {
 		}
 		//如果交易记录长度为零，需要清空本地的交易记录。
 		if (trans.length === 0) {
-			await truncateTran();
+			await truncateTran(addresses);
 		}
 		else {
 			//初始化交易列表
@@ -566,7 +566,7 @@ async function iniTranList(addresses) {
 }
 //将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
 async function truncateTran(addresses) {
-	await iniTranList();
+	await iniTranList(addresses);
 	let count = tranList.length;
 	let cmds = [];
 	if (count > 0) {
