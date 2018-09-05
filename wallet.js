@@ -1341,8 +1341,10 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
 
 //发送交易
 async function sendMultiPayment(opts, handleResult) {
+	alert(0);
 	if(opts.isHot == 1) {
 		//不做处理
+		alert(1);
 	}else {
 		opts.findAddressForJoint = findAddressForJoint;
 		//判断发送方是否等于接收方，不允许发送给自己
