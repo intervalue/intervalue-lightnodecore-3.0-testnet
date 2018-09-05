@@ -24,21 +24,6 @@ function getBase64Hash(obj) {
 
 function getNakedUnit(objUnit) {
 	var objNakedUnit = _.cloneDeep(objUnit);
-	delete objNakedUnit.unit;
-	delete objNakedUnit.headers_commission;
-	delete objNakedUnit.payload_commission;
-	delete objNakedUnit.main_chain_index;
-	delete objNakedUnit.timestamp;
-	delete objNakedUnit.author;
-	//delete objNakedUnit.last_ball_unit;
-	if (objNakedUnit.messages) {
-		for (var i = 0; i < objNakedUnit.messages.length; i++) {
-			delete objNakedUnit.messages[i].payload;
-			delete objNakedUnit.messages[i].payload_uri;
-		}
-	}
-	//console.log("naked Unit: ", objNakedUnit);
-	//console.log("original Unit: ", objUnit);
 	return objNakedUnit;
 }
 
