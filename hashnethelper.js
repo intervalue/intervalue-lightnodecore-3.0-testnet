@@ -14,11 +14,7 @@ var localfullnodes = [];
 class HashnetHelper {
     //返回一个局部全节点，供调用。
     static async buildSingleLocalfullnode() {
-        //判断钱包是否切换了，如果是，则重新初始化局部全节点列表。
-        if (device.walletChanged) {
-            device.walletChanged = false;
-            await HashnetHelper.initialLocalfullnodeList();
-        }
+
         if (localfullnodes.length === 0) {
             //从数据库中拉取局部全节点列表
             let list = await db.toList('select * from my_witnesses');
