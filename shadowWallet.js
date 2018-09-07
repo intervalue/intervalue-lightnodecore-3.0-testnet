@@ -217,7 +217,7 @@ exports.getTradingUnit = function (opts ,cb) {
     var objectLength = require("./object_length.js");
     var timestamp = Math.round(Date.now() / 1000);
 
-    var obj = { sendAddress: opts.change_address, receiveAddress: opts.to_address, amount: opts.amount, timestamp};
+    var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: opts.amount, timestamp};
 
     obj.fee = objectLength.getTotalPayloadSize(obj);
 

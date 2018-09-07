@@ -134,7 +134,7 @@ async function writeTran(params, handleResult) {
 		var timestamp = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
 		//isValid代表交易是否在共识网验证通过
-		obj = { sendAddress: params.change_address, receiveAddress: params.to_address, amount: params.amount, timestamp};
+		obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount, timestamp};
 		var address = await params.findAddressForJoint(params.change_address);
 		obj.pubkey = address.definition[1].pubkey;
 		obj.fee = objectLength.getTotalPayloadSize(obj);
@@ -179,7 +179,7 @@ async function writeTran(params, handleResult) {
 			try {
 				//更新数据库
 				await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
-					obj.id, obj.timestamp, obj.amount, obj.fee, obj.sendAddress, obj.receiveAddress);
+					obj.id, obj.timestamp, obj.amount, obj.fee, obj.fromAddress, obj.toAddress);
 				//更新列表
                 obj.isStable = 1;
                 obj.isValid = 0;
