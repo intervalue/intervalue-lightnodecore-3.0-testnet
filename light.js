@@ -412,15 +412,15 @@ async function updateHistory(addresses) {
 	if (!u_finished) {
 		return;
 	}
+    //将u_finished设置为false，表示正在进行交易记录更新
+    u_finished = false;
 	//判断钱包是否切换了，如果是，则重新初始化局部全节点列表。
 	if (device.walletChanged) {
 		device.walletChanged = false;
-		await HashnetHelper.initialLocalfullnodeList();
+		await hashnethelper.initialLocalfullnodeList();
 		//初始化交易列表
 		await iniTranList(addresses);
 	}
-	//将u_finished设置为false，表示正在进行交易记录更新
-	u_finished = false;
 	//存储此次交易记录的数组
 	let trans = null;
 	try {
