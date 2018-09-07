@@ -17,7 +17,7 @@ class HashnetHelper {
 
         if (localfullnodes.length === 0) {
             //从数据库中拉取局部全节点列表
-            let list = await db.toList('select * from my_witnesses');
+            let list = await db.toList('select * from lfullnode_list');
             if (list.length > 0) {
                 for (var l of list) {
                     let ip = l.address.split(':')[0];
@@ -48,7 +48,7 @@ class HashnetHelper {
         //用队列的方式更新数据库
         await mutex.lock(["write"], async function (unlock) {
             try {
-                await db.execute('delete from my_witnesses');
+                await db.execute('delete from lfullnode_list');
             }
             catch (e) {
                 console.log(e.toString());
@@ -69,9 +69,9 @@ class HashnetHelper {
                 localfullnodeList = JSON.parse(localfullnodeList);
                 let cmds = [];
                 //清空数据库中的局部全节点列表，将拉取到的新的局部全节点列表放入其中。
-                db.addCmd(cmds, "delete from my_witnesses");
+                db.addCmd(cmds, "delete from lfullnode_list");
                 for (var i = 0; i < localfullnodeList.length; i++) {
-                    db.addCmd(cmds, "INSERT " + db.getIgnore() + " INTO my_witnesses ( address ) values (?)",
+                    db.addCmd(cmds, "INSERT " + db.getIgnore() + " INTO lfullnode_list ( address ) values (?)",
                         localfullnodeList[i].ip + ':' + localfullnodeList[i].httpPort);
                 }
                 //用队列的方式进行数据库更新
@@ -107,7 +107,7 @@ class HashnetHelper {
             //用队列的方式进行数据库更新
             await mutex.lock(["write"], async function (unlock) {
                 try {
-                    await db.execute("delete from my_witnesses where address = ?", localfullnode.ip + ':' + localfullnode.httpPort);
+                    await db.execute("delete from lfullnode_list where address = ?", localfullnode.ip + ':' + localfullnode.httpPort);
                 }
                 catch (e) {
                     console.log(e.toString());
