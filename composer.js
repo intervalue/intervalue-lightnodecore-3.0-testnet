@@ -160,11 +160,11 @@ async function writeTran(params, handleResult) {
 	obj.signature = signature;
 	alert(JSON.stringify(obj));
 
-	// var network = require('./network.js');
+	var network = require('./network.js');
 	//往共识网发送交易
-	// let result = await network.sendTransaction(obj);
+	let result = await network.sendTransaction(obj);
 
-    var result = '';
+    // var result = '';
 
     //通过签名获取ID(44位)
     obj.id = crypto.createHash("sha256").update(signature, "utf8").digest("base64");
