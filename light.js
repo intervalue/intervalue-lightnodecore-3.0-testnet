@@ -601,7 +601,7 @@ async function truncateTran(addresses) {
 }
 //更新已有交易记录的状态
 async function updateTran(tran) {
-	let id = tran.id;
+	let id = tran.hash;
 	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
 		try {
@@ -625,12 +625,9 @@ async function updateTran(tran) {
 }
 //失败的交易
 async function badTran(tran) {
-	let id = tran.id;
+	let id = tran.hash;
 	let cmds = [];
-	db.addCmd(cmds,
-		"update transactions set result = 'final-bad' where id = ?",
-		id
-	);
+	db.addCmd(cmds, "update transactions set result = 'final-bad' where id = ?", id);
 	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
 		try {
@@ -660,7 +657,7 @@ async function insertTran(tran) {
 	var cmds = [];
 	var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result";
 	var values = "?,?,?,?,?,?,?";
-	var params = [tran.id, tran.creation_date, tran.amount,
+	var params = [tran.hash, tran.creation_date, tran.amount,
 	tran.fee || 0, tran.from, tran.to, getResultFromTran(tran)];
 	db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
 	//用队列的方式更新数据库
