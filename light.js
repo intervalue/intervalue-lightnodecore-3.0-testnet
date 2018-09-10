@@ -437,6 +437,7 @@ async function updateHistory(addresses) {
 				}
 			}
 		}
+		alert(JSON.stringify(trans));
 		//如果为NULL，则表示访问共识网有问题，返回。
 		if (trans == null) {
 			return;
@@ -657,8 +658,7 @@ async function insertTran(tran) {
 	var cmds = [];
 	var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result";
 	var values = "?,?,?,?,?,?,?";
-	var params = [tran.hash, tran.creation_date, tran.amount,
-	tran.fee || 0, tran.from, tran.to, getResultFromTran(tran)];
+	var params = [tran.hash, tran.time, tran.amount,tran.fee || 0, tran.fromAddress, tran.toAddress, getResultFromTran(tran)];
 	db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
 	//用队列的方式更新数据库
 	await mutex.lock(["write"], async function (unlock) {
