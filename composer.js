@@ -134,10 +134,10 @@ async function writeTran(params, handleResult) {
 		var timestamp = Math.round(Date.now() / 1000);
 		//isStable代表交易是否发送成功
 		//isValid代表交易是否在共识网验证通过
-		obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount, timestamp};
+		obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount + "", timestamp};
 		var address = await params.findAddressForJoint(params.change_address);
 		obj.pubkey = address.definition[1].pubkey;
-		obj.fee = objectLength.getTotalPayloadSize(obj);
+		obj.fee = objectLength.getTotalPayloadSize(obj) + "";
 		obj.type = 1;
 
 		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
