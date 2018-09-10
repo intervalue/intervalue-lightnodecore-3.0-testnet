@@ -563,7 +563,7 @@ async function iniTranList(addresses) {
 		tranAddr = addresses;
 		//余额
 		stable = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
-			(select sum(amount + fee) from transactions where addressFrom in (?) and (result = 'good' || result = 'pending')) as stable", addresses, addresses));
+			(select sum(amount + fee) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
 		//待确认
 		pending = parseInt(db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
 			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
