@@ -2,7 +2,7 @@
 "use strict";
 var db = require('./db.js');
 var conf = require('./conf.js');
-var myWitnesses = require('./my_witnesses.js');
+// var myWitnesses = require('./my_witnesses.js');
 var network = require('./network.js');
 var storage = require('./storage.js');
 var walletGeneral = require('./wallet_general.js');
