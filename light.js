@@ -437,7 +437,7 @@ async function updateHistory(addresses) {
 				}
 			}
 		}
-		alert(JSON.stringify(trans));
+		console.log(JSON.stringify(trans));
 		//如果为NULL，则表示访问共识网有问题，返回。
 		if (trans == null) {
 			return;
@@ -450,7 +450,7 @@ async function updateHistory(addresses) {
 			//初始化交易列表
 			await iniTranList(addresses);
 			for (var tran of trans) {
-				let my_tran = _.find(tranList, { id: tran.id });
+				let my_tran = _.find(tranList, { id: tran.hash });
 				//本地存在交易记录，状态是待确认，需要进行状态的更新。
 				if (my_tran && tran.isStable == 1 && tran.isValid == 1 && my_tran.result == 'pending') {
 					await updateTran(tran);
