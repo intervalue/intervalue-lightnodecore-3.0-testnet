@@ -71,15 +71,15 @@ async function updateHistory(addresses) {
             for (var tran of trans) {
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
-                if (my_tran && tran.isStable == 1 && tran.isValid == 1 && my_tran.result == 'pending') {
+                if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
                     await updateTran(tran);
                 }
                 //本地存在交易记录，共识网判定交易非法，需要更新交易状态到本地
-                else if (my_tran && tran.isStable == 1 && tran.isValid == 0 && my_tran.result != 'final-bad') {
+                else if (my_tran && tran.isStable && !tran.isValid && my_tran.result != 'final-bad') {
                     await badTran(tran);
                 }
                 //本地不存在此交易记录，需往本地插入交易记录
-                else if (!my_tran && tran.isValid == 1) {
+                else if (!my_tran && tran.isValid) {
                     await insertTran(tran);
                 }
             }
@@ -629,7 +629,8 @@ exports.prepareParentsAndLastBallAndWitnessListUnit = prepareParentsAndLastBallA
 exports.updateHistory = updateHistory;
 exports.stable = stable;
 exports.pending = pending;
-exports.refreshTranList = refreshTranList;
 exports.tranList = tranList;
+exports.refreshTranList = refreshTranList;
 exports.iniTranList = iniTranList;
 exports.findStable = findStable;
+exports.findTranList = findTranList;
