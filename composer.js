@@ -141,7 +141,7 @@ async function writeTran(params, handleResult) {
 		obj.type = 1;
 
 		//TODO 测试   if (light.stable < obj.fee + obj.amount) {
-		if (light.stable < obj.fee + obj.amount) {
+		if (light.stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
 			return handleResult("not enough spendable funds from " + params.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount)));
 		}
 		//获取签名的BUF
