@@ -198,7 +198,7 @@ function findTranList(wallet,cb) {
      db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?))", [wallet, wallet,wallet],function (row) {
          if(row.length > 0) {
-            return cb(row);
+            cb(row);
          }
      });
 }
@@ -214,7 +214,7 @@ function findStable2(wallet,cb){
     db.query("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", [wallet, wallet] ,function (rows) {
         if(rows.length > 0) {
-            return cb(rows[0].stable);
+            cb(rows[0].stable);
         }
     });
 }
