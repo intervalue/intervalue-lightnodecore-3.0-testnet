@@ -204,9 +204,9 @@ function findTranList(wallet,cb) {
 }
 
 //余额
-async function findStable(addresses){
-    return stable = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'good') - \n\
-			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
+async function findStable(wallet){
+    return stable = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
+			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", wallet, wallet));
 }
 
 //将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
