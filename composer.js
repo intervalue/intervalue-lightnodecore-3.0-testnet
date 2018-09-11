@@ -186,7 +186,7 @@ async function writeTran(params, handleResult) {
 				light.refreshTranList(obj);
 				//返回到界面
 				alert("交易完成个");
-				handleResult('', obj.id);
+				handleResult(obj);
 			}
 			catch (e) {
 				console.log(e.toString());
