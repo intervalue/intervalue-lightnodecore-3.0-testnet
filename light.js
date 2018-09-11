@@ -194,9 +194,13 @@ async function iniTranList(addresses) {
 }
 
 //交易列表
-async function findTranList(addresses) {
-    return tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
-		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
+function findTranList(wallet,cb) {
+     db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
+		 from transactions where(addressFrom in (select * from my_addresses where wallet = ?) or addressTo in (select * from my_addresses where wallet = ?))", wallet, wallet,function (row) {
+         if(row.length > 0) {
+            cb(row);
+         }
+     });
 }
 
 //余额
