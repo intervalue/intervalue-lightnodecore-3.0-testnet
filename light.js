@@ -609,8 +609,6 @@ function processLinkProofs(arrUnits, arrChain, callbacks) {
 	callbacks.ifOk();
 }
 
-exports.prepareHistory = prepareHistory;
-exports.processHistory = processHistory;
 exports.prepareLinkProofs = prepareLinkProofs;
 exports.processLinkProofs = processLinkProofs;
 exports.determineIfHaveUnstableJoints = determineIfHaveUnstableJoints;
