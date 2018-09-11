@@ -192,10 +192,19 @@ async function iniTranList(addresses) {
         console.log(tranList);
     }
 }
+
+//交易列表
+async function findTranList(addresses) {
+    return tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
+		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
+}
+
+//余额
 async function findStable(addresses){
     return stable = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
 }
+
 //将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
 async function truncateTran(addresses) {
     await iniTranList(addresses);
