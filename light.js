@@ -181,10 +181,10 @@ async function iniTranList(addresses) {
 	if (tranAddr == [] || tranAddr != addresses || !tranList) {
 		tranAddr = addresses;
 		//余额 = 收到 - 发送
-		stable = parseInt(db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'good') - \n\
+		stable = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
 		//待确认
-		pending = parseInt(db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'pending') + \n\
+		pending = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'pending') + \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
 		//交易列表
 		tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
