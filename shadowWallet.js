@@ -217,14 +217,14 @@ exports.getTradingUnit = function (opts ,cb) {
     var objectLength = require("./object_length.js");
     var timestamp = Math.round(Date.now() / 1000);
 
-    var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: opts.amount, timestamp};
+    var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: ""+opts.amount, timestamp};
 
-    obj.fee = objectLength.getTotalPayloadSize(obj);
+    obj.fee = ""+objectLength.getTotalPayloadSize(obj);
 
 
     //TODO test
-    if (light.stable < obj.fee + obj.amount) {
-        return cb("not enough spendable funds from " + obj.to_address + " for " + (obj.fee + obj.amount));
+    if (light.stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
+        return cb("not enough spendable funds from " + obj.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount)));
     }
 
     var db = require("./db");
