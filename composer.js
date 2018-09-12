@@ -135,14 +135,13 @@ async function writeTran(params, handleResult) {
         //isStable代表交易是否发送成功
         //isValid代表交易是否在共识网验证通过
         obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount + "", timestamp};
-        var address = params.change_address;
-        var address1 = await params.findAddressForJoint(params.change_address);
-        obj.pubkey = address1.definition[1].pubkey;
+        var address = await params.findAddressForJoint(params.change_address);
+        obj.pubkey = address.definition[1].pubkey;
         obj.fee = objectLength.getTotalPayloadSize(obj) + "";
         obj.type = 1;
 
         //TODO 测试   if (light.stable < obj.fee + obj.amount) {
-        if (light.findStable([address]) < (parseInt(obj.fee) + parseInt(obj.amount))) {
+        if (light.findStable(params.wallet) < (parseInt(obj.fee) + parseInt(obj.amount))) {
             return handleResult("not enough spendable funds from " + params.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount)));
         }
         //获取签名的BUF
@@ -202,7 +201,7 @@ async function writeTran(params, handleResult) {
 }
 
 /*
-	params.signing_addresses must sign the message but they do not necessarily pay 
+	params.signing_addresses must sign the message but they do not necessarily pay
 	params.paying_addresses pay for byte outputs and commissions
 */
 async function composeJointForJoint(params) {
@@ -508,7 +507,7 @@ async function composeJointForJoint(params) {
 
 
 /*
-	params.signing_addresses must sign the message but they do not necessarily pay 
+	params.signing_addresses must sign the message but they do not necessarily pay
 	params.paying_addresses pay for byte outputs and commissions
 */
 function composeJoint(params) {
