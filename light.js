@@ -30,9 +30,10 @@ async function updateHistory(addresses) {
     if (device.walletChanged) {
         device.walletChanged = false;
         await hashnethelper.initialLocalfullnodeList();
-        //初始化交易列表
-        await iniTranList(addresses);
     }
+    //初始化交易列表
+    await iniTranList(addresses);
+
     //存储此次交易记录的数组
     let trans = null;
     try {
@@ -62,6 +63,8 @@ async function updateHistory(addresses) {
             //初始化交易列表
             await iniTranList(addresses);
             for (var tran of trans) {
+                console.log("tranList");
+                console.log(JSON.stringify(tranList));
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
@@ -174,11 +177,11 @@ async function iniTranList(addresses) {
     if (tranAddr == [] || tranAddr != addresses || !tranList) {
         tranAddr = addresses;
         //余额 = 收到 - 发送
-        stable = parseInt( await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'good') - \n\
-			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
+        stable = parseInt( await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
+			(select (amount + fee) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
         //待确认
-        pending = parseInt(await db.single("select (select ifnull(sum(amount),0) from transactions where addressTo in (?) and result = 'pending') + \n\
-			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
+        pending = parseInt(await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
+			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
         //交易列表
         tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);

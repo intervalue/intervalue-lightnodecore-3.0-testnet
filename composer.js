@@ -15,7 +15,6 @@ var parentComposer = require('./parent_composer.js');
 var validation = require('./validation.js');
 var writer = require('./writer.js');
 var conf = require('./conf.js');
-var profiler = require('./profiler.js');
 var inputs = require('./inputs.js');
 var device = require('./device.js');
 var light = require('./light.js');
@@ -47,25 +46,6 @@ function createTextMessage(text) {
     };
 }
 
-// change goes back to the first paying address
-function composeTextJoint(arrSigningAddresses, arrPayingAddresses, text, signer, callbacks) {
-    composePaymentAndTextJoint(arrSigningAddresses, arrPayingAddresses, [{ address: arrPayingAddresses[0], amount: 0 }], text, signer, callbacks);
-}
-
-function composePaymentJoint(arrFromAddresses, arrOutputs, signer, callbacks) {
-    composeJoint({ paying_addresses: arrFromAddresses, outputs: arrOutputs, signer: signer, callbacks: callbacks });
-}
-
-function composePaymentAndTextJoint(arrSigningAddresses, arrPayingAddresses, arrOutputs, text, signer, callbacks) {
-    composeJoint({
-        signing_addresses: arrSigningAddresses,
-        paying_addresses: arrPayingAddresses,
-        outputs: arrOutputs,
-        messages: [createTextMessage(text)],
-        signer: signer,
-        callbacks: callbacks
-    });
-}
 
 function composeContentJoint(from_address, app, payload, signer, callbacks) {
     var objMessage = {
@@ -83,47 +63,6 @@ function composeContentJoint(from_address, app, payload, signer, callbacks) {
     });
 }
 
-function composeDefinitionChangeJoint(from_address, definition_chash, signer, callbacks) {
-    composeContentJoint(from_address, "address_definition_change", { definition_chash: definition_chash }, signer, callbacks);
-}
-
-function composeDataFeedJoint(from_address, data, signer, callbacks) {
-    composeContentJoint(from_address, "data_feed", data, signer, callbacks);
-}
-
-function composeDataJoint(from_address, data, signer, callbacks) {
-    composeContentJoint(from_address, "data", data, signer, callbacks);
-}
-
-function composeDedinitionTemplateJoint(from_address, arrDefinitionTemplate, signer, callbacks) {
-    composeContentJoint(from_address, "definition_template", arrDefinitionTemplate, signer, callbacks);
-}
-
-function composePollJoint(from_address, question, arrChoices, signer, callbacks) {
-    var poll_data = { question: question, choices: arrChoices };
-    composeContentJoint(from_address, "poll", poll_data, signer, callbacks);
-}
-
-function composeVoteJoint(from_address, poll_unit, choice, signer, callbacks) {
-    var vote_data = { unit: poll_unit, choice: choice };
-    composeContentJoint(from_address, "vote", vote_data, signer, callbacks);
-}
-
-function composeProfileJoint(from_address, profile_data, signer, callbacks) {
-    composeContentJoint(from_address, "profile", profile_data, signer, callbacks);
-}
-
-function composeAttestationJoint(from_address, attested_address, profile_data, signer, callbacks) {
-    composeContentJoint(from_address, "attestation", { address: attested_address, profile: profile_data }, signer, callbacks);
-}
-
-function composeAssetDefinitionJoint(from_address, asset_definition, signer, callbacks) {
-    composeContentJoint(from_address, "asset", asset_definition, signer, callbacks);
-}
-
-function composeAssetAttestorsJoint(from_address, asset, arrNewAttestors, signer, callbacks) {
-    composeContentJoint(from_address, "asset_attestors", { asset: asset, attestors: arrNewAttestors }, signer, callbacks);
-}
 
 //发送交易到共识网并更新数据库，刷新界面
 async function writeTran(params, handleResult) {
@@ -158,13 +97,11 @@ async function writeTran(params, handleResult) {
         obj = params;
     }
     obj.signature = signature;
-    alert(JSON.stringify(obj));
 
     var network = require('./network.js');
     //往共识网发送交易
     let result = await network.sendTransaction(obj);
 
-    // var result = '';
 
     //通过签名获取ID(44位)
     obj.id = crypto.createHash("sha256").update(signature, "utf8").digest("base64");
@@ -206,31 +143,6 @@ async function writeTran(params, handleResult) {
 */
 async function composeJointForJoint(params) {
 
-    // var arrWitnesses = params.witnesses;
-    // if (!arrWitnesses) {
-    // 	myWitnesses.readMyWitnesses(function (_arrWitnesses) {
-    // 		params.witnesses = _arrWitnesses;
-    // 		composeJoint(params);
-    // 	});
-    // 	return;
-    // }
-
-    /*if (conf.bLight && !params.lightProps){
-        var network = require('./network.js');
-        network.requestFromLightVendor(
-            'light/get_parents_and_last_ball_and_witness_list_unit',
-            {witnesses: arrWitnesses},
-            function(ws, request, response){
-                if (response.error)
-                    return params.callbacks.ifError(response.error);
-                if (!response.parent_units || !response.last_stable_mc_ball || !response.last_stable_mc_ball_unit || typeof response.last_stable_mc_ball_mci !== 'number')
-                    return params.callbacks.ifError("invalid parents from light vendor");
-                params.lightProps = response;
-                composeJoint(params);
-            }
-        );
-        return;
-    }*/
 
     // try to use as few paying_addresses as possible. Assuming paying_addresses are sorted such that the most well-funded addresses come first
     if (params.minimal && !params.send_all) {
@@ -520,23 +432,6 @@ function composeJoint(params) {
         });
         return;
     }
-
-    /*if (conf.bLight && !params.lightProps){
-        var network = require('./network.js');
-        network.requestFromLightVendor(
-            'light/get_parents_and_last_ball_and_witness_list_unit',
-            {witnesses: arrWitnesses},
-            function(ws, request, response){
-                if (response.error)
-                    return params.callbacks.ifError(response.error);
-                if (!response.parent_units || !response.last_stable_mc_ball || !response.last_stable_mc_ball_unit || typeof response.last_stable_mc_ball_mci !== 'number')
-                    return params.callbacks.ifError("invalid parents from light vendor");
-                params.lightProps = response;
-                composeJoint(params);
-            }
-        );
-        return;
-    }*/
 
     // try to use as few paying_addresses as possible. Assuming paying_addresses are sorted such that the most well-funded addresses come first
     if (params.minimal && !params.send_all) {
@@ -1025,18 +920,6 @@ function readSortedFundedAddresses(asset, arrAvailableAddresses, estimated_amoun
         function (rows) {
             var arrFundedAddresses = filterMostFundedAddresses(rows, estimated_amount);
             handleFundedAddresses(arrFundedAddresses);
-            /*	if (arrFundedAddresses.length === 0)
-                    return handleFundedAddresses([]);
-                if (!asset || arrFundedAddresses.length === arrAvailableAddresses.length) // base asset or all available addresses already used
-                    return handleFundedAddresses(arrFundedAddresses);
-
-                // add other addresses to pay for commissions (in case arrFundedAddresses don't have enough bytes to pay commissions)
-                var arrOtherAddresses = _.difference(arrAvailableAddresses, arrFundedAddresses);
-                readSortedFundedAddresses(null, arrOtherAddresses, TYPICAL_FEE, function(arrFundedOtherAddresses){
-                    if (arrFundedOtherAddresses.length === 0)
-                        return handleFundedAddresses(arrFundedAddresses);
-                    handleFundedAddresses(arrFundedAddresses.concat(arrFundedOtherAddresses));
-                });*/
         }
     );
 }
@@ -1065,18 +948,6 @@ async function readSortedFundedAddressesForJoint(asset, arrAvailableAddresses, e
         async function (rows) {
             var arrFundedAddresses = filterMostFundedAddresses(rows, estimated_amount);
             await handleFundedAddresses(arrFundedAddresses);
-            /*	if (arrFundedAddresses.length === 0)
-                    return handleFundedAddresses([]);
-                if (!asset || arrFundedAddresses.length === arrAvailableAddresses.length) // base asset or all available addresses already used
-                    return handleFundedAddresses(arrFundedAddresses);
-
-                // add other addresses to pay for commissions (in case arrFundedAddresses don't have enough bytes to pay commissions)
-                var arrOtherAddresses = _.difference(arrAvailableAddresses, arrFundedAddresses);
-                readSortedFundedAddresses(null, arrOtherAddresses, TYPICAL_FEE, function(arrFundedOtherAddresses){
-                    if (arrFundedOtherAddresses.length === 0)
-                        return handleFundedAddresses(arrFundedAddresses);
-                    handleFundedAddresses(arrFundedAddresses.concat(arrFundedOtherAddresses));
-                });*/
         }
     );
 }
@@ -1111,17 +982,7 @@ function composeMinimalJoint(params) {
     });
 }
 
-function composeAndSaveMinimalJoint(params) {
-    var params_with_save = _.clone(params);
-    params_with_save.callbacks = getSavingCallbacks(params.callbacks);
-    composeMinimalJoint(params_with_save);
-}
 
-function composeAndSaveMinimalJointForJoint(params) {
-    var params_with_save = _.clone(params);
-    params_with_save.callbacks = getSavingCallbacksForJoint(params.callbacks);
-    composeMinimalJointForJoint(params_with_save);
-}
 
 function getSavingCallbacksForJoint(callbacks) {
     return {
@@ -1288,9 +1149,6 @@ function postJointToLightVendorIfNecessaryAndSave(objJoint, onLightError, save) 
         save();
 }
 
-function composeAndSavePaymentJoint(arrFromAddresses, arrOutputs, signer, callbacks) {
-    composePaymentJoint(arrFromAddresses, arrOutputs, signer, getSavingCallbacks(callbacks));
-}
 
 
 function getMessageIndexByPayloadHash(objUnit, payload_hash) {
@@ -1305,19 +1163,6 @@ function generateBlinding() {
 }
 
 
-exports.composePaymentAndTextJoint = composePaymentAndTextJoint;
-exports.composeTextJoint = composeTextJoint;
-exports.composePaymentJoint = composePaymentJoint;
-exports.composeDefinitionChangeJoint = composeDefinitionChangeJoint;
-exports.composeDataFeedJoint = composeDataFeedJoint;
-exports.composeDataJoint = composeDataJoint;
-exports.composeDedinitionTemplateJoint = composeDedinitionTemplateJoint;
-exports.composePollJoint = composePollJoint;
-exports.composeVoteJoint = composeVoteJoint;
-exports.composeProfileJoint = composeProfileJoint;
-exports.composeAttestationJoint = composeAttestationJoint;
-exports.composeAssetDefinitionJoint = composeAssetDefinitionJoint;
-exports.composeAssetAttestorsJoint = composeAssetAttestorsJoint;
 
 exports.composeJoint = composeJoint;
 
@@ -1325,13 +1170,10 @@ exports.signMessage = signMessage;
 
 exports.filterMostFundedAddresses = filterMostFundedAddresses;
 exports.readSortedFundedAddresses = readSortedFundedAddresses;
-exports.composeAndSaveMinimalJoint = composeAndSaveMinimalJoint;
 
 exports.sortOutputs = sortOutputs;
 exports.getSavingCallbacks = getSavingCallbacks;
 exports.postJointToLightVendorIfNecessaryAndSave = postJointToLightVendorIfNecessaryAndSave;
-exports.composeAndSavePaymentJoint = composeAndSavePaymentJoint;
-exports.composeAndSaveMinimalJointForJoint = composeAndSaveMinimalJointForJoint;
 exports.generateBlinding = generateBlinding;
 exports.getMessageIndexByPayloadHash = getMessageIndexByPayloadHash;
 exports.writeTran = writeTran;
