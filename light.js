@@ -30,9 +30,10 @@ async function updateHistory(addresses) {
     if (device.walletChanged) {
         device.walletChanged = false;
         await hashnethelper.initialLocalfullnodeList();
+        //初始化交易列表
+        await iniTranList(addresses);
     }
-    //初始化交易列表
-    await iniTranList(addresses);
+
 
     //存储此次交易记录的数组
     let trans = null;
@@ -50,6 +51,7 @@ async function updateHistory(addresses) {
                 }
             }
         }
+        console.log("trans" , trans.length);
         console.log(JSON.stringify(trans));
         //如果为NULL，则表示访问共识网有问题，返回。
         if (trans == null) {
@@ -63,7 +65,7 @@ async function updateHistory(addresses) {
             //初始化交易列表
             await iniTranList(addresses);
             for (var tran of trans) {
-                console.log("tranList");
+                console.log("tranList" ,tranList.length);
                 console.log(JSON.stringify(tranList));
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
