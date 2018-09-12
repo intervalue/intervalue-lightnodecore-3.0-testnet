@@ -30,10 +30,9 @@ async function updateHistory(addresses) {
     if (device.walletChanged) {
         device.walletChanged = false;
         await hashnethelper.initialLocalfullnodeList();
-        //初始化交易列表
-        await iniTranList(addresses);
     }
-
+    //初始化交易列表
+    await iniTranList(addresses);
 
     //存储此次交易记录的数组
     let trans = null;
@@ -51,7 +50,6 @@ async function updateHistory(addresses) {
                 }
             }
         }
-        console.log("trans" , trans.length);
         console.log(JSON.stringify(trans));
         //如果为NULL，则表示访问共识网有问题，返回。
         if (trans == null) {
@@ -65,7 +63,7 @@ async function updateHistory(addresses) {
             //初始化交易列表
             await iniTranList(addresses);
             for (var tran of trans) {
-                console.log("tranList" ,tranList.length);
+                console.log("tranList");
                 console.log(JSON.stringify(tranList));
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
@@ -193,12 +191,14 @@ async function iniTranList(addresses) {
 
 //交易列表
 function findTranList(wallet,cb) {
-     db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
+    db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?))", [wallet, wallet,wallet],function (row) {
-         if(row.length > 0) {
+        if(row.length > 0) {
             cb(row);
-         }
-     });
+        }else{
+            cb([]);
+        }
+    });
 }
 
 //余额
@@ -209,10 +209,13 @@ async function findStable(wallet){
 
 //余额
 function findStable2(wallet,cb){
+    alert(wallet);
     db.query("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", [wallet, wallet] ,function (rows) {
         if(rows.length > 0) {
             cb(rows[0].stable);
+        }else {
+            cb(0);
         }
     });
 }
