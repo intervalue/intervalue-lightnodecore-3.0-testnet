@@ -1,15 +1,8 @@
 /*jslint node: true */
 "use strict";
 var async = require('async');
-var storage = require('./storage.js');
-var objectHash = require("./object_hash.js");
 var db = require('./db.js');
 var mutex = require('./mutex.js');
-var constants = require("./constants.js");
-var graph = require('./graph.js');
-var validation = require('./validation.js');
-var ValidationUtils = require("./validation_utils.js");
-var parentComposer = require('./parent_composer.js');
 var eventBus = require('./event_bus.js');
 var device = require('./device.js');
 var hashnethelper = require('./hashnethelper');
