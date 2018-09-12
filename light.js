@@ -307,7 +307,7 @@ async function insertTran(tran) {
     var cmds = [];
     var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result";
     var values = "?,?,?,?,?,?,?";
-    var params = [tran.hash, tran.time, tran.amount,tran.fee || 0, tran.fromAddress, tran.toAddress, getResultFromTran(tran)];
+    var params = [tran.hash, tran.updateTime, tran.amount,tran.fee || 0, tran.fromAddress, tran.toAddress, getResultFromTran(tran)];
     db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
