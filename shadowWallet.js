@@ -62,8 +62,15 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
             cb(false);
             break;
     }
+    var sign_json = {
+        name:"shadow",
+        type:"sign",
+        addr:json.addr,
+        random:json.random
+    };
 
-    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(json), "utf8").digest();
+
+    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(sign_json), "utf8").digest();
 
     var mnemonic = new Mnemonic(words);
     var xPrivKey = mnemonic.toHDPrivateKey("");
@@ -129,13 +136,20 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     var xpub = json.expub;
     var pubkey = json.pubkey;
 
+    var sing_json = {
+        name:"shadow",
+        type:"sign",
+        addr:addr,
+        random:json.random
+    };
+
     var result = {
         'addr':addr,
         'sign':sign,
         'xpub':xpub,
         'pubkey':pubkey
     };
-    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(signatureCode), "utf8").digest();
+    var buf_to_sign = crypto.createHash("sha256").update(getSourceString(sing_json), "utf8").digest();
 
     var pub1 = ecdsaSig.recover(buf_to_sign,sign,1).toString("base64");
     var pub2 = ecdsaSig.recover(buf_to_sign,sign,0).toString("base64");
