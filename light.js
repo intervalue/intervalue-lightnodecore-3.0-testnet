@@ -209,7 +209,6 @@ async function findStable(wallet){
 
 //余额
 function findStable2(wallet,cb){
-    alert(wallet);
     db.query("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", [wallet, wallet] ,function (rows) {
         if(rows.length > 0) {
