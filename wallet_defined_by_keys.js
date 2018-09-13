@@ -6,10 +6,8 @@ var db = require('./db.js');
 var constants = require('./constants.js');
 var mutex = require('./mutex.js');
 var conf = require('./conf.js');
-var composer = require('./composer.js');
 var objectHash = require('./object_hash.js');
 var _ = require('lodash');
-var storage = require('./storage.js');
 var network = require('./network.js');
 var device = require('./device.js');
 var walletGeneral = require('./wallet_general.js');
@@ -357,13 +355,19 @@ function deleteWallet(wallet, rejector_device_address, onDone) {
 }
 
 // called from network, without user interaction
-// One of the proposed cosigners declined wallet creation
+// One of the proposed cosigners declined wallet creation\
+/**
+ * 根据walletid删除钱包数据库信息
+ * @param wallet
+ * @param onDone
+ */
 function deleteWalletFromUI(wallet, onDone) {
 	var arrQueries = [];
 	db.addQuery(arrQueries, "DELETE FROM my_addresses WHERE wallet=?", [wallet]);
 	db.addQuery(arrQueries, "DELETE FROM extended_pubkeys WHERE wallet=?", [wallet]);
 	db.addQuery(arrQueries, "DELETE FROM wallet_signing_paths WHERE wallet=?", [wallet]);
 	db.addQuery(arrQueries, "DELETE FROM wallets WHERE wallet=?", [wallet]);
+	db.addQuery(arrQueries, "DELETE FROM transactions WHERE addressFrom in (select address from my_addresses where wallet =?) or addressTo =(select address from my_addresses where wallet = ?)", [wallet,wallet])
 	// delete unused indirect correspondents
 	async.series(arrQueries, function () {
 		onDone();
@@ -761,15 +765,6 @@ function readAddressInfo(address, handleAddress) {
 	});
 }
 
-function readAllAddresses(wallet, handleAddresses) {
-	db.query(
-		"SELECT address FROM my_addresses WHERE wallet=?",
-		[wallet],
-		function (rows) {
-			handleAddresses(rows.map(function (row) { return row.address; }));
-		}
-	);
-}
 
 
 
@@ -804,13 +799,6 @@ function readDeviceAddressesControllingPaymentAddresses(conn, arrAddresses, hand
 	);
 }
 
-function forwardPrivateChainsToOtherMembersOfAddresses(arrChains, arrAddresses, conn, onSaved) {
-	console.log("forwardPrivateChainsToOtherMembersOfAddresses", arrAddresses);
-	conn = conn || db;
-	readDeviceAddressesControllingPaymentAddresses(conn, arrAddresses, function (arrDeviceAddresses) {
-		walletGeneral.forwardPrivateChainsToDevices(arrDeviceAddresses, arrChains, true, conn, onSaved);
-	});
-}
 
 
 
