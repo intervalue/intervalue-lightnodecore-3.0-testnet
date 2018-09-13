@@ -1755,4 +1755,4 @@ exports.getSigner = getSigner;
 exports.signMessage = signMessage;
 exports.storePrivateAssetPayload = storePrivateAssetPayload;
 exports.handlePrivatePaymentFile = handlePrivatePaymentFile;
-xeports.getWalletsInfo = getWalletsInfo;
+exports.getWalletsInfo = getWalletsInfo;
