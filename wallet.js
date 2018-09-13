@@ -1408,44 +1408,6 @@ function forwardPrivateChainsToOtherMembersOfSharedAddresses(arrChainsOfCosigner
 	});
 }
 
-function sendTextcoinEmail(email, subject, amount, asset, mnemonic) {
-	var mail = require('./mail.js' + '');
-	var usd_amount_str = '';
-	if (!asset) {
-		amount -= constants.TEXTCOIN_CLAIM_FEE;
-		if (network.exchangeRates['GBYTE_USD']) {
-			usd_amount_str = " (≈" + ((amount / 1e9) * network.exchangeRates['GBYTE_USD']).toLocaleString([], { maximumFractionDigits: 2 }) + " USD)";
-		}
-		amount = (amount / 1e9).toLocaleString([], { maximumFractionDigits: 9 });
-		asset = 'GB';
-	}
-	replaceInTextcoinTemplate({ amount: amount, asset: asset, mnemonic: mnemonic, usd_amount_str: usd_amount_str }, function (html, text) {
-		mail.sendmail({
-			to: email,
-			from: conf.from_email || "noreply@intervalue.org",
-			subject: subject || "Intervalue user beamed you money",
-			body: text,
-			htmlBody: html
-		});
-	});
-}
-
-function replaceInTextcoinTemplate(params, handleText) {
-	var fs = require('fs' + '');
-	fs.readFile(__dirname + '/email_template.html', 'utf8', function (err, template) {
-		if (err)
-			throw Error("failed to read template: " + err);
-		_.forOwn(params, function (value, key) {
-			var re = new RegExp('\\{\\{' + key + '\\}\\}', "g");
-			template = template.replace(re, value);
-		});
-		template = template.replace(/\{\{\w*\}\}/g, '');
-
-		var text = "Here is your link to receive " + params.amount + " " + params.asset + params.usd_amount_str + ": https://intervalue.org/#textcoin?" + params.mnemonic;
-		handleText(template, text);
-	});
-}
-
 function expandMnemonic(mnemonic) {
 	var addrInfo = {};
 	mnemonic = mnemonic.toLowerCase().split('-').join(' ');
