@@ -45,3 +45,4 @@ Session.vim
 
 *.iml
 .idea
+/shadowWtest.js

@@ -37,31 +37,8 @@ function sortOutputs(a, b) {
     return addr_comparison ? addr_comparison : (a.amount - b.amount);
 }
 
-function createTextMessage(text) {
-    return {
-        app: "text",
-        payload_location: "inline",
-        payload_hash: objectHash.getBase64Hash(text),
-        payload: text
-    };
-}
 
 
-function composeContentJoint(from_address, app, payload, signer, callbacks) {
-    var objMessage = {
-        app: app,
-        payload_location: "inline",
-        payload_hash: objectHash.getBase64Hash(payload),
-        payload: payload
-    };
-    composeJoint({
-        paying_addresses: [from_address],
-        outputs: [{ address: from_address, amount: 0 }],
-        messages: [objMessage],
-        signer: signer,
-        callbacks: callbacks
-    });
-}
 
 
 //发送交易到共识网并更新数据库，刷新界面
@@ -984,75 +961,6 @@ function composeMinimalJoint(params) {
 
 
 
-function getSavingCallbacksForJoint(callbacks) {
-    return {
-        ifError: callbacks.ifError,
-        ifNotEnoughFunds: callbacks.ifNotEnoughFunds,
-        ifOk: async function (objJoint, assocPrivatePayloads, composer_unlock) {
-            var objUnit = objJoint.unit;
-            var unit = objUnit.unit;
-            await validation.validateForJoint(objJoint, {
-                ifUnitError: function (err) {
-                    composer_unlock();
-                    callbacks.ifError("Validation error: " + err);
-                    //	throw Error("unexpected validation error: "+err);
-                },
-                ifJointError: function (err) {
-                    throw Error("unexpected validation joint error: " + err);
-                },
-                ifTransientError: function (err) {
-                    throw Error("unexpected validation transient error: " + err);
-                },
-                ifNeedHashTree: function () {
-                    throw Error("unexpected need hash tree");
-                },
-                ifNeedParentUnits: function (arrMissingUnits) {
-                    throw Error("unexpected dependencies: " + arrMissingUnits.join(", "));
-                },
-                ifOk: async function (objValidationState, validation_unlock) {
-                    console.log("base asset OK " + objValidationState.sequence);
-                    if (objValidationState.sequence !== 'good') {
-                        validation_unlock();
-                        composer_unlock();
-                        return callbacks.ifError("Bad sequence " + objValidationState.sequence);
-                    }
-                    await postJointToLightVendorIfNecessaryAndSaveForJoint(
-                        objJoint,
-                        function onLightError(err) { // light only
-                            console.log("failed to post base payment " + unit);
-                            var eventBus = require('./event_bus.js');
-                            if (err.match(/signature/))
-                                eventBus.emit('nonfatal_error', "failed to post unit " + unit + ": " + err + "; " + JSON.stringify(objUnit), new Error());
-                            validation_unlock();
-                            composer_unlock();
-                            callbacks.ifError(err);
-                        },
-                        function save() {
-                            writer.saveJoint(
-                                objJoint, objValidationState,
-                                function (conn, cb) {
-                                    if (typeof callbacks.preCommitCb === "function")
-                                        callbacks.preCommitCb(conn, objJoint, cb);
-                                    else
-                                        cb();
-                                },
-                                function onDone(err) {
-                                    validation_unlock();
-                                    composer_unlock();
-                                    if (err)
-                                        return callbacks.ifError(err);
-                                    console.log("composer saved unit " + unit);
-                                    light.refreshUnitList({ unitId: objJoint.unit.unit, isStable: 0, isValid: 1 });
-                                    callbacks.ifOk(objJoint, assocPrivatePayloads);
-                                }
-                            );
-                        }
-                    );
-                } // ifOk validation
-            }); // validate
-        }
-    };
-}
 
 function getSavingCallbacks(callbacks) {
     return {
