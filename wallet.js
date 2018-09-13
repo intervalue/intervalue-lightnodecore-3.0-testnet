@@ -858,8 +858,8 @@ function fetchAssetMetadata(asset, handleMetadata) {
     });
 }
 
-function readTransactionHistory(opts, handleHistory) {
-    light.findTranList(opts.wallet,function (cb) {
+function readTransactionHistory(wallet, handleHistory) {
+    light.findTranList(wallet,function (cb) {
         return handleHistory(cb);
     });
 }
