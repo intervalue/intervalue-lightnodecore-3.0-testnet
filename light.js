@@ -30,9 +30,9 @@ async function updateHistory(addresses) {
     if (device.walletChanged) {
         device.walletChanged = false;
         await hashnethelper.initialLocalfullnodeList();
+        //初始化交易列表
+        await iniTranList(addresses);
     }
-    //初始化交易列表
-    await iniTranList(addresses);
 
     //存储此次交易记录的数组
     let trans = null;
@@ -119,7 +119,7 @@ function refreshTranList(tran) {
     }
     else {
         //如果本地不存在记录，需要插入新的记录到列表中
-        my_tran = { id: tran.id, creation_date: tran.creation_date, amount: tran.amount, fee: tran.fee, addressFrom: tran.addressFrom, addressTo: tran.addressTo, result: getResultFromTran(tran) };
+        my_tran = { id: tran.hash, creation_date: tran.creation_date, amount: tran.amount, fee: tran.fee, addressFrom: tran.addressFrom, addressTo: tran.addressTo, result: getResultFromTran(tran) };
         //如果是交易的接收方
         if (tranAddr.indexOf(tran.to)) {
             //更新余额和待确认金额
