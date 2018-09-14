@@ -50,6 +50,11 @@ exports.getSignatureCode = function(address,cb){
  * @returns {*}
  */
 exports.getSignatureDetlCode = function(signatureCode,words, cb){
+    if(words == null || words == "") {
+        cb("mnemonic could not be null~!");
+        return ;
+    }
+
     var json;
     switch(typeof signatureCode) {
         case "string":
