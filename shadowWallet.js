@@ -49,9 +49,9 @@ exports.getSignatureCode = function(address,cb){
  * @param cb
  * @returns {*}
  */
-exports.getSignatureDetlCode = function(signatureCode,words, cb){
-    if(words == null || words == "") {
-        cb("mnemonic could not be null~!");
+exports.getSignatureDetlCode = function(signatureCode,xPrivkey, cb){
+    if(xPrivkey == null || xPrivkey == "") {
+        cb("xPrivkey could not be null~!");
         return ;
     }
 
@@ -77,8 +77,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(sign_json), "utf8").digest();
 
-    var mnemonic = new Mnemonic(words);
-    var xPrivKey = mnemonic.toHDPrivateKey("");
+    var xPrivKey = new Bitcore.HDPrivateKey.fromString(xPrivkey);
 
 
     var path = "m/44'/0'/0'/0/0";
