@@ -770,8 +770,8 @@ function removeCorrespondentDevice(device_address, onDone) {
 // -------------------------------
 // witnesses
 
-
-function getWitnessesFromHub(cb) {
+//TODO delete
+/*function getWitnessesFromHub(cb) {
     console.log('getWitnessesFromHub');
     if (!my_device_hub) {
         console.log('getWitnessesFromHub: no hub yet');
@@ -789,7 +789,7 @@ function getWitnessesFromHub(cb) {
             cb(null, arrWitnessesFromHub);
         });
     });
-}
+}*/
 
 // responseHandler(error, response) callback
 function requestFromHub(command, params, responseHandler) {
@@ -846,7 +846,8 @@ exports.readCorrespondentsByDeviceAddresses = readCorrespondentsByDeviceAddresse
 exports.updateCorrespondentProps = updateCorrespondentProps;
 exports.removeCorrespondentDevice = removeCorrespondentDevice;
 exports.addIndirectCorrespondents = addIndirectCorrespondents;
-exports.getWitnessesFromHub = getWitnessesFromHub;
+//TODO delete
+// exports.getWitnessesFromHub = getWitnessesFromHub;
 exports.requestFromHub = requestFromHub;
 exports.getHubWs = getHubWs;
 exports.getInfo = getInfo;
