@@ -107,15 +107,6 @@ function setDevicePublicKey(pub_b64) {
 
 
 
-function checkDeviceAddress() {
-    if (!objMyPermanentDeviceKey)
-        return;
-    var derived_my_device_address = objectHash.getDeviceAddress(objMyPermanentDeviceKey.pub_b64);
-    if (my_device_address !== derived_my_device_address) {
-        breadcrumbs.add('different device address: old ' + my_device_address + ', derived ' + derived_my_device_address);
-        throw Error('different device address: old ' + my_device_address + ', derived ' + derived_my_device_address);
-    }
-}
 
 function setTempKeys(temp_priv_key, prev_temp_priv_key, fnSaveTempKeys) {
     //	console.log("setTempKeys", temp_priv_key, prev_temp_priv_key);
