@@ -63,7 +63,7 @@ async function writeTran(params, handleResult) {
         //获取签名的BUF
         var buf_to_sign = objectHash.getUnitHashToSign(obj);
         //获取签名的私钥
-        var privKeyBuf = params.getLocalPrivateKey(address.account, address.is_change, address.address_index);
+        var privKeyBuf = params.getLocalPrivateKey();
         //通过私钥进行签名
         signature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
     } else {
@@ -856,7 +856,6 @@ function signMessage(from_address, message, signer, handleResult) {
     });
 }
 
-var TYPICAL_FEE = 1000;
 var MAX_FEE = 20000;
 
 function filterMostFundedAddresses(rows, estimated_amount) {
@@ -901,63 +900,7 @@ function readSortedFundedAddresses(asset, arrAvailableAddresses, estimated_amoun
     );
 }
 
-async function readSortedFundedAddressesForJoint(asset, arrAvailableAddresses, estimated_amount, spend_unconfirmed, handleFundedAddresses) {
-    if (arrAvailableAddresses.length === 0)
-        return await handleFundedAddresses([]);
-    if (estimated_amount && typeof estimated_amount !== 'number')
-        throw Error('invalid estimated amount: ' + estimated_amount);
-    // addresses closest to estimated amount come first
-    var order_by = estimated_amount ? "(SUM(amount)>" + estimated_amount + ") DESC, ABS(SUM(amount)-" + estimated_amount + ") ASC" : "SUM(amount) DESC";
-    await db.query(
-        "SELECT * FROM ( \n\
-            SELECT address, SUM(amount) AS total \n\
-            FROM outputs \n\
-            CROSS JOIN units USING(unit) \n\
-            WHERE address IN(?) "+ inputs.getConfirmationConditionSql(spend_unconfirmed) + " AND sequence='good' \n\
-				AND is_spent=0 AND asset"+ (asset ? "=?" : " IS NULL") + " \n\
-			GROUP BY address ORDER BY "+ order_by + " \n\
-		) AS t \n\
-		WHERE NOT EXISTS ( \n\
-			SELECT * FROM units CROSS JOIN unit_authors USING(unit) \n\
-			WHERE is_stable=0 AND unit_authors.address=t.address AND definition_chash IS NOT NULL \n\
-		)",
-        asset ? [arrAvailableAddresses, asset] : [arrAvailableAddresses],
-        async function (rows) {
-            var arrFundedAddresses = filterMostFundedAddresses(rows, estimated_amount);
-            await handleFundedAddresses(arrFundedAddresses);
-        }
-    );
-}
 
-// tries to use as few of the params.available_paying_addresses as possible.
-// note: it doesn't select addresses that have _only_ witnessing or headers commissions outputs
-function composeMinimalJointForJoint(params) {
-    var estimated_amount = (params.send_all || params.retrieveMessages) ? 0 : params.outputs.reduce(function (acc, output) { return acc + output.amount; }, 0) + TYPICAL_FEE;
-    readSortedFundedAddressesForJoint(null, params.available_paying_addresses, estimated_amount, params.spend_unconfirmed || 'own', function (arrFundedPayingAddresses) {
-        if (arrFundedPayingAddresses.length === 0)
-            return params.callbacks.ifNotEnoughFunds("all paying addresses are unfunded");
-        var minimal_params = _.clone(params);
-        delete minimal_params.available_paying_addresses;
-        minimal_params.minimal = true;
-        minimal_params.paying_addresses = arrFundedPayingAddresses;
-        composeJointForJoint(minimal_params);
-    });
-}
-
-// tries to use as few of the params.available_paying_addresses as possible.
-// note: it doesn't select addresses that have _only_ witnessing or headers commissions outputs
-function composeMinimalJoint(params) {
-    var estimated_amount = (params.send_all || params.retrieveMessages) ? 0 : params.outputs.reduce(function (acc, output) { return acc + output.amount; }, 0) + TYPICAL_FEE;
-    readSortedFundedAddresses(null, params.available_paying_addresses, estimated_amount, params.spend_unconfirmed || 'own', function (arrFundedPayingAddresses) {
-        if (arrFundedPayingAddresses.length === 0)
-            return params.callbacks.ifNotEnoughFunds("all paying addresses are unfunded");
-        var minimal_params = _.clone(params);
-        delete minimal_params.available_paying_addresses;
-        minimal_params.minimal = true;
-        minimal_params.paying_addresses = arrFundedPayingAddresses;
-        composeJoint(minimal_params);
-    });
-}
 
 
 
@@ -1031,17 +974,6 @@ function getSavingCallbacks(callbacks) {
     };
 }
 
-async function postJointToLightVendorIfNecessaryAndSaveForJoint(objJoint, onLightError, save) {
-    var network = require('./network.js');
-    console.log(JSON.stringify(objJoint));
-    let result = await network.sendTransaction(objJoint);
-    if (result) {
-        onLightError(result);
-    }
-    else {
-        save();
-    }
-}
 
 function postJointToLightVendorIfNecessaryAndSave(objJoint, onLightError, save) {
     if (conf.bLight) { // light clients cannot save before receiving OK from light vendor
