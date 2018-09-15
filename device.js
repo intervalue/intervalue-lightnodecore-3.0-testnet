@@ -107,15 +107,6 @@ function setDevicePublicKey(pub_b64) {
 
 
 
-function checkDeviceAddress() {
-    if (!objMyPermanentDeviceKey)
-        return;
-    var derived_my_device_address = objectHash.getDeviceAddress(objMyPermanentDeviceKey.pub_b64);
-    if (my_device_address !== derived_my_device_address) {
-        breadcrumbs.add('different device address: old ' + my_device_address + ', derived ' + derived_my_device_address);
-        throw Error('different device address: old ' + my_device_address + ', derived ' + derived_my_device_address);
-    }
-}
 
 function setTempKeys(temp_priv_key, prev_temp_priv_key, fnSaveTempKeys) {
     //	console.log("setTempKeys", temp_priv_key, prev_temp_priv_key);
@@ -770,8 +761,8 @@ function removeCorrespondentDevice(device_address, onDone) {
 // -------------------------------
 // witnesses
 
-
-function getWitnessesFromHub(cb) {
+//TODO delete
+/*function getWitnessesFromHub(cb) {
     console.log('getWitnessesFromHub');
     if (!my_device_hub) {
         console.log('getWitnessesFromHub: no hub yet');
@@ -789,7 +780,7 @@ function getWitnessesFromHub(cb) {
             cb(null, arrWitnessesFromHub);
         });
     });
-}
+}*/
 
 // responseHandler(error, response) callback
 function requestFromHub(command, params, responseHandler) {
@@ -846,7 +837,8 @@ exports.readCorrespondentsByDeviceAddresses = readCorrespondentsByDeviceAddresse
 exports.updateCorrespondentProps = updateCorrespondentProps;
 exports.removeCorrespondentDevice = removeCorrespondentDevice;
 exports.addIndirectCorrespondents = addIndirectCorrespondents;
-exports.getWitnessesFromHub = getWitnessesFromHub;
+//TODO delete
+// exports.getWitnessesFromHub = getWitnessesFromHub;
 exports.requestFromHub = requestFromHub;
 exports.getHubWs = getHubWs;
 exports.getInfo = getInfo;
