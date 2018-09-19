@@ -49,9 +49,9 @@ exports.getSignatureCode = function(address,cb){
  * @param cb
  * @returns {*}
  */
-exports.getSignatureDetlCode = function(signatureCode,words, cb){
-    if(words == null || words == "") {
-        cb("mnemonic could not be null~!");
+exports.getSignatureDetlCode = function(signatureCode,xPrivkey, cb){
+    if(xPrivkey == null || xPrivkey == "") {
+        cb("xPrivkey could not be null~!");
         return ;
     }
 
@@ -77,8 +77,7 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(sign_json), "utf8").digest();
 
-    var mnemonic = new Mnemonic(words);
-    var xPrivKey = mnemonic.toHDPrivateKey("");
+    var xPrivKey = new Bitcore.HDPrivateKey.fromString(xPrivkey);
 
 
     var path = "m/44'/0'/0'/0/0";
@@ -93,13 +92,13 @@ exports.getSignatureDetlCode = function(signatureCode,words, cb){
 
     signatureDetlCode =
         {
-          name:"shadow",
-          type:"signDetl",
-          signature:sign_64,
-          random:json.random,
-          expub:xpubkey +'',
-          addr:json.addr,
-          pubkey:pubkey
+            name:"shadow",
+            type:"signDetl",
+            signature:sign_64,
+            random:json.random,
+            expub:xpubkey +'',
+            addr:json.addr,
+            pubkey:pubkey
         };
     return cb(signatureDetlCode);
 };
@@ -285,7 +284,12 @@ exports.getTradingUnit = function (opts ,cb) {
  * @param cb
  * @returns {Promise<void>}
  */
-exports.signTradingUnit = function (opts ,words ,cb) {
+exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
+
+    if(xPrivkey == null || xPrivkey == "") {
+        cb("xPrivkey could not be null~!");
+        return ;
+    }
 
     switch(typeof opts) {
         case "string":
@@ -321,9 +325,9 @@ exports.signTradingUnit = function (opts ,words ,cb) {
     var buf_to_sign = objectHash.getUnitHashToSign(obj);
 
     //签名
-    var mnemonic = new Mnemonic(words);
-    var xPrivKey = mnemonic.toHDPrivateKey("");
-
+    // var mnemonic = new Mnemonic(words);
+    // var xPrivKey = mnemonic.toHDPrivateKey("");
+    var xPrivKey = new Bitcore.HDPrivateKey.fromString(xPrivkey);
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
