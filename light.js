@@ -202,7 +202,7 @@ async function iniTranList(addresses) {
 //交易列表
 function findTranList(wallet,cb) {
     db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
-		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?))", [wallet, wallet,wallet],function (row) {
+		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?)) order by creation_date desc", [wallet, wallet,wallet],function (row) {
         if(row.length > 0) {
             cb(row);
         }else{
