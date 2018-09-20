@@ -92,8 +92,8 @@ async function writeTran(params, handleResult) {
         await mutex.lock(["write"], async function (unlock) {
             try {
                 //更新数据库
-                await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo) values (?,?,?,?,?,?)",
-                    obj.id, obj.timestamp, obj.amount, obj.fee, obj.fromAddress, obj.toAddress);
+                await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo,result) values (?,?,?,?,?,?,?)",
+                    obj.id, obj.timestamp, obj.amount, obj.fee, obj.fromAddress, obj.toAddress,"pending");
                 //更新列表
                 obj.isStable = 1;
                 obj.isValid = 0;

@@ -67,7 +67,6 @@ async function updateHistory(addresses) {
 
                 console.log(JSON.stringify(tranList));
 
-
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
