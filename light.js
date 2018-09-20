@@ -80,13 +80,15 @@ async function updateHistory(addresses) {
                 //本地不存在此交易记录，需往本地插入交易记录
                 else if (!my_tran && tran.isValid) {
                     await insertTran(tran);
+
+                    if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
+                        db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
+                            alert(rs);
+                        });
+                    }
                 }
 
-                if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
-                    db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
-                        alert(rs);
-                    });
-                }
+
 
             }
         }
