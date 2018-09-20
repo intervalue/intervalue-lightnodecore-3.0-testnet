@@ -2782,7 +2782,7 @@ function startRelay() {
 		addOutboundPeers();
 		// retry lost and failed connections every 1 minute
 		setInterval(addOutboundPeers, 60 * 1000);
-		setTimeout(checkIfHaveEnoughOutboundPeersAndAdd, 30 * 1000);
+		h(checkIfHaveEnoughOutboundPeersAndAdd, 30 * 1000);
 		setInterval(purgeDeadPeers, 30 * 60 * 1000);
 	}
 	// purge peer_events every 6 hours, removing those older than 3 days ago.

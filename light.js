@@ -62,9 +62,12 @@ async function updateHistory(addresses) {
         else {
             //初始化交易列表
             await iniTranList(addresses);
+            console.log("======tranList");
             for (var tran of trans) {
-                console.log("tranList");
+
                 console.log(JSON.stringify(tranList));
+
+
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
@@ -78,6 +81,13 @@ async function updateHistory(addresses) {
                 else if (!my_tran && tran.isValid) {
                     await insertTran(tran);
                 }
+
+                if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
+                    db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
+                        alert(rs);
+                    });
+                }
+
             }
         }
     }
