@@ -1901,6 +1901,11 @@ function requestProofsOfJointsIfNewOrUnstable(arrUnits, onDone) {
 	});
 }
 
+/**
+ * 发送交易 到共识网
+ * @param unit
+ * @returns {Promise<*>}
+ */
 async function sendTransaction(unit) {
 	return await hashnethelper.sendMessage(unit);
 }
@@ -2120,7 +2125,6 @@ function handleJustsaying(ws, subject, body) {
 			if (ws.bOutbound) // ignore: if you are outbound, I already know your url
 				break;
 			// inbound only
-			if (ws.bAdvertisedOwnUrl) // allow it only once per connection
 				break;
 			ws.bAdvertisedOwnUrl = true;
 			if (url.indexOf('ws://') !== 0 && url.indexOf('wss://') !== 0) // invalid url
@@ -2797,6 +2801,9 @@ function startRelay() {
 	setInterval(findAndHandleJointsThatAreReady, 5 * 1000);
 }
 
+/**
+ * 定时任务：拉取共识网交易记录
+ */
 function startLightClient() {
 	wss = { clients: [] };
 	// rerequestLostJointsOfPrivatePayments();
