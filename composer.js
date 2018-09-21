@@ -64,6 +64,7 @@ async function writeTran(params, handleResult) {
         var buf_to_sign = objectHash.getUnitHashToSign(obj);
         //获取签名的私钥
         var path = "m/44'/0'/0'/0/0";
+        var Bitcore = require('bitcore-lib');
         var xPrivKey = new Bitcore.HDPrivateKey.fromString(params.xPrivKey);
         var privateKey = xPrivKey.derive(path).privateKey;
         //var privKeyBuf = privateKey.toBuffer();
