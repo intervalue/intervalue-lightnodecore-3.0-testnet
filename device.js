@@ -168,15 +168,6 @@ function setWalletId(walletId) {
     walletId = '';
 }
 
-function setDeviceHub(device_hub) {
-    console.log("setDeviceHub", device_hub);
-    var bChanged = (device_hub !== my_device_hub);
-    my_device_hub = device_hub;
-    if (bChanged) {
-        network.addPeer(conf.WS_PROTOCOL + device_hub);
-        loginToHub();
-    }
-}
 
 function isValidPubKey(b64_pubkey) {
     return ecdsa.publicKeyVerify(new Buffer(b64_pubkey, 'base64'));
@@ -225,6 +216,7 @@ function getHubWs(cb) {
 setInterval(loginToHub, RECONNECT_TO_HUB_PERIOD);
 eventBus.on('connected', loginToHub);
 
+//TODO delete
 function sendLoginCommand(ws, challenge) {
     var objLogin = { challenge: challenge, pubkey: objMyPermanentDeviceKey.pub_b64 };
     objLogin.signature = ecdsaSig.sign(objectHash.getDeviceMessageHashToSign(objLogin), objMyPermanentDeviceKey.priv);
@@ -404,6 +396,7 @@ function decryptPackage(objEncryptedPackage) {
         return json;
 }
 
+//TODO delete 底层
 // a hack to read large text from cordova sqlite
 function readMessageInChunksFromOutbox(message_hash, len, handleMessage) {
     var CHUNK_LEN = 1000000;
@@ -423,6 +416,7 @@ function readMessageInChunksFromOutbox(message_hash, len, handleMessage) {
     readChunk();
 }
 
+//TODO delete
 function resendStalledMessages(delay) {
     var delay = delay || 0;
     console.log("resending stalled messages delayed by " + delay + " minute");
@@ -494,6 +488,7 @@ function reliablySendPreparedMessageToHub(ws, recipient_device_pubkey, json, cal
     );
 }
 
+//TODO delete
 // first param is either WebSocket or hostname of the hub
 function sendPreparedMessageToHub(ws, recipient_device_pubkey, message_hash, json, callbacks) {
     if (!callbacks)
@@ -814,7 +809,6 @@ exports.setTempKeys = setTempKeys;
 exports.setDeviceAddress = setDeviceAddress;
 exports.setNewDeviceAddress = setNewDeviceAddress;
 exports.setDeviceName = setDeviceName;
-exports.setDeviceHub = setDeviceHub;
 
 exports.scheduleTempDeviceKeyRotation = scheduleTempDeviceKeyRotation;
 

@@ -12,7 +12,7 @@ var conf = require('./conf.js');
 var breadcrumbs = require('./breadcrumbs.js');
 
 
-
+//TODO delete 底层
 function checkIfNewUnit(unit, callbacks) {
 	if (storage.isKnownUnit(unit))
 		return callbacks.ifKnown();

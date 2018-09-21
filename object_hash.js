@@ -94,6 +94,7 @@ function getDeviceAddress(b64_pubkey) {
 	return ('0' + getChash160(b64_pubkey));
 }
 
+//TODO delete 底层
 function getDeviceMessageHashToSign(objDeviceMessage) {
 	var objNakedDeviceMessage = _.clone(objDeviceMessage);
 	delete objNakedDeviceMessage.signature;

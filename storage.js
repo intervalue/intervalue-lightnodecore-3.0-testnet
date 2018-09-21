@@ -1230,10 +1230,12 @@ function readUnitAuthors(conn, unit, handleAuthors){
 	});
 }
 
+//TODO delete 底层
 function isKnownUnit(unit){
 	return (assocCachedUnits[unit] || assocKnownUnits[unit]) ? true : false;
 }
 
+//TODO delete 底层
 function setUnitIsKnown(unit){
 	return assocKnownUnits[unit] = true;
 }

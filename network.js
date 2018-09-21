@@ -456,7 +456,6 @@ function addOutboundPeers(multiplier) {
         function (rows) {
             for (var i = 0; i < rows.length; i++) {
                 assocKnownPeers[rows[i].peer] = true;
-                findOutboundPeerOrConnect(rows[i].peer);
             }
             if (arrOutboundPeerUrls.length === 0 && rows.length === 0) // if no outbound connections at all, get less strict
                 addOutboundPeers(multiplier * 2);
@@ -515,6 +514,7 @@ function getPeerWebSocket(peer) {
     return null;
 }
 
+//TODO delete
 function findOutboundPeerOrConnect(url, onOpen) {
     return;
     if (!url)
@@ -657,11 +657,6 @@ function requestFromLightVendor(command, params, responseHandler) {
             requestFromLightVendor(command, params, responseHandler);
         }, 1000);
     }
-    findOutboundPeerOrConnect(exports.light_vendor_url, function (err, ws) {
-        if (err)
-            return responseHandler(null, null, {error: "[connect to light vendor failed]: " + err});
-        sendRequest(ws, command, params, false, responseHandler);
-    });
 }
 
 function requestFromLightVendorForJoint(command, params, responseHandler) {
@@ -671,11 +666,6 @@ function requestFromLightVendorForJoint(command, params, responseHandler) {
             requestFromLightVendorForJoint(command, params, responseHandler);
         }, 1000);
     }
-    findOutboundPeerOrConnect(exports.light_vendor_url, function (err, ws) {
-        if (err)
-            return responseHandler(null, null, {error: "[connect to light vendor failed]: " + err});
-        sendRequestForJoint(ws, command, params, false, responseHandler);
-    });
 }
 
 function printConnectionStatus() {
@@ -751,6 +741,7 @@ function rerequestLostJoints() {
     });
 }
 
+//TODO delete
 function requestNewMissingJoints(ws, arrUnits) {
     var arrNewUnits = [];
     async.eachSeries(
@@ -863,6 +854,7 @@ function havePendingRequest(command) {
     return false;
 }
 
+//TODO delete 底层
 function havePendingJointRequest(unit) {
     var arrPeers = wss.clients.concat(arrOutboundPeers);
     for (var i = 0; i < arrPeers.length; i++) {
@@ -1365,11 +1357,6 @@ function notifyLocalWatchedAddressesAboutStableJoints(mci) {
 function addLightWatchedAddress(address) {
     if (!conf.bLight || !exports.light_vendor_url)
         return;
-    findOutboundPeerOrConnect(exports.light_vendor_url, function (err, ws) {
-        if (err)
-            return;
-        sendJustsaying(ws, 'light/new_address_to_watch', address);
-    });
 }
 
 function flushEvents(forceFlushing) {
@@ -1951,6 +1938,7 @@ function updateLinkProofsOfPrivateChain(arrPrivateElements, unit, message_index,
     });
 }
 
+//TODO delete 底层
 function initWitnessesIfNecessary(ws, onDone) {
     onDone = onDone || function () {
     };
@@ -2105,10 +2093,6 @@ function handleJustsaying(ws, subject, body) {
                 // verify it is really your url by connecting to this url, sending a random string through this new connection,
                 // and expecting this same string over existing inbound connection
                 ws.sent_echo_string = crypto.randomBytes(30).toString("base64");
-                findOutboundPeerOrConnect(url, function (err, reverse_ws) {
-                    if (!err)
-                        sendJustsaying(reverse_ws, 'want_echo', ws.sent_echo_string);
-                });
             });
             break;
 
