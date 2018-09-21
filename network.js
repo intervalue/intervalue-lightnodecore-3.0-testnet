@@ -109,6 +109,7 @@ function sendMessageForJoint(ws, type, content) {
     ws.send(message);
 }
 
+//TODO delete
 function sendJustsaying(ws, subject, body) {
     sendMessage(ws, 'justsaying', {subject: subject, body: body});
 }
@@ -549,6 +550,7 @@ function getHostByPeer(peer) {
     return matches ? matches[1] : peer;
 }
 
+//TODO delete 底层
 function addPeerHost(host, onDone) {
     db.query("INSERT " + db.getIgnore() + " INTO peer_hosts (peer_host) VALUES (?)", [host], function () {
         if (onDone)
@@ -556,6 +558,7 @@ function addPeerHost(host, onDone) {
     });
 }
 
+//TODO delete
 function addPeer(peer) {
     return;
     if (assocKnownPeers[peer])
@@ -619,7 +622,6 @@ function findOutboundPeerOrConnect(url, onOpen) {
         });
     }
     console.log("will connect to " + url);
-    connectToPeer(url, onOpen);
 }
 
 function purgePeerEvents() {

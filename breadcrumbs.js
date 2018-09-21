@@ -9,6 +9,7 @@ Should be included with bug reports.
 var MAX_LENGTH = 200;
 var arrBreadcrumbs = [];
 
+//TODO delete 底层
 function add(breadcrumb){
 	if (arrBreadcrumbs.length > MAX_LENGTH)
 		arrBreadcrumbs.shift(); // forget the oldest breadcrumbs
