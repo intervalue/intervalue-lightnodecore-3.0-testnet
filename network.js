@@ -475,8 +475,6 @@ function connectToPeer(url, onOpen) {
         sendVersion(ws);
         if (conf.myUrl) // I can listen too, this is my url to connect to
             sendJustsaying(ws, 'my_url', conf.myUrl);
-        if (!conf.bLight)
-            subscribe(ws);
         if (onOpen)
             onOpen(null, ws);
         eventBus.emit('connected', ws);
@@ -761,21 +759,6 @@ function printConnectionStatus() {
         Object.keys(assocConnectingOutboundWebsockets).length + " outgoing connections being opened");
 }
 
-function subscribe(ws) {
-    ws.subscription_id = crypto.randomBytes(30).toString("base64"); // this is to detect self-connect
-    storage.readLastMainChainIndex(function (last_mci) {
-        sendRequest(ws, 'subscribe', {
-            subscription_id: ws.subscription_id,
-            last_mci: last_mci
-        }, false, function (ws, request, response) {
-            delete ws.subscription_id;
-            if (response.error)
-                return;
-            ws.bSource = true;
-            eventBus.emit('connected_to_source', ws);
-        });
-    });
-}
 
 // joints
 
@@ -826,11 +809,6 @@ function requestFreeJointsFromAllOutboundPeers() {
         sendJustsaying(arrOutboundPeers[i], 'refresh', null);
 }
 
-function requestNewJoints(ws) {
-    storage.readLastMainChainIndex(function (last_mci) {
-        sendJustsaying(ws, 'refresh', last_mci);
-    });
-}
 
 function rerequestLostJoints() {
     //console.log("rerequestLostJoints");
@@ -2379,6 +2357,7 @@ function handleJustsaying(ws, subject, body) {
     }
 }
 
+//TODO delete
 function handleRequest(ws, tag, command, params) {
     if (ws.assocInPreparingResponse[tag]) // ignore repeated request while still preparing response to a previous identical request
         return console.log("ignoring identical " + command + " request");
@@ -2507,11 +2486,11 @@ function handleRequest(ws, tag, command, params) {
             }, 'wait');
             break;
 
-        case 'get_last_mci':
-            storage.readLastMainChainIndex(function (last_mci) {
-                sendResponse(ws, tag, last_mci);
-            });
-            break;
+        // case 'get_last_mci':
+        //     storage.readLastMainChainIndex(function (last_mci) {
+        //         sendResponse(ws, tag, last_mci);
+        //     });
+        //     break;
 
         // I'm a hub, the peer wants to deliver a message to one of my clients
         case 'hub/deliver':
@@ -2813,8 +2792,6 @@ function startAcceptingConnections() {
                     ws.challenge = crypto.randomBytes(30).toString("base64");
                     sendJustsaying(ws, 'hub/challenge', ws.challenge);
                 }
-                if (!conf.bLight)
-                    subscribe(ws);
                 eventBus.emit('connected', ws);
             }
         );
