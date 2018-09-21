@@ -63,13 +63,6 @@ async function writeTran(params, handleResult) {
         //获取签名的BUF
         var buf_to_sign = objectHash.getUnitHashToSign(obj);
         //获取签名的私钥
-        // var path = "m/44'/0'/0'/0/0";
-        // var Bitcore = require('bitcore-lib');
-        // var xPrivKey = new Bitcore.HDPrivateKey.fromString(params.xPrivKey);
-        // var privateKey = xPrivKey.derive(path).privateKey;
-        // var privKeyBuf = privateKey.toBuffer(params.xPrivKey);
-        // var privKeyBuf = privateKey.bn.toBuffer({ size: 32 }); // https://github.com/bitpay/bitco
-
         var privKeyBuf = params.getLocalPrivateKey(params.xPrivKey);
         //通过私钥进行签名
         signature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
