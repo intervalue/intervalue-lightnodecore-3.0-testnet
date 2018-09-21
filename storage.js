@@ -821,6 +821,7 @@ function readLastStableMcIndex(conn, handleLastStableMcIndex){
 }
 
 
+//TODO delete 底层
 function readLastMainChainIndex(handleLastMcIndex){
 	db.query("SELECT MAX(main_chain_index) AS last_mc_index FROM units", function(rows){
 		var last_mc_index = rows[0].last_mc_index;
