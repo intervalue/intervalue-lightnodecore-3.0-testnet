@@ -429,6 +429,7 @@ function readCosigners(wallet, handleCosigners) {
 	);
 }
 
+//TODO
 // silently adds new address upon receiving a network message
 function addNewAddress(wallet, is_change, address_index, address, handleError) {
 	breadcrumbs.add('addNewAddress is_change=' + is_change + ', index=' + address_index + ', address=' + address);
@@ -527,7 +528,7 @@ function validateWalletDefinitionTemplate(arrWalletDefinitionTemplate, from_addr
 
 
 
-
+//todo delete 底层
 function readNextAddressIndex(wallet, is_change, handleNextAddressIndex) {
 	db.query("SELECT MAX(address_index) AS last_used_index FROM my_addresses WHERE wallet=? AND is_change=?", [wallet, is_change], function (rows) {
 		var last_used_index = rows[0].last_used_index;
@@ -552,6 +553,7 @@ function derivePubkey(xPubKey, path) {
 	return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
 }
 
+//todo delete
 function deriveAddress(wallet, is_change, address_index, handleNewAddress) {
 	db.query("SELECT definition_template, full_approval_date FROM wallets WHERE wallet=?", [wallet], function (wallet_rows) {
 		if (wallet_rows.length === 0)
@@ -581,7 +583,21 @@ function deriveAddress(wallet, is_change, address_index, handleNewAddress) {
 	});
 }
 
+/**
+ * 记录地址
+ * @param wallet
+ * @param is_change
+ * @param address_index
+ * @param address
+ * @param arrDefinition
+ * @param onDone
+ */
 function recordAddress(wallet, is_change, address_index, address, arrDefinition, onDone) {
+	if(is_change != 0 || address_index != 0) {
+        console.log("error:the address is not allow create----is_change is"+is_change + ",address_index is " + address_index);
+		onDone();
+        return;
+	}
 	if (typeof address_index === 'string' && is_change)
 		throw Error("address with string index cannot be change address");
 	var address_index_column_name = (typeof address_index === 'string') ? 'app' : 'address_index';
@@ -599,6 +615,7 @@ function recordAddress(wallet, is_change, address_index, address, arrDefinition,
 	);
 }
 
+//todo delete
 function deriveAndRecordAddress(wallet, is_change, address_index, handleNewAddress) {
 	deriveAddress(wallet, is_change, address_index, function (address, arrDefinition) {
 		recordAddress(wallet, is_change, address_index, address, arrDefinition, function () {
@@ -607,6 +624,7 @@ function deriveAndRecordAddress(wallet, is_change, address_index, handleNewAddre
 	});
 }
 
+//todo delete
 function issueAddress(wallet, is_change, address_index, handleNewAddress) {
 	breadcrumbs.add('issueAddress wallet=' + wallet + ', is_change=' + is_change + ', index=' + address_index);
 	deriveAndRecordAddress(wallet, is_change, address_index, function (address) {
@@ -648,6 +666,7 @@ function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
 	);
 }
 
+//todo delete
 function issueNextAddress(wallet, is_change, handleAddress) {
 	mutex.lock(['issueNextAddress'], function (unlock) {
 		readNextAddressIndex(wallet, is_change, function (next_index) {
