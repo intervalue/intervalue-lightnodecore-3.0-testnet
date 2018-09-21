@@ -15,7 +15,6 @@ var breadcrumbs = require('./breadcrumbs.js');
 
 
 var SEND_RETRY_PERIOD = 60 * 1000;
-var RECONNECT_TO_HUB_PERIOD = 60 * 1000;
 var TEMP_DEVICE_KEY_ROTATION_PERIOD = 3600 * 1000;
 
 var my_device_hub;
