@@ -209,7 +209,7 @@ function getHubWs(cb) {
 }
 
 
-eventBus.on('connected', loginToHub);
+// eventBus.on('connected', loginToHub);
 
 //TODO delete
 function sendLoginCommand(ws, challenge) {
