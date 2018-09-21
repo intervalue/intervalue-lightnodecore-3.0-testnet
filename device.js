@@ -181,26 +181,6 @@ function handleChallenge(ws, challenge) {
 }
 
 
-function loginToHub() {
-    if (!objMyPermanentDeviceKey)
-        return console.log("objMyPermanentDeviceKey not set yet, can't log in");
-    if (!objMyTempDeviceKey)
-        return console.log("objMyTempDeviceKey not set yet, can't log in");
-    if (!my_device_hub)
-        return console.log("my_device_hub not set yet, can't log in");
-    console.log("logging in to hub " + my_device_hub);
-    network.findOutboundPeerOrConnect(conf.WS_PROTOCOL + my_device_hub, function onLocatedHubForLogin(err, ws) {
-        if (err)
-            return;
-        if (ws.bLoggedIn)
-            return;
-        if (ws.received_challenge)
-            sendLoginCommand(ws, ws.received_challenge);
-        else
-            ws.bLoggingIn = true;
-        console.log('done loginToHub');
-    });
-}
 
 function getHubWs(cb) {
     if (!my_device_hub)
