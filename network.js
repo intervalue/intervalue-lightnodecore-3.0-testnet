@@ -499,7 +499,6 @@ function connectToPeer(url, onOpen) {
         if (!ws.bOutbound)
             eventBus.emit('open-' + url, err);
     });
-    ws.on('message', onWebsocketMessage);
     console.log('connectToPeer done');
 }
 
@@ -2705,41 +2704,6 @@ function handleRequest(ws, tag, command, params) {
     }
 }
 
-function onWebsocketMessage(message) {
-
-    var ws = this;
-
-    if (ws.readyState !== ws.OPEN)
-        return;
-
-    console.log('RECEIVED ' + (message.length > 1000 ? message.substr(0, 1000) + '... (' + message.length + ' chars)' : message) + ' from ' + ws.peer);
-    ws.last_ts = Date.now();
-
-    try {
-        var arrMessage = JSON.parse(message);
-    }
-    catch (e) {
-        return console.log('failed to json.parse message ' + message);
-    }
-    var message_type = arrMessage[0];
-    var content = arrMessage[1];
-
-    switch (message_type) {
-        case 'justsaying':
-            return handleJustsaying(ws, content.subject, content.body);
-
-        case 'request':
-            return handleRequest(ws, content.tag, content.command, content.params);
-
-        case 'response':
-            return handleResponse(ws, content.tag, content.response);
-
-        default:
-            console.log("unknown type: " + message_type);
-        //	throw Error("unknown type: "+message_type);
-    }
-}
-
 function startAcceptingConnections() {
     db.query("DELETE FROM watched_light_addresses");
     db.query("DELETE FROM watched_light_units");
@@ -2799,8 +2763,6 @@ function startAcceptingConnections() {
             function tryHandleMessage() {
                 if (bStatsCheckUnderWay)
                     setTimeout(tryHandleMessage, 100);
-                else
-                    onWebsocketMessage.call(ws, message);
             }
 
             tryHandleMessage();
