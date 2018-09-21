@@ -79,8 +79,6 @@ function setDevicePrivateKey(priv_key) {
     // this temp pubkey package signs my permanent key and is actually used only if I'm my own hub.
     // In this case, there are no intermediaries and TLS already provides perfect forward security
     network.setMyDeviceProps(my_device_address, createTempPubkeyPackage(objMyPermanentDeviceKey.pub_b64));
-    if (bChanged)
-        loginToHub();
 }
 
 
@@ -100,8 +98,6 @@ function setDevicePublicKey(pub_b64) {
     // this temp pubkey package signs my permanent key and is actually used only if I'm my own hub.
     // In this case, there are no intermediaries and TLS already provides perfect forward security
     // network.setMyDeviceProps(my_device_address, createTempPubkeyPackage(pub_b64));
-    if (bChanged)
-        loginToHub();
 }
 
 
@@ -121,7 +117,6 @@ function setTempKeys(temp_priv_key, prev_temp_priv_key, fnSaveTempKeys) {
             pub_b64: ecdsa.publicKeyCreate(prev_temp_priv_key, true).toString('base64')
         };
     saveTempKeys = fnSaveTempKeys;
-    loginToHub();
 }
 
 function setDeviceAddress(device_address) {
@@ -185,6 +180,7 @@ function handleChallenge(ws, challenge) {
         ws.received_challenge = challenge;
 }
 
+
 function loginToHub() {
     if (!objMyPermanentDeviceKey)
         return console.log("objMyPermanentDeviceKey not set yet, can't log in");
@@ -213,7 +209,6 @@ function getHubWs(cb) {
 }
 
 
-setInterval(loginToHub, RECONNECT_TO_HUB_PERIOD);
 eventBus.on('connected', loginToHub);
 
 //TODO delete
@@ -815,7 +810,6 @@ exports.scheduleTempDeviceKeyRotation = scheduleTempDeviceKeyRotation;
 exports.decryptPackage = decryptPackage;
 
 exports.handleChallenge = handleChallenge;
-exports.loginToHub = loginToHub;
 
 exports.sendMessageToHub = sendMessageToHub;
 exports.sendMessageToDevice = sendMessageToDevice;
