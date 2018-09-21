@@ -821,15 +821,6 @@ function readLastStableMcIndex(conn, handleLastStableMcIndex){
 }
 
 
-//TODO delete 底层
-function readLastMainChainIndex(handleLastMcIndex){
-	db.query("SELECT MAX(main_chain_index) AS last_mc_index FROM units", function(rows){
-		var last_mc_index = rows[0].last_mc_index;
-		if (last_mc_index === null) // empty database
-			last_mc_index = 0;
-		handleLastMcIndex(last_mc_index);
-	});
-}
 
 
 function findLastBallMciOfMci(conn, mci, handleLastBallMci){
@@ -1471,7 +1462,6 @@ exports.readFreeJoints = readFreeJoints;
 exports.readDefinitionByAddress = readDefinitionByAddress;
 exports.readDefinition = readDefinition;
 
-exports.readLastMainChainIndex = readLastMainChainIndex;
 
 exports.readLastStableMcUnitProps = readLastStableMcUnitProps;
 exports.readLastStableMcIndex = readLastStableMcIndex;
