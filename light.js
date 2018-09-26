@@ -80,11 +80,11 @@ async function updateHistory(addresses) {
                 else if (!my_tran && tran.isValid) {
                     await insertTran(tran);
 
-                    if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
-                        db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
-                            alert(rs);
-                        });
-                    }
+                    // if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
+                    //     db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
+                    //         // alert(rs);
+                    //     });
+                    // }
                 }
 
 
@@ -196,7 +196,7 @@ async function iniTranList(addresses) {
         //交易列表
         tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
-        console.log(tranList);
+        // console.log(tranList);
     }
 }
 

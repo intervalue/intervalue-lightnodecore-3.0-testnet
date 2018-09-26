@@ -15,6 +15,8 @@ var eventBus = require('./event_bus.js');
 var Definition = require("./definition.js");
 var ValidationUtils = require("./validation_utils.js");
 var breadcrumbs = require('./breadcrumbs.js');
+var objectHash = require('./object_hash');
+
 try {
 	var Bitcore = require('bitcore-lib');
 }
@@ -624,7 +626,13 @@ function deriveAndRecordAddress(wallet, is_change, address_index, handleNewAddre
 	});
 }
 
-//todo delete
+/**
+ * 发行地址
+ * @param wallet
+ * @param is_change
+ * @param address_index
+ * @param handleNewAddress
+ */
 function issueAddress(wallet, is_change, address_index, handleNewAddress) {
 	breadcrumbs.add('issueAddress wallet=' + wallet + ', is_change=' + is_change + ', index=' + address_index);
 	deriveAndRecordAddress(wallet, is_change, address_index, function (address) {
@@ -641,7 +649,7 @@ function issueAddress(wallet, is_change, address_index, handleNewAddress) {
 	}, 5000);
 }
 
-
+//TODO delete 底层
 function readAddressByIndex(wallet, is_change, address_index, handleAddress) {
 	db.query(
 		"SELECT address, address_index, " + db.getUnixTimestamp("creation_date") + " AS creation_ts \n\
@@ -653,6 +661,7 @@ function readAddressByIndex(wallet, is_change, address_index, handleAddress) {
 	);
 }
 
+//TODO delete 底层
 function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
 	if (from_index === null)
 		from_index = -1;
@@ -665,6 +674,7 @@ function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
 		}
 	);
 }
+
 
 //todo delete
 function issueNextAddress(wallet, is_change, handleAddress) {
@@ -746,6 +756,13 @@ function checkAddress(account, is_change, address_index) {
 	});
 }
 
+/**
+ * 读取地址
+ * @param wallet
+ * @param opts
+ * @param handleAddresses
+ */
+//TODO 需要优化
 function readAddresses(wallet, opts, handleAddresses) {
 	var sql = "SELECT address, address_index, is_change, " + db.getUnixTimestamp("creation_date") + " AS creation_ts \n\
 		FROM my_addresses WHERE wallet=?";
@@ -852,3 +869,4 @@ exports.derivePubkey = derivePubkey;
 exports.issueAddress = issueAddress;
 exports.createWallet = createWallet;
 exports.recordAddress = recordAddress;
+exports.issueNextAddress = issueNextAddress;
