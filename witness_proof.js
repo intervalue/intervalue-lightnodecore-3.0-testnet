@@ -2,7 +2,6 @@
 "use strict";
 var async = require('async');
 var storage = require('./storage.js');
-// var myWitnesses = require('./my_witnesses.js');
 var objectHash = require("./object_hash.js");
 var db = require('./db.js');
 var constants = require("./constants.js");
