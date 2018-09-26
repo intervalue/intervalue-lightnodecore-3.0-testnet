@@ -5,7 +5,6 @@ var _ = require('lodash');
 var constants = require('./constants.js');
 var storage = require('./storage.js');
 var objectHash = require("./object_hash.js");
-var db = require('./db.js');
 var composer = require("./composer.js");
 var ValidationUtils = require('./validation_utils.js');
 var validation = require('./validation.js');
@@ -361,45 +360,9 @@ function composeAndSaveDivisibleAssetPaymentJoint(params){
 	composeDivisibleAssetPaymentJoint(params_with_save);
 }
 
-var TYPICAL_FEE = 1000;
 
-// {asset: asset, available_paying_addresses: arrAvailablePayingAddresses, available_fee_paying_addresses: arrAvailableFeePayingAddresses, change_address: change_address, to_address: to_address, amount: amount, signer: signer, callbacks: callbacks}
-function composeMinimalDivisibleAssetPaymentJoint(params){
-		
-	if (!ValidationUtils.isNonemptyArray(params.available_paying_addresses))
-		throw Error('no available_paying_addresses');
-	if (!ValidationUtils.isNonemptyArray(params.available_fee_paying_addresses))
-		throw Error('no available_fee_paying_addresses');
-	composer.readSortedFundedAddresses(params.asset, params.available_paying_addresses, params.amount, params.spend_unconfirmed || 'own', function(arrFundedPayingAddresses){
-		if (arrFundedPayingAddresses.length === 0){
-			 // special case for issuing uncapped asset.  If it is not issuing, not-enough-funds will pop anyway
-			if (params.available_paying_addresses.length === 1)
-				arrFundedPayingAddresses = params.available_paying_addresses.concat();
-			else
-				return params.callbacks.ifNotEnoughFunds("all paying addresses are unfunded in asset, make sure all your funds are confirmed");
-		}
-		composer.readSortedFundedAddresses(null, params.available_fee_paying_addresses, TYPICAL_FEE, params.spend_unconfirmed || 'own', function(arrFundedFeePayingAddresses){
-			if (arrFundedFeePayingAddresses.length === 0)
-				return params.callbacks.ifNotEnoughFunds("all paying addresses are unfunded in bytes necessary for fees, make sure all your funds are confirmed");
-			var minimal_params = _.clone(params);
-			delete minimal_params.available_paying_addresses;
-			delete minimal_params.available_fee_paying_addresses;
-			minimal_params.minimal = true;
-			minimal_params.paying_addresses = arrFundedPayingAddresses;
-			minimal_params.fee_paying_addresses = arrFundedFeePayingAddresses;
-			composeDivisibleAssetPaymentJoint(minimal_params);
-		});
-	});
-}
 
-// {asset: asset, available_paying_addresses: arrAvailablePayingAddresses, available_fee_paying_addresses: arrAvailableFeePayingAddresses, change_address: change_address, to_address: to_address, amount: amount, signer: signer, callbacks: callbacks}
-function composeAndSaveMinimalDivisibleAssetPaymentJoint(params){
-	var params_with_save = _.clone(params);
-	params_with_save.callbacks = getSavingCallbacks(params.callbacks);
-	composeMinimalDivisibleAssetPaymentJoint(params_with_save);
-}
 
 
 exports.validateAndSavePrivatePaymentChain = validateAndSavePrivatePaymentChain;
 exports.composeAndSaveDivisibleAssetPaymentJoint = composeAndSaveDivisibleAssetPaymentJoint;
-exports.composeAndSaveMinimalDivisibleAssetPaymentJoint = composeAndSaveMinimalDivisibleAssetPaymentJoint;
