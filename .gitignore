@@ -46,3 +46,4 @@ Session.vim
 *.iml
 .idea
 /shadowWtest.js
+/test.js
