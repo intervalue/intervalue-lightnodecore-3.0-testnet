@@ -1128,7 +1128,8 @@ function getSigner(opts, arrSigningDeviceAddresses, signWithLocalPrivateKey) {
                         if (sig === '[refused]')
                             eventBus.emit('refused_to_sign', device_address);
                     });
-                    walletGeneral.sendOfferToSign(device_address, address, signing_path, objUnsignedUnit, assocPrivatePayloads);
+                    console.log("delete walletGeneral.sendOfferToSign");
+                    // walletGeneral.sendOfferToSign(device_address, address, signing_path, objUnsignedUnit, assocPrivatePayloads);
                     if (!bRequestedConfirmation) {
                         eventBus.emit("confirm_on_other_devices");
                         bRequestedConfirmation = true;
@@ -1213,9 +1214,10 @@ function forwardPrivateChainsToOtherMembersOfSharedAddresses(arrChainsOfCosigner
         walletDefinedByKeys.readDeviceAddressesControllingPaymentAddresses(conn, arrControlAddresses, function (arrMultisigDeviceAddresses) {
             arrMultisigDeviceAddresses = _.difference(arrMultisigDeviceAddresses, arrControlDeviceAddresses);
             // counterparties on shared addresses must forward further, that's why bForwarded=false
-            walletGeneral.forwardPrivateChainsToDevices(arrControlDeviceAddresses, arrChainsOfCosignerPrivateElements, bForwarded, conn, function () {
-                walletGeneral.forwardPrivateChainsToDevices(arrMultisigDeviceAddresses, arrChainsOfCosignerPrivateElements, true, conn, onDone);
-            });
+            console.log("delete walletGeneral.forwardPrivateChainsToDevices");
+            // walletGeneral.forwardPrivateChainsToDevices(arrControlDeviceAddresses, arrChainsOfCosignerPrivateElements, bForwarded, conn, function () {
+            //     walletGeneral.forwardPrivateChainsToDevices(arrMultisigDeviceAddresses, arrChainsOfCosignerPrivateElements, true, conn, onDone);
+            // });
         });
     });
 }

@@ -20,18 +20,6 @@ class WebHelper {
         });
     }
 
-    // static httpGet2(url) {
-    //     return new Promise(function (resolve, reject) {
-    //         req.get(url, function (err, response, body) {
-    //             if (err) {
-    //                 reject(err);
-    //                 return;
-    //             }
-    //             resolve(body);
-    //         });
-    //     });
-
-    // }
 
     static httpPost(url, headers, data) {
         return new Promise(function (resolve, reject) {
@@ -50,22 +38,6 @@ class WebHelper {
                 });
         });
     }
-
-    // static httpPost2(url, headers, data) {
-    //     let option = {
-    //         url: url,
-    //         method: "POST",
-    //         json: true,
-    //         headers: headers,
-    //         form: data
-    //     };
-    //     return new Promise((resolve, reject) => {
-    //         request(option, function (error, response, body) {
-    //             console.log(JSON.stringify(response));
-    //             resolve(body);
-    //         });
-    //     });
-    // }
 }
 
 module.exports = WebHelper;

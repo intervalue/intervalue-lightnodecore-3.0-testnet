@@ -816,7 +816,8 @@ function forwardPrivateChainsToOtherMembersOfWallets(arrChains, arrWallets, conn
 		[arrWallets, device.getMyDeviceAddress()],
 		function (rows) {
 			var arrDeviceAddresses = rows.map(function (row) { return row.device_address; });
-			walletGeneral.forwardPrivateChainsToDevices(arrDeviceAddresses, arrChains, true, conn, onSaved);
+            console.log("delete walletGeneral.forwardPrivateChainsToDevices");
+			// walletGeneral.forwardPrivateChainsToDevices(arrDeviceAddresses, arrChains, true, conn, onSaved);
 		}
 	);
 }

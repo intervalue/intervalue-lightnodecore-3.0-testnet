@@ -30,9 +30,10 @@ async function updateHistory(addresses) {
     if (device.walletChanged) {
         device.walletChanged = false;
         await hashnethelper.initialLocalfullnodeList();
-        //初始化交易列表
-        await iniTranList(addresses);
     }
+    //update化交易列表
+    await iniTranList(addresses);
+
 
     //存储此次交易记录的数组
     let trans = null;
@@ -50,22 +51,26 @@ async function updateHistory(addresses) {
                 }
             }
         }
-        console.log(JSON.stringify(trans));
+        // console.log(JSON.stringify(trans));
         //如果为NULL，则表示访问共识网有问题，返回。
         if (trans == null) {
             return;
         }
+        console.log("共识网拉取交易信息:");
+        console.log(trans);
+
+
         //如果交易记录长度为零，需要清空本地的交易记录。
         if (trans.length === 0) {
             await truncateTran(addresses);
         }
         else {
             //初始化交易列表
-            await iniTranList(addresses);
+            // await iniTranList(addresses);
             console.log("======tranList");
             for (var tran of trans) {
 
-                console.log(JSON.stringify(tranList));
+                // console.log(JSON.stringify(tranList));
 
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
@@ -82,7 +87,7 @@ async function updateHistory(addresses) {
 
                     // if(tran.hash == 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ') {
                     //     db.query("update transactions set creation_date =  ?  where id =  'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'" , [tran.time/1000],function(rs) {
-                    //         // alert(rs);
+                    //         alert(rs);
                     //     });
                     // }
                 }
@@ -167,8 +172,8 @@ function refreshTranList(tran) {
                     break;
             }
             //往列表中插入记录
-            tranList.push(my_tran);
         }
+        tranList.push(my_tran);
     }
 }
 //通过交易的状态返回数据库中状态的值
@@ -185,7 +190,10 @@ function getResultFromTran(tran) {
 }
 //钱包启动后初始化余额、待确认、交易列表
 async function iniTranList(addresses) {
-    if (tranAddr == [] || tranAddr != addresses || !tranList) {
+    var rs1 = tranAddr == [];
+    var rs2 = tranAddr != addresses;
+    var rs3 = !tranList;
+    // if (tranAddr == [] || tranAddr != addresses || !tranList) {
         tranAddr = addresses;
         //余额 = 收到 - 发送
         stable = parseInt( await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
@@ -197,7 +205,7 @@ async function iniTranList(addresses) {
         tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
         // console.log(tranList);
-    }
+    // }
 }
 
 //交易列表
@@ -314,7 +322,7 @@ async function badTran(tran) {
 //新增一条交易记录
 async function insertTran(tran) {
     console.log("\nsaving unit:");
-    console.log(JSON.stringify(tran));
+    // console.log(JSON.stringify(tran));
     var cmds = [];
     var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result";
     var values = "?,?,?,?,?,?,?";

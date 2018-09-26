@@ -2,7 +2,6 @@
 "use strict";
 
 var getSourceString = require('./string_utils').getSourceString;
-var Mnemonic = require('bitcore-mnemonic');
 var Bitcore = require('bitcore-lib');
 
 var crypto = require('crypto');
@@ -241,7 +240,7 @@ exports.getTradingUnit = function (opts ,cb) {
 
 
     //TODO test
-    if (light.stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
+    if (light.findStable(params.wallet) < (parseInt(obj.fee) + parseInt(obj.amount))) {
         return cb("not enough spendable funds from " + obj.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount)));
     }
 

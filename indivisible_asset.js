@@ -10,7 +10,6 @@ var constants = require("./constants.js");
 var composer = require("./composer.js");
 var validation = require('./validation.js');
 var ValidationUtils = require("./validation_utils.js");
-var writer = require('./writer.js');
 var graph = require('./graph.js');
 var profiler = require('./profiler.js');
 
@@ -918,19 +917,20 @@ function getSavingCallbacks(to_address, callbacks){
 					}
 					
 					var saveAndUnlock = function(){
-						writer.saveJoint(
-							objJoint, objValidationState, 
-							preCommitCallback,
-							function onDone(err){
-								console.log("saved unit "+unit+", err="+err);
-								validation_unlock();
-								composer_unlock();
-								if (bPreCommitCallbackFailed)
-									callbacks.ifError("precommit callback failed: "+err);
-								else
-									callbacks.ifOk(objJoint, arrRecipientChains, arrCosignerChains);
-							}
-						);
+                        console.log("delete writer.saveJoint")
+						// writer.saveJoint(
+						// 	objJoint, objValidationState,
+						// 	preCommitCallback,
+						// 	function onDone(err){
+						// 		console.log("saved unit "+unit+", err="+err);
+						// 		validation_unlock();
+						// 		composer_unlock();
+						// 		if (bPreCommitCallbackFailed)
+						// 			callbacks.ifError("precommit callback failed: "+err);
+						// 		else
+						// 			callbacks.ifOk(objJoint, arrRecipientChains, arrCosignerChains);
+						// 	}
+						// );
 					};
 					
 					// if light and private, we'll post the joint later, in precommit 
