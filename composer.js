@@ -13,7 +13,6 @@ var storage = require('./storage.js');
 // var myWitnesses = require('./my_witnesses.js');
 var parentComposer = require('./parent_composer.js');
 var validation = require('./validation.js');
-var writer = require('./writer.js');
 var conf = require('./conf.js');
 var inputs = require('./inputs.js');
 var device = require('./device.js');
@@ -949,23 +948,24 @@ function getSavingCallbacks(callbacks) {
                             callbacks.ifError(err);
                         },
                         function save() {
-                            writer.saveJoint(
-                                objJoint, objValidationState,
-                                function (conn, cb) {
-                                    if (typeof callbacks.preCommitCb === "function")
-                                        callbacks.preCommitCb(conn, objJoint, cb);
-                                    else
-                                        cb();
-                                },
-                                function onDone(err) {
-                                    validation_unlock();
-                                    composer_unlock();
-                                    if (err)
-                                        return callbacks.ifError(err);
-                                    console.log("composer saved unit " + unit);
-                                    callbacks.ifOk(objJoint, assocPrivatePayloads);
-                                }
-                            );
+                            console.log("delete writer.saveJoint")
+                            // writer.saveJoint(
+                            //     objJoint, objValidationState,
+                            //     function (conn, cb) {
+                            //         if (typeof callbacks.preCommitCb === "function")
+                            //             callbacks.preCommitCb(conn, objJoint, cb);
+                            //         else
+                            //             cb();
+                            //     },
+                            //     function onDone(err) {
+                            //         validation_unlock();
+                            //         composer_unlock();
+                            //         if (err)
+                            //             return callbacks.ifError(err);
+                            //         console.log("composer saved unit " + unit);
+                            //         callbacks.ifOk(objJoint, assocPrivatePayloads);
+                            //     }
+                            // );
                         }
                     );
                 } // ifOk validation

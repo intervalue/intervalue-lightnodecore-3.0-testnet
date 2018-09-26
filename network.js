@@ -1,7 +1,6 @@
 /*jslint node: true */
 "use strict";
 var WebSocket = process.browser ? global.WebSocket : require('ws');
-var socks = process.browser ? null : require('socks' + '');
 var WebSocketServer = WebSocket.Server;
 var crypto = require('crypto');
 var _ = require('lodash');
@@ -9,11 +8,9 @@ var async = require('async');
 var db = require('./db.js');
 var constants = require('./constants.js');
 var storage = require('./storage.js');
-// var myWitnesses = require('./my_witnesses.js');
 var joint_storage = require('./joint_storage.js');
 var validation = require('./validation.js');
 var ValidationUtils = require("./validation_utils.js");
-var writer = require('./writer.js');
 var conf = require('./conf.js');
 var mutex = require('./mutex.js');
 var catchup = require('./catchup.js');
@@ -969,15 +966,17 @@ function handleJoint(ws, objJoint, bSaved, callbacks) {
             ifOk: function (objValidationState, validation_unlock) {
                 if (objJoint.unsigned)
                     throw Error("ifOk() unsigned");
-                writer.saveJoint(objJoint, objValidationState, null, function () {
-                    validation_unlock();
-                    callbacks.ifOk();
-                    if (ws)
-                        writeEvent((objValidationState.sequence !== 'good') ? 'nonserial' : 'new_good', ws.host);
-                    notifyWatchers(objJoint, ws);
-                    if (!bCatchingUp)
-                        eventBus.emit('new_joint', objJoint);
-                });
+
+                console.log("delete writer.saveJoint")
+                // writer.saveJoint(objJoint, objValidationState, null, function () {
+                //     validation_unlock();
+                //     callbacks.ifOk();
+                //     if (ws)
+                //         writeEvent((objValidationState.sequence !== 'good') ? 'nonserial' : 'new_good', ws.host);
+                //     notifyWatchers(objJoint, ws);
+                //     if (!bCatchingUp)
+                //         eventBus.emit('new_joint', objJoint);
+                // });
             },
             ifOkUnsigned: function (bSerial) {
                 if (!objJoint.unsigned)

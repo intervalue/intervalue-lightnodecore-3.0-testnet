@@ -8,7 +8,6 @@ var objectHash = require("./object_hash.js");
 var composer = require("./composer.js");
 var ValidationUtils = require('./validation_utils.js');
 var validation = require('./validation.js');
-var writer = require('./writer.js');
 var inputs = require('./inputs.js');
 
 
@@ -334,17 +333,18 @@ function getSavingCallbacks(callbacks){
 							callbacks.ifError(err);
 						},
 						function save(){
-							writer.saveJoint(
-								objJoint, objValidationState, 
-								preCommitCallback,
-								function onDone(err){
-									console.log("saved unit "+unit+", err="+err, objPrivateElement);
-									validation_unlock();
-									composer_unlock();
-									var arrChains = objPrivateElement ? [[objPrivateElement]] : null; // only one chain that consists of one element
-									callbacks.ifOk(objJoint, arrChains, arrChains);
-								}
-							);
+                            console.log("delete writer.saveJoint")
+							// writer.saveJoint(
+							// 	objJoint, objValidationState,
+							// 	preCommitCallback,
+							// 	function onDone(err){
+							// 		console.log("saved unit "+unit+", err="+err, objPrivateElement);
+							// 		validation_unlock();
+							// 		composer_unlock();
+							// 		var arrChains = objPrivateElement ? [[objPrivateElement]] : null; // only one chain that consists of one element
+							// 		callbacks.ifOk(objJoint, arrChains, arrChains);
+							// 	}
+							// );
 						}
 					);
 				} // ifOk validation
