@@ -57,7 +57,7 @@ async function updateHistory(addresses) {
             return;
         }
         console.log("共识网拉取交易信息:");
-        console.log(trans);
+        // console.log(trans);
 
 
         //如果交易记录长度为零，需要清空本地的交易记录。
