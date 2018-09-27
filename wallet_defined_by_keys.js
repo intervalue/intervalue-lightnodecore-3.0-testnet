@@ -3,19 +3,16 @@
 var async = require('async');
 var crypto = require('crypto');
 var db = require('./db.js');
-var constants = require('./constants.js');
 var mutex = require('./mutex.js');
 var conf = require('./conf.js');
 var objectHash = require('./object_hash.js');
 var _ = require('lodash');
 var network = require('./network.js');
 var device = require('./device.js');
-var walletGeneral = require('./wallet_general.js');
 var eventBus = require('./event_bus.js');
 var Definition = require("./definition.js");
 var ValidationUtils = require("./validation_utils.js");
 var breadcrumbs = require('./breadcrumbs.js');
-var objectHash = require('./object_hash');
 
 try {
 	var Bitcore = require('bitcore-lib');
@@ -61,54 +58,6 @@ function sendNewWalletAddress(device_address, wallet, is_change, address_index, 
 		wallet: wallet, address: address, is_change: is_change, address_index: address_index
 	});
 }
-
-
-
-// {wallet: "base64", wallet_definition_template: [...]}
-function handleOfferToCreateNewWallet(body, from_address, callbacks) {
-	if (!ValidationUtils.isNonemptyString(body.wallet))
-		return callbacks.ifError("no wallet");
-	if (!ValidationUtils.isNonemptyString(body.wallet_name))
-		return callbacks.ifError("no wallet_name");
-	if (body.wallet.length > constants.HASH_LENGTH)
-		return callbacks.ifError("wallet too long");
-	if (body.wallet_name.length > 200)
-		return callbacks.ifError("wallet_name too long");
-	if (!ValidationUtils.isArrayOfLength(body.wallet_definition_template, 2))
-		return callbacks.ifError("no definition template");
-	if (!ValidationUtils.isNonemptyArray(body.other_cosigners))
-		return callbacks.ifError("no other_cosigners");
-	// the wallet should have an event handler that requests user confirmation, derives (or generates) a new key, records it, 
-	// and sends the newly derived xpubkey to other members
-	validateWalletDefinitionTemplate(body.wallet_definition_template, from_address, function (err, arrDeviceAddresses) {
-		if (err)
-			return callbacks.ifError(err);
-		if (body.other_cosigners.length !== arrDeviceAddresses.length - 1)
-			return callbacks.ifError("wrong length of other_cosigners");
-		var arrOtherDeviceAddresses = _.uniq(body.other_cosigners.map(function (cosigner) { return cosigner.device_address; }));
-		arrOtherDeviceAddresses.push(from_address);
-		if (!_.isEqual(arrDeviceAddresses.sort(), arrOtherDeviceAddresses.sort()))
-			return callbacks.ifError("wrong other_cosigners");
-		for (var i = 0; i < body.other_cosigners.length; i++) {
-			var cosigner = body.other_cosigners[i];
-			if (!ValidationUtils.isStringOfLength(cosigner.pubkey, constants.PUBKEY_LENGTH))
-				return callbacks.ifError("bad pubkey");
-			if (cosigner.device_address !== objectHash.getDeviceAddress(cosigner.pubkey))
-				return callbacks.ifError("bad cosigner device address");
-			if (!ValidationUtils.isNonemptyString(cosigner.name))
-				return callbacks.ifError("no cosigner name");
-			if (cosigner.name.length > 100)
-				return callbacks.ifError("cosigner name too long");
-			if (!ValidationUtils.isNonemptyString(cosigner.hub))
-				return callbacks.ifError("no cosigner hub");
-			if (cosigner.hub.length > 100)
-				return callbacks.ifError("cosigner hub too long");
-		}
-		eventBus.emit("create_new_wallet", body.wallet, body.wallet_definition_template, arrDeviceAddresses, body.wallet_name, body.other_cosigners, body.is_single_address);
-		callbacks.ifOk();
-	});
-}
-
 
 
 function readNextAccount(handleAccount) {
@@ -270,11 +219,6 @@ function createSinglesigWallet(xPubKey, account, walletName, handleWallet) {
 	createWallet(xPubKey, account, arrDefinitionTemplate, walletName, null, handleWallet);
 }
 
-function createSinglesigWalletWithExternalPrivateKey(xPubKey, account, device_address, handleWallet) {
-	var arrDefinitionTemplate = ["sig", { pubkey: '$pubkey@' + device_address }];
-	createWallet(xPubKey, account, arrDefinitionTemplate, 'unused wallet name', null, handleWallet);
-}
-
 // called from UI
 function createWalletByDevices(xPubKey, account, count_required_signatures, arrOtherDeviceAddresses, walletName, isSingleAddress, handleWallet) {
 	console.log('createWalletByDevices: xPubKey=' + xPubKey + ", account=" + account);
@@ -377,39 +321,6 @@ function deleteWalletFromUI(wallet, onDone) {
 }
 
 // called from network, without user interaction
-function addDeviceXPubKey(wallet, device_address, xPubKey, onDone) {
-	db.query(
-		"INSERT " + db.getIgnore() + " INTO extended_pubkeys (wallet, device_address) VALUES(?,?)",
-		[wallet, device_address],
-		function () {
-			db.query(
-				"UPDATE extended_pubkeys SET extended_pubkey=?, approval_date=" + db.getNow() + " WHERE wallet=? AND device_address=?",
-				[xPubKey, wallet, device_address],
-				function () {
-					eventBus.emit('wallet_approved', wallet, device_address);
-					checkAndFullyApproveWallet(wallet, onDone);
-				}
-			);
-		}
-	);
-}
-
-// called from network, without user interaction
-function handleNotificationThatWalletFullyApproved(wallet, device_address, onDone) {
-	db.query( // just in case it was not inserted yet
-		"INSERT " + db.getIgnore() + " INTO extended_pubkeys (wallet, device_address) VALUES(?,?)",
-		[wallet, device_address],
-		function () {
-			db.query(
-				"UPDATE extended_pubkeys SET member_ready_date=" + db.getNow() + " WHERE wallet=? AND device_address=?",
-				[wallet, device_address],
-				function () {
-					checkAndFinalizeWallet(wallet, onDone);
-				}
-			);
-		}
-	);
-}
 
 function readCosigners(wallet, handleCosigners) {
 	db.query(
@@ -431,23 +342,6 @@ function readCosigners(wallet, handleCosigners) {
 	);
 }
 
-//TODO
-// silently adds new address upon receiving a network message
-function addNewAddress(wallet, is_change, address_index, address, handleError) {
-	breadcrumbs.add('addNewAddress is_change=' + is_change + ', index=' + address_index + ', address=' + address);
-	db.query("SELECT 1 FROM wallets WHERE wallet=?", [wallet], function (rows) {
-		if (rows.length === 0)
-			return handleError("wallet " + wallet + " does not exist");
-		deriveAddress(wallet, is_change, address_index, function (new_address, arrDefinition) {
-			if (new_address !== address)
-				return handleError("I derived address " + new_address + ", your address " + address);
-			recordAddress(wallet, is_change, address_index, address, arrDefinition, function () {
-				eventBus.emit("new_wallet_address", address);
-				handleError();
-			});
-		});
-	});
-}
 
 function getDeviceAddresses(arrWalletDefinitionTemplate) {
 	return _.uniq(_.values(getDeviceAddressesBySigningPaths(arrWalletDefinitionTemplate)));
@@ -500,34 +394,6 @@ function getDeviceAddressesBySigningPaths(arrWalletDefinitionTemplate) {
 	evaluate(arrWalletDefinitionTemplate, 'r');
 	return assocDeviceAddressesBySigningPaths;
 }
-
-function validateWalletDefinitionTemplate(arrWalletDefinitionTemplate, from_address, handleResult) {
-	var arrDeviceAddresses = getDeviceAddresses(arrWalletDefinitionTemplate);
-	if (arrDeviceAddresses.indexOf(device.getMyDeviceAddress()) === - 1)
-		return handleResult("my device address not mentioned in the definition");
-	if (arrDeviceAddresses.indexOf(from_address) === - 1)
-		return handleResult("sender device address not mentioned in the definition");
-
-	var params = {};
-	// to fill the template for validation, assign my public key to all member devices
-	arrDeviceAddresses.forEach(function (device_address) {
-		params['pubkey@' + device_address] = device.getMyDevicePubKey();
-	});
-	try {
-		var arrFakeDefinition = Definition.replaceInTemplate(arrWalletDefinitionTemplate, params);
-	}
-	catch (e) {
-		return handleResult(e.toString());
-	}
-	var objFakeUnit = { authors: [] };
-	var objFakeValidationState = { last_ball_mci: MAX_INT32 };
-	Definition.validateDefinition(db, arrFakeDefinition, objFakeUnit, objFakeValidationState, null, false, function (err) {
-		if (err)
-			return handleResult(err);
-		handleResult(null, arrDeviceAddresses);
-	});
-}
-
 
 
 //todo delete 底层
@@ -649,17 +515,6 @@ function issueAddress(wallet, is_change, address_index, handleNewAddress) {
 	}, 5000);
 }
 
-//TODO delete 底层
-function readAddressByIndex(wallet, is_change, address_index, handleAddress) {
-	db.query(
-		"SELECT address, address_index, " + db.getUnixTimestamp("creation_date") + " AS creation_ts \n\
-		FROM my_addresses WHERE wallet=? AND is_change=? AND address_index=?",
-		[wallet, is_change, address_index],
-		function (rows) {
-			handleAddress(rows[0]);
-		}
-	);
-}
 
 //TODO delete 底层
 function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
@@ -702,33 +557,6 @@ function issueOrSelectNextAddress(wallet, is_change, handleAddress) {
 	});
 }
 
-function issueOrSelectNextChangeAddress(wallet, handleAddress) {
-	readNextAddressIndex(wallet, 1, function (next_index) {
-		readLastUsedAddressIndex(wallet, 1, function (last_used_index) {
-			var first_unused_index = (last_used_index === null) ? 0 : (last_used_index + 1);
-			if (first_unused_index > next_index)
-				throw Error("unued > next")
-			if (first_unused_index < next_index)
-				readAddressByIndex(wallet, 1, first_unused_index, function (addressInfo) {
-					addressInfo ? handleAddress(addressInfo) : issueAddress(wallet, 1, first_unused_index, handleAddress);
-				});
-			else
-				issueAddress(wallet, 1, next_index, handleAddress);
-		});
-	});
-}
-
-function issueOrSelectAddressForApp(wallet, app_name, handleAddress) {
-	db.query("SELECT address FROM my_addresses WHERE wallet=? AND app=?", [wallet, app_name], function (rows) {
-		if (rows.length > 1)
-			throw Error("more than 1 address for app " + app_name);
-		if (rows.length === 1)
-			return handleAddress(rows[0].address);
-		issueAddress(wallet, 0, app_name, function (addressInfo) {
-			handleAddress(addressInfo.address);
-		});
-	});
-}
 
 function checkAddress(account, is_change, address_index) {
 	db.query("SELECT wallet, extended_pubkey FROM wallets JOIN extended_pubkeys USING(wallet) WHERE account=?", [account], function (rows) {
@@ -783,29 +611,6 @@ function readAddresses(wallet, opts, handleAddresses) {
 	checkAddress(0, 0, 0);
 }
 
-function readExternalAddresses(wallet, opts, handleAddresses) {
-	opts.is_change = 0;
-	readAddresses(wallet, opts, handleAddresses);
-}
-
-function readChangeAddresses(wallet, handleAddresses) {
-	readAddresses(wallet, { is_change: 1, reverse: 1 }, handleAddresses);
-}
-
-// unused so far
-function readAddressInfo(address, handleAddress) {
-	db.query("SELECT address_index, is_change FROM my_addresses WHERE address=?", [address], function (rows) {
-		if (rows.length === 0)
-			return handleAddress("address " + address + " not found");
-		handleAddress(null, rows[0]);
-	});
-}
-
-
-
-
-
-
 
 
 function forwardPrivateChainsToOtherMembersOfWallets(arrChains, arrWallets, conn, onSaved) {
@@ -841,24 +646,14 @@ function readDeviceAddressesControllingPaymentAddresses(conn, arrAddresses, hand
 
 exports.readNextAccount = readNextAccount;
 exports.createWalletByDevices = createWalletByDevices;
-exports.createSinglesigWalletWithExternalPrivateKey = createSinglesigWalletWithExternalPrivateKey;
 exports.approveWallet = approveWallet;
 exports.cancelWallet = cancelWallet;
 
-exports.handleOfferToCreateNewWallet = handleOfferToCreateNewWallet;
 exports.deleteWallet = deleteWallet;
-exports.addDeviceXPubKey = addDeviceXPubKey;
-exports.handleNotificationThatWalletFullyApproved = handleNotificationThatWalletFullyApproved;
-exports.addNewAddress = addNewAddress;
 
 exports.issueNextAddress = issueNextAddress;
-exports.readAddressByIndex = readAddressByIndex;
 exports.issueOrSelectNextAddress = issueOrSelectNextAddress;
-exports.issueOrSelectNextChangeAddress = issueOrSelectNextChangeAddress;
 exports.readAddresses = readAddresses;
-exports.readExternalAddresses = readExternalAddresses;
-exports.readChangeAddresses = readChangeAddresses;
-exports.readAddressInfo = readAddressInfo;
 
 exports.forwardPrivateChainsToOtherMembersOfWallets = forwardPrivateChainsToOtherMembersOfWallets;
 
@@ -869,5 +664,4 @@ exports.deleteWalletFromUI = deleteWalletFromUI;
 exports.derivePubkey = derivePubkey;
 exports.issueAddress = issueAddress;
 exports.createWallet = createWallet;
-exports.recordAddress = recordAddress;
 exports.issueNextAddress = issueNextAddress;
