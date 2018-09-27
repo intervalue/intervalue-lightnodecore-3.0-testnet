@@ -2,11 +2,24 @@
 "use strict";
 var ecdsa = require('secp256k1');
 
+/**
+ * 签名
+ * @param hash
+ * @param priv_key
+ * @returns {string}
+ */
 exports.sign = function(hash, priv_key){
 	var res = ecdsa.sign(hash, priv_key);
 	return res.signature.toString("base64");
 };
 
+/**
+ * 验证
+ * @param hash
+ * @param b64_sig
+ * @param b64_pub_key
+ * @returns {*}
+ */
 exports.verify = function(hash, b64_sig, b64_pub_key){
 	try{
 		var signature = new Buffer(b64_sig, "base64"); // 64 bytes (32+32)
@@ -18,7 +31,13 @@ exports.verify = function(hash, b64_sig, b64_pub_key){
 	}
 };
 
-
+/**
+ * 恢复公钥
+ * @param hash
+ * @param b64_sig
+ * @param recovery
+ * @returns {*}
+ */
 exports.recover = function(hash, b64_sig, recovery){
     try{
 		var signature = new Buffer(b64_sig, "base64");

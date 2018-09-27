@@ -14,7 +14,6 @@ var conf = require('./conf.js');
 var breadcrumbs = require('./breadcrumbs.js');
 
 
-var SEND_RETRY_PERIOD = 60 * 1000;
 var TEMP_DEVICE_KEY_ROTATION_PERIOD = 3600 * 1000;
 
 var my_device_hub;
@@ -48,9 +47,6 @@ function uPMyHotDeviceAddress(walletId) {
     });
 }
 
-function setMyHotDeviceAddress(addr) {
-    my_device_address = addr;
-}
 function getMyHotDeviceAddress() {
 
     if (!my_Hot_device_address)
@@ -138,6 +134,11 @@ function setDeviceName(device_name) {
 var pubKey = '';
 var walletId = '';
 var addresses = [];
+
+/**
+ * 获取钱包设备信息
+ * @returns {Promise<{walletId: string, pubKey: string, addresses: Array}>}
+ */
 async function getInfo() {
     if (!pubKey || !walletId) {
         addresses = [];
@@ -153,6 +154,11 @@ async function getInfo() {
 
 var walletChanged = false;
 var focusWalletId = '';
+
+/**
+ * 设置walletId
+ * @param walletId
+ */
 function setWalletId(walletId) {
     if (focusWalletId != '' && walletId != focusWalletId) {
         walletChanged = true;
@@ -430,7 +436,7 @@ function resendStalledMessages(delay) {
     });
 }
 
-setInterval(function () { resendStalledMessages(1); }, SEND_RETRY_PERIOD);
+// setInterval(function () { resendStalledMessages(1); }, SEND_RETRY_PERIOD);
 
 // reliable delivery
 // first param is either WebSocket or hostname of the hub
@@ -767,7 +773,6 @@ function requestFromHub(command, params, responseHandler) {
 }
 function setMyHotDeviceAddress(addr) {
     my_device_address = addr;
-
 }
 
 
