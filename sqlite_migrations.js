@@ -435,9 +435,6 @@ function migrateDb(connection, onDone) {
 	});
 }
 
-function rescanAttestations(arrQueries, cb) {
-
-}
 
 exports.migrateDb = migrateDb;
 exports.migrateDbSync = migrateDbSync;
