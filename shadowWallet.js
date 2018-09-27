@@ -236,8 +236,8 @@ exports.getTradingUnit = function (opts ,cb) {
 
     var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: ""+opts.amount, timestamp};
 
-    obj.fee = ""+objectLength.getTotalPayloadSize(obj);
-
+    // obj.fee = ""+objectLength.getTotalPayloadSize(obj);
+    obj.fee = ""+0;
 
     //TODO test
     if (light.findStable(params.wallet) < (parseInt(obj.fee) + parseInt(obj.amount))) {

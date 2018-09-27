@@ -52,7 +52,8 @@ async function writeTran(params, handleResult) {
         obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount + "", timestamp};
         var address = await params.findAddressForJoint(params.change_address);
         obj.pubkey = address.definition[1].pubkey;
-        obj.fee = objectLength.getTotalPayloadSize(obj) + "";
+        // obj.fee = objectLength.getTotalPayloadSize(obj) + "";
+        obj.fee = "0";
         obj.type = 1;
 
         //TODO 测试   if (light.stable < obj.fee + obj.amount) {
