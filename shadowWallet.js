@@ -239,40 +239,43 @@ exports.getTradingUnit = function (opts ,cb) {
     // obj.fee = ""+objectLength.getTotalPayloadSize(obj);
     obj.fee = ""+0;
 
-    //TODO test
-    if (light.findStable(params.wallet) < (parseInt(obj.fee) + parseInt(obj.amount))) {
-        return cb("not enough spendable funds from " + obj.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount)));
-    }
-
-    var db = require("./db");
-    db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.from[0].address],function (row) {
-        var address;
-
-        if(row.length > 0) {
-            address = {
-                definition: JSON.parse(row[0].definition),
-                wallet: row[0].wallet,
-                account: row[0].account,
-                is_change: row[0].is_change,
-                address_index: row[0].address_index
-            };
-            obj.pubkey = address.definition[1].pubkey;
-            obj.type = 1;
-
-            var authorized_signature = obj;
-
-            var h = crypto.createHash("md5");
-            h.update(JSON.stringify(authorized_signature));
-            var md5 = h.digest("hex");
-
-            authorized_signature.type = "trading";
-            authorized_signature.md5 = md5;
-            authorized_signature.name = "isHot";
-
-            cb(authorized_signature);
+    light.findStable2(opts.walletId ,function (stable) {
+        //TODO test
+        if (stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
+            return cb("not enough spendable funds from " + obj.to_address + " for " + ((parseInt(obj.fee) + parseInt(obj.amount))));
         }
 
+        var db = require("./db");
+        db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.fromAddress],function (row) {
+            var address;
+
+            if(row.length > 0) {
+                address = {
+                    definition: JSON.parse(row[0].definition),
+                    wallet: row[0].wallet,
+                    account: row[0].account,
+                    is_change: row[0].is_change,
+                    address_index: row[0].address_index
+                };
+                obj.pubkey = address.definition[1].pubkey;
+                obj.type = 1;
+
+                var authorized_signature = obj;
+
+                var h = crypto.createHash("md5");
+                h.update(JSON.stringify(authorized_signature));
+                var md5 = h.digest("hex");
+
+                authorized_signature.type = "trading";
+                authorized_signature.md5 = md5;
+                authorized_signature.name = "isHot";
+
+                cb(authorized_signature);
+            }
+
+        });
     });
+
 
 };
 

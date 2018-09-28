@@ -1,8 +1,6 @@
 /*jslint node: true */
 "use strict";
 var _ = require('lodash');
-var async = require('async');
-var sqlite_migrations = require('./sqlite_migrations');
 var EventEmitter = require('events').EventEmitter;
 
 var bCordova = (typeof window === 'object' && window.cordova);
@@ -188,7 +186,7 @@ module.exports = function (db_name, MAX_CONNECTIONS, bReadOnly) {
 		await connection.query("PRAGMA journal_mode=WAL");
 		await connection.query("PRAGMA synchronous=NORMAL");
 		await connection.query("PRAGMA temp_store=MEMORY");
-		await sqlite_migrations.migrateDbSync(connection);
+		// await sqlite_migrations.migrateDbSync(connection);
 		// arrConnectionSyncs.push(connection);
 		return connection;
 	}
@@ -204,9 +202,9 @@ module.exports = function (db_name, MAX_CONNECTIONS, bReadOnly) {
 					connection.query("PRAGMA journal_mode=WAL", function () {
 						connection.query("PRAGMA synchronous=NORMAL", function () {
 							connection.query("PRAGMA temp_store=MEMORY", function () {
-								sqlite_migrations.migrateDb(connection, function () {
+								// sqlite_migrations.migrateDb(connection, function () {
 									handleConnection(connection);
-								});
+								// });
 							});
 						});
 					});

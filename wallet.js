@@ -253,7 +253,7 @@ function getWalletsInfo(cb) {
             });
             cb(trans);
         }else {
-            cb({stables : 0});
+            cb(false);
         }
     })
 }
