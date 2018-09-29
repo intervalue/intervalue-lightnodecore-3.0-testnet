@@ -3,15 +3,11 @@
 
 var getSourceString = require('./string_utils').getSourceString;
 var Bitcore = require('bitcore-lib');
-
 var crypto = require('crypto');
 var objectHash = require('./object_hash.js');
 var ecdsaSig = require('./signature');
-
-
 var signatureCode;
 var signatureDetlCode;
-
 var RANDOM;
 
 
@@ -72,12 +68,9 @@ exports.getSignatureDetlCode = function(signatureCode,xPrivkey, cb){
         addr:json.addr,
         random:json.random
     };
-
-
     var buf_to_sign = crypto.createHash("sha256").update(getSourceString(sign_json), "utf8").digest();
 
     var xPrivKey = new Bitcore.HDPrivateKey.fromString(xPrivkey);
-
 
     var path = "m/44'/0'/0'/0/0";
     var privateKey = xPrivKey.derive(path).privateKey.bn.toBuffer({size:32});
@@ -107,7 +100,6 @@ function derivePubkey(xPubKey, path) {
     return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
 }
 
-
 /**
  * 热钱包  生成热钱包
  * @param signatureDetlCode
@@ -133,7 +125,6 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
     if(RANDOM != json.random) {
         return cb("random failed");
     }
-
     var addr = json.addr;
     var sign = json.signature;
     var xpub = json.expub;
@@ -169,35 +160,6 @@ exports.generateShadowWallet = function(signatureDetlCode,cb){
 };
 
 
-//查找钱包
-exports.getWallets = function (cb) {
-    var data = [];
-
-    var db = require('./db');
-    db.query("select address,wallet from my_addresses",function (result) {
-        if(result.length > 0) {
-            var n = 1;
-            result.forEach(function(r) {
-                var addr = r.address;
-                var wallet = r.wallet;
-                var obj = {
-                    "name": n++,
-                    "addr":addr,
-                    "amount":0,
-                    "walletId":wallet
-                };
-
-                data.push(obj);
-            });
-            cb(data);
-        }
-    });
-};
-
-
-
-
-
 var light = require("./light");
 /**
  * 热钱包生成交易授权签名
@@ -218,17 +180,13 @@ exports.getTradingUnit = function (opts ,cb) {
             cb(false);
             break;
     }
-
     if (opts.change_address == opts.to_address) {
         return cb("to_address and from_address is same");
     }
-
     if (typeof opts.amount !== 'number')
         return cb('amount must be a number');
     if (opts.amount < 0)
         return cb('amount must be positive');
-
-
     var isHot = opts.ishot;
 
     var objectLength = require("./object_length.js");
@@ -244,7 +202,6 @@ exports.getTradingUnit = function (opts ,cb) {
         if (stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
             return cb("not enough spendable funds from " + obj.to_address + " for " + ((parseInt(obj.fee) + parseInt(obj.amount))));
         }
-
         var db = require("./db");
         db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.fromAddress],function (row) {
             var address;
@@ -258,25 +215,19 @@ exports.getTradingUnit = function (opts ,cb) {
                     address_index: row[0].address_index
                 };
                 obj.pubkey = address.definition[1].pubkey;
-                obj.type = 1;
+                obj.type = "trading";
 
                 var authorized_signature = obj;
 
-                var h = crypto.createHash("md5");
+                let h = crypto.createHash("md5");
                 h.update(JSON.stringify(authorized_signature));
                 var md5 = h.digest("hex");
-
-                authorized_signature.type = "trading";
                 authorized_signature.md5 = md5;
                 authorized_signature.name = "isHot";
-
                 cb(authorized_signature);
             }
-
         });
     });
-
-
 };
 
 /**
@@ -304,17 +255,16 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
             cb(false);
             break;
     }
+    var type = opts.type;
     var name = opts.name;
     var md5 = opts.md5;
-    var type = opts.type;
 
     delete opts.name;
     delete opts.md5;
-    delete opts.type;
 
     var obj = opts;
 
-    var h = crypto.createHash("md5");
+    let h = crypto.createHash("md5");
 
     h.update(JSON.stringify(obj));
 
@@ -340,9 +290,7 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
     var xpubkey = Bitcore.HDPublicKey(privateKey2).xpubkey;
 
     var pubkey = derivePubkey(xpubkey ,"m/0/0");
-
     var flag = ecdsaSig.verify(buf_to_sign,signature,pubkey);
-
 
     opts.type = "sign";
     opts.name = "isHot";
