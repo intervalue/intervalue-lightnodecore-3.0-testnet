@@ -77,7 +77,6 @@ async function writeTran(params, handleResult) {
         obj.fee = "0";
         obj.type = 1;
         signature = params.signature;
-        obj = params;
     }
     obj.signature = signature;
 
