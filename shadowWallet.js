@@ -192,11 +192,11 @@ exports.getTradingUnit = function (opts ,cb) {
     var objectLength = require("./object_length.js");
     var timestamp = Math.round(Date.now() / 1000);
 
-    var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: ""+opts.amount, timestamp};
+    var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: opts.amount+"", timestamp};
 
 
     // obj.fee = ""+objectLength.getTotalPayloadSize(obj);
-    obj.fee = ""+0;
+    obj.fee = "0";
 
     light.findStable2(opts.walletId ,function (stable) {
         //TODO test
@@ -260,8 +260,8 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
     var name = opts.name;
     var md5 = opts.md5;
 
-    var obj = {fromAddress:opts.fromAddress,toAddress:opts.toAddress,amount:opts.amount+"",timestamp:opts.timestamp};
-    obj.fee = "" + opts.fee;
+    var obj = {fromAddress:opts.fromAddress,toAddress:opts.toAddress,amount:opts.amount,timestamp:opts.timestamp};
+    obj.fee = opts.fee;
     obj.pubkey = opts.pubkey;
     obj.type = 1;
     var str = getSourceString(obj);
