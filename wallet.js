@@ -237,12 +237,12 @@ async function sendMultiPayment(opts, handleResult) {
  * @param cb
  */
 function getWalletsInfo(cb) {
-    db.query("select address,wallet, ifnull((sumto.total - sumfrom.total),0) stable from my_addresses \n" +
-        "left join  \n" +
-        "( select addressTo, sum(amount) total  from transactions where result='good' group by addressTo ) sumto on sumto.addressTo = my_addresses.address\n" +
-        "left join \n" +
-        "(select addressFrom ,sum(amount + fee) total from transactions where (result = 'good' or result = 'pending') and id <>'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ' group by addressFrom) sumfrom\n" +
-        "on my_addresses.address = sumfrom.addressFrom",function (result) {
+    db.query("select address,wallet, ifnull((sumto.total - sumfrom.total),0) stable from my_addresses \n\
+        left join  \n\
+        ( select addressTo, sum(amount) total  from transactions where result='good' group by addressTo ) sumto on sumto.addressTo = my_addresses.address \n\
+        left join \n\
+        (select addressFrom ,sum(amount + fee) total from transactions where (result = 'good' or result = 'pending') and id <>'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ' group by addressFrom) sumfrom \n\
+        on my_addresses.address = sumfrom.addressFrom",function (result) {
         if(result.length > 0 ) {
             let trans = [];
             result.forEach(function(tran){
