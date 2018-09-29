@@ -72,9 +72,10 @@ async function writeTran(params, handleResult) {
         //通过私钥进行签名
         signature = ecdsaSig.sign(buf_to_sign, privKeyBuf);
     } else {
-        delete params.type;
-        delete params.name;
-        delete params.md5;
+        obj = { fromAddress: params.change_address, toAddress: params.to_address, amount: params.amount + "", timestamp:params.timestamp};
+        obj.pubkey = params.pubkey;
+        obj.fee = "0";
+        obj.type = 1;
         signature = params.signature;
         obj = params;
     }
