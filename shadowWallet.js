@@ -216,7 +216,7 @@ exports.getTradingUnit = function (opts ,cb) {
                     address_index: row[0].address_index
                 };
                 obj.pubkey = address.definition[1].pubkey;
-                obj.type = "trading";
+                obj.type = 1;
                 var str = getSourceString(obj);
                 var authorized_signature = obj;
 
@@ -260,10 +260,10 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
     var name = opts.name;
     var md5 = opts.md5;
 
-    var obj = {"fromAddress":opts.fromAddress,"toAddress":opts.toAddress,"amount":opts.amount,"timestamp":opts.timestamp};
-    obj.fee = opts.fee;
+    var obj = {fromAddress:opts.fromAddress,toAddress:opts.toAddress,amount:opts.amount+"",timestamp:opts.timestamp};
+    obj.fee = "" + opts.fee;
     obj.pubkey = opts.pubkey;
-    obj.type = opts.type;
+    obj.type = 1;
     var str = getSourceString(obj);
 
     let h = crypto.createHash("md5");
