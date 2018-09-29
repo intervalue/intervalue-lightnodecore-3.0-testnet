@@ -237,7 +237,7 @@ async function sendMultiPayment(opts, handleResult) {
  * @param cb
  */
 function getWalletsInfo(cb) {
-    db.query("select address,wallet, ifnull((sumto.total - sumfrom.total),0) stable from my_addresses \n\
+    db.query("select address,wallet, (ifnull(sumto.total,0) - ifnull(sumfrom.total,0)) stable ,ifnull(sumto.total,0) receive , ifnull(sumfrom.total,0) sent from my_addresses  \n\
         left join  \n\
         ( select addressTo, sum(amount) total  from transactions where result='good' group by addressTo ) sumto on sumto.addressTo = my_addresses.address \n\
         left join \n\
