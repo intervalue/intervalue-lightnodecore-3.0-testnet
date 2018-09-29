@@ -225,6 +225,7 @@ exports.getTradingUnit = function (opts ,cb) {
                 var md5 = h.digest("hex");
                 authorized_signature.md5 = md5;
                 authorized_signature.name = "isHot";
+                authorized_signature.type = "trading";
                 cb(authorized_signature);
             }
         });
