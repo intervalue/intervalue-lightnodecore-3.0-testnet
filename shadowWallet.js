@@ -259,10 +259,14 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
     var name = opts.name;
     var md5 = opts.md5;
 
-    delete opts.name;
-    delete opts.md5;
-
-    var obj = opts;
+    var obj = {};
+    obj.amount = opts.amount;
+    obj.fee = opts.fee;
+    obj.fromAddress = opts.fromAddress;
+    obj.pubkey = opts.pubkey;
+    obj.timestamp = opts.timestamp;
+    obj.toAddress = opts.toAddress;
+    obj.type = opts.type;
 
     let h = crypto.createHash("md5");
 
