@@ -194,6 +194,7 @@ exports.getTradingUnit = function (opts ,cb) {
 
     var obj = { fromAddress: opts.change_address, toAddress: opts.to_address, amount: ""+opts.amount, timestamp};
 
+
     // obj.fee = ""+objectLength.getTotalPayloadSize(obj);
     obj.fee = ""+0;
 
@@ -216,11 +217,11 @@ exports.getTradingUnit = function (opts ,cb) {
                 };
                 obj.pubkey = address.definition[1].pubkey;
                 obj.type = "trading";
-
+                var str = getSourceString(obj);
                 var authorized_signature = obj;
 
                 let h = crypto.createHash("md5");
-                h.update(JSON.stringify(authorized_signature));
+                h.update(str);
                 var md5 = h.digest("hex");
                 authorized_signature.md5 = md5;
                 authorized_signature.name = "isHot";
@@ -263,10 +264,11 @@ exports.signTradingUnit = function (opts ,xPrivkey ,cb) {
     obj.fee = opts.fee;
     obj.pubkey = opts.pubkey;
     obj.type = opts.type;
+    var str = getSourceString(obj);
 
     let h = crypto.createHash("md5");
 
-    h.update(JSON.stringify(obj));
+    h.update(str);
 
     var result = h.digest("hex");
 
