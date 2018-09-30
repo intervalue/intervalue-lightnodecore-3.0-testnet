@@ -200,7 +200,7 @@ exports.getTradingUnit = function (opts ,cb) {
 
     light.findStable2(opts.walletId ,function (stable) {
         //TODO test
-        if (stable < (parseInt(obj.fee) + parseInt(obj.amount))/1000000) {
+        if (stable < (parseInt(obj.fee) + parseInt(obj.amount))) {
             return cb("not enough spendable funds from " + obj.to_address + " for " + ((parseInt(obj.fee) + parseInt(obj.amount))/1000000));
         }
         var db = require("./db");

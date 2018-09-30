@@ -57,7 +57,7 @@ async function writeTran(params, handleResult) {
         obj.type = 1;
 
         //TODO 测试   if (light.stable < obj.fee + obj.amount) {
-        if (await light.findStable(params.walletId) < (parseInt(obj.fee) + parseInt(obj.amount))/1000000) {
+        if (await light.findStable(params.walletId) < (parseInt(obj.fee) + parseInt(obj.amount))) {
             return handleResult("not enough spendable funds from " + params.to_address + " for " + (parseInt(obj.fee) + parseInt(obj.amount))/1000000);
         }
         //获取签名的BUF
