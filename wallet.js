@@ -21,7 +21,6 @@ var divisibleAsset = require('./divisible_asset.js');
 var profiler = require('./profiler.js');
 var balances = require('./balances');
 var Mnemonic = require('bitcore-mnemonic');
-var inputs = require('./inputs.js');
 var light = require('./light.js');
 var message_counter = 0;
 var assocLastFailedAssetMetadataTimestamps = {};
@@ -131,64 +130,15 @@ function handlePrivatePaymentChains(ws, body, from_address, callbacks) {
             checkIfAllValidated();
             callbacks.ifOk();
             // forward the chains to other members of output addresses
-            if (!body.forwarded)
-                forwardPrivateChainsToOtherMembersOfOutputAddresses(arrChains);
+            if (!body.forwarded);
+                // forwardPrivateChainsToOtherMembersOfOutputAddresses(arrChains);
         }
     );
 }
 
 
-function forwardPrivateChainsToOtherMembersOfOutputAddresses(arrChains, conn, onSaved) {
-    console.log("forwardPrivateChainsToOtherMembersOfOutputAddresses", arrChains);
-    var assocOutputAddresses = {};
-    arrChains.forEach(function (arrPrivateElements) {
-        var objHeadPrivateElement = arrPrivateElements[0];
-        var payload = objHeadPrivateElement.payload;
-        payload.outputs.forEach(function (output) {
-            if (output.address)
-                assocOutputAddresses[output.address] = true;
-        });
-        if (objHeadPrivateElement.output && objHeadPrivateElement.output.address)
-            assocOutputAddresses[objHeadPrivateElement.output.address] = true;
-    });
-    var arrOutputAddresses = Object.keys(assocOutputAddresses);
-    console.log("output addresses", arrOutputAddresses);
-    conn = conn || db;
-    if (!onSaved)
-        onSaved = function () { };
-    readWalletsByAddresses(conn, arrOutputAddresses, function (arrWallets) {
-        if (arrWallets.length === 0) {
-            //	breadcrumbs.add("forwardPrivateChainsToOtherMembersOfOutputAddresses: " + JSON.stringify(arrChains)); // remove in livenet
-            //	eventBus.emit('nonfatal_error', "not my wallet? output addresses: "+arrOutputAddresses.join(', '), new Error());
-            //	throw Error("not my wallet? output addresses: "+arrOutputAddresses.join(', '));
-        }
-        var arrFuncs = [];
-        if (arrWallets.length > 0)
-            arrFuncs.push(function (cb) {
-                walletDefinedByKeys.forwardPrivateChainsToOtherMembersOfWallets(arrChains, arrWallets, conn, cb);
-            });
-        arrFuncs.push(function (cb) {
-            walletDefinedByAddresses.forwardPrivateChainsToOtherMembersOfAddresses(arrChains, arrOutputAddresses, conn, cb);
-        });
-        async.series(arrFuncs, onSaved);
-    });
-}
 
 
-
-function readWalletsByAddresses(conn, arrAddresses, handleWallets) {
-    conn.query("SELECT DISTINCT wallet FROM my_addresses WHERE address IN(?)", [arrAddresses], function (rows) {
-        var arrWallets = rows.map(function (row) { return row.wallet; });
-        conn.query("SELECT DISTINCT address FROM shared_address_signing_paths WHERE shared_address IN(?)", [arrAddresses], function (rows) {
-            if (rows.length === 0)
-                return handleWallets(arrWallets);
-            var arrNewAddresses = rows.map(function (row) { return row.address; });
-            readWalletsByAddresses(conn, arrNewAddresses, function (arrNewWallets) {
-                handleWallets(_.union(arrWallets, arrNewWallets));
-            });
-        });
-    });
-}
 
 /**
  * 根据walletId查找地址
@@ -257,11 +207,6 @@ function getWalletsInfo(cb) {
         }
     })
 }
-
-// event emitted in two cases:
-// 1. if I received private payloads via direct connection, not through a hub
-// 2. (not true any more) received private payload from anywhere, didn't handle it immediately, saved and handled later
-eventBus.on("new_direct_private_chains", forwardPrivateChainsToOtherMembersOfOutputAddresses);
 
 
 function emitNewPrivatePaymentReceived(payer_device_address, arrChains, message_counter) {
