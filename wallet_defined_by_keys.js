@@ -421,7 +421,13 @@ function derivePubkey(xPubKey, path) {
 	return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");
 }
 
-//todo delete
+/**
+ *	获取地址
+ * @param wallet
+ * @param is_change
+ * @param address_index
+ * @param handleNewAddress
+ */
 function deriveAddress(wallet, is_change, address_index, handleNewAddress) {
 	db.query("SELECT definition_template, full_approval_date FROM wallets WHERE wallet=?", [wallet], function (wallet_rows) {
 		if (wallet_rows.length === 0)
@@ -516,7 +522,13 @@ function issueAddress(wallet, is_change, address_index, handleNewAddress) {
 }
 
 
-//TODO delete 底层
+/**
+ *
+ * @param wallet
+ * @param is_change
+ * @param from_index
+ * @param handleAddress
+ */
 function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
 	if (from_index === null)
 		from_index = -1;
@@ -531,7 +543,12 @@ function selectRandomAddress(wallet, is_change, from_index, handleAddress) {
 }
 
 
-//todo delete
+/**
+ *
+ * @param wallet
+ * @param is_change
+ * @param handleAddress
+ */
 function issueNextAddress(wallet, is_change, handleAddress) {
 	mutex.lock(['issueNextAddress'], function (unlock) {
 		readNextAddressIndex(wallet, is_change, function (next_index) {

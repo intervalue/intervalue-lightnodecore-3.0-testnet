@@ -3,19 +3,14 @@
 
 var async = require('async');
 var db = require('./db.js');
-var constants = require('./constants.js');
 var conf = require('./conf.js');
-var composer = require('./composer.js');
 var objectHash = require('./object_hash.js');
 var _ = require('lodash');
 var network = require('./network.js');
 var device = require('./device.js');
-var walletGeneral = require('./wallet_general.js');
 var eventBus = require('./event_bus.js');
 var Definition = require("./definition.js");
 var ValidationUtils = require("./validation_utils.js");
-var indivisibleAsset = require('./indivisible_asset.js');
-var divisibleAsset = require('./divisible_asset.js');
 
 var MAX_INT32 = Math.pow(2, 31) - 1;
 
@@ -26,21 +21,7 @@ function sendOfferToCreateNewSharedAddress(device_address, arrAddressDefinitionT
 	device.sendMessageToDevice(device_address, "create_new_shared_address", {address_definition_template: arrAddressDefinitionTemplate});
 }
 
-// called from UI (unused)
-function sendApprovalOfNewSharedAddress(device_address, address_definition_template_chash, address, assocDeviceAddressesByRelativeSigningPaths){
-	device.sendMessageToDevice(device_address, "approve_new_shared_address", {
-		address_definition_template_chash: address_definition_template_chash, 
-		address: address, 
-		device_addresses_by_relative_signing_paths: assocDeviceAddressesByRelativeSigningPaths
-	});
-}
 
-// called from UI (unused)
-function sendRejectionOfNewSharedAddress(device_address, address_definition_template_chash){
-	device.sendMessageToDevice(device_address, "reject_new_shared_address", {
-		address_definition_template_chash: address_definition_template_chash
-	});
-}
 
 function sendNewSharedAddress(device_address, address, arrDefinition, assocSignersByPath, bForwarded){
 	device.sendMessageToDevice(device_address, "new_shared_address", {
@@ -450,19 +431,6 @@ function readAllControlAddresses(conn, arrAddresses, handleLists){
 }
 
 
-/*
-function readRequiredCosigners(shared_address, arrSigningDeviceAddresses, handleCosigners){
-	db.query(
-		"SELECT shared_address_signing_paths.address \n\
-		FROM shared_address_signing_paths \n\
-		LEFT JOIN unit_authors USING(address) \n\
-		WHERE shared_address=? AND device_address IN(?) AND unit_authors.address IS NULL",
-		[shared_address, arrSigningDeviceAddresses],
-		function(rows){
-			handleCosigners(rows.map(function(row){ return row.address; }));
-		}
-	);
-}*/
 
 function readSharedAddressDefinition(shared_address, handleDefinition){
 	db.query(

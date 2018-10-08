@@ -120,7 +120,7 @@ module.exports = function (db_name, MAX_CONNECTIONS, bReadOnly) {
 				if (bCordova) {
 					return new Promise(function (resolve, reject) {
 						db.query(new_args[0], new_args[1], function (err, result) {
-							console.log(new_args[0], new_args[1]);
+							// console.log(new_args[0], new_args[1]);
 							showTime();
 							if (err) {
 								// showError(err);
@@ -136,7 +136,7 @@ module.exports = function (db_name, MAX_CONNECTIONS, bReadOnly) {
 					if (bSelect) {
 						return new Promise(function (resolve, reject) {
 							db.all(new_args[0], new_args[1], function (err, result) {
-								console.log(new_args[0], new_args[1]);
+								// console.log(new_args[0], new_args[1]);
 								showTime();
 								if (err) {
 									// showError(err);
@@ -151,7 +151,7 @@ module.exports = function (db_name, MAX_CONNECTIONS, bReadOnly) {
 					else {
 						return new Promise(function (resolve, reject) {
 							db.run(new_args[0], new_args[1], function (err, result) {
-								console.log(new_args[0], new_args[1]);
+								// console.log(new_args[0], new_args[1]);
 								showTime();
 								if (err) {
 									// showError(err);
