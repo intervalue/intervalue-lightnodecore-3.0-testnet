@@ -262,8 +262,6 @@ function cancelWallet(wallet, arrDeviceAddresses, arrOtherCosigners) {
 	arrOtherCosigners.forEach(function (cosigner) {
 		if (cosigner.device_address === device.getMyDeviceAddress())
 			return;
-		// can't use device.sendMessageToDevice because some of the proposed cosigners might not be paired
-		device.sendMessageToHub(cosigner.hub, cosigner.pubkey, "cancel_new_wallet", { wallet: wallet });
 	});
 	db.query("DELETE FROM extended_pubkeys WHERE wallet=?", [wallet], function () {
 		db.query("DELETE FROM wallet_signing_paths WHERE wallet=?", [wallet], function () { });
@@ -416,6 +414,12 @@ function readLastUsedAddressIndex(wallet, is_change, handleLastUsedAddressIndex)
 	);
 }
 
+/**
+ * 衍生出子公钥 并用base64编码
+ * @param xPubKey
+ * @param path
+ * @returns {*}
+ */
 function derivePubkey(xPubKey, path) {
 	var hdPubKey = new Bitcore.HDPublicKey(xPubKey);
 	return hdPubKey.derive(path).publicKey.toBuffer().toString("base64");

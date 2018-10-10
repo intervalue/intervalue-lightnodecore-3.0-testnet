@@ -207,7 +207,7 @@ exports.getTradingUnit = function (opts ,cb) {
         db.query("SELECT wallet, account, is_change, address_index,definition FROM my_addresses JOIN wallets USING(wallet) WHERE address=? ",[obj.fromAddress],function (row) {
             var address;
 
-            if(row.length > 0) {
+            if(row != null && row.length > 0) {
                 address = {
                     definition: JSON.parse(row[0].definition),
                     wallet: row[0].wallet,
