@@ -180,6 +180,11 @@ exports.getTradingUnit = function (opts ,cb) {
             cb(false);
             break;
     }
+    //判断发送方是否等于接收方，不允许发送给自己
+    if (opts.change_address == opts.to_address) {
+        return handleResult("to_address and from_address is same"
+        );
+    }
     if (opts.change_address == opts.to_address) {
         return cb("to_address and from_address is same");
     }
