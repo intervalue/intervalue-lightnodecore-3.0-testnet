@@ -6,15 +6,11 @@ var db = require('./db.js');
 var conf = require('./conf.js');
 var objectHash = require("./object_hash.js");
 var constants = require("./constants.js");
-var mutex = require('./mutex.js');
 var archiving = require('./archiving.js');
-var profiler = require('./profiler.js');
 
 var MAX_INT32 = Math.pow(2, 31) - 1;
 
-var genesis_ball = objectHash.getBallHash(constants.GENESIS_UNIT);
 
-var MAX_ITEMS_IN_CACHE = 300;
 var assocKnownUnits = {};
 var assocCachedUnits = {};
 var assocCachedUnitAuthors = {};
@@ -614,27 +610,6 @@ function determineWitnessedLevelAndBestParent(conn, arrParentUnits, arrWitnesses
 	});
 }
 
-
-/*
-function readWitnessesOnMcUnit(conn, main_chain_index, handleWitnesses){
-	conn.query( // we read witnesses from MC unit (users can cheat with side-chains)
-		"SELECT address \n\
-		FROM units \n\
-		JOIN unit_witnesses ON(units.unit=unit_witnesses.unit OR units.witness_list_unit=unit_witnesses.unit) \n\
-		WHERE main_chain_index=? AND is_on_main_chain=1", 
-		[main_chain_index],
-		function(witness_rows){
-			if (witness_rows.length === 0)
-				throw "no witness list on MC unit "+main_chain_index;
-			if (witness_rows.length !== constants.COUNT_WITNESSES)
-				throw "wrong number of witnesses on MC unit "+main_chain_index;
-			var arrWitnesses = witness_rows.map(function(witness_row){ return witness_row.address; });
-			handleWitnesses(arrWitnesses);
-		}
-	);
-}*/
-
-
 // max_mci must be stable
 function readDefinitionByAddress(conn, address, max_mci, callbacks){
 	if (max_mci === null)
@@ -671,34 +646,10 @@ function readDefinition(conn, definition_chash, callbacks){
 	});
 }
 
-function readFreeJoints(ifFoundFreeBall, onDone){
-	db.query("SELECT units.unit FROM units LEFT JOIN archived_joints USING(unit) WHERE is_free=1 AND archived_joints.unit IS NULL", function(rows){
-		async.each(rows, function(row, cb){
-			readJoint(db, row.unit, {
-				ifNotFound: function(){
-					throw Error("free ball lost");
-				},
-				ifFound: function(objJoint){
-					ifFoundFreeBall(objJoint);
-					cb();
-				}
-			});
-		}, onDone);
-	});
-}
 
 function isGenesisUnit(unit){
 	return (unit === constants.GENESIS_UNIT);
 }
-
-function isGenesisBall(ball){
-	return (ball === genesis_ball);
-}
-
-
-
-
-
 
 function readUnitProps(conn, unit, handleProps){
 	if (assocStableUnits[unit])
@@ -796,10 +747,6 @@ function throwError(msg){
 		eventBus.emit('nonfatal_error', msg, new Error());
 }
 
-
-
-
-
 function readLastStableMcUnitProps(conn, handleLastStableMcUnitProps){
 	conn.query(
 		"SELECT units.*, ball FROM units LEFT JOIN balls USING(unit) WHERE is_on_main_chain=1 AND is_stable=1 ORDER BY main_chain_index DESC LIMIT 1", 
@@ -820,9 +767,6 @@ function readLastStableMcIndex(conn, handleLastStableMcIndex){
 	});
 }
 
-
-
-
 function findLastBallMciOfMci(conn, mci, handleLastBallMci){
 	if (mci === 0)
 		throw Error("findLastBallMciOfMci called with mci=0");
@@ -841,9 +785,6 @@ function findLastBallMciOfMci(conn, mci, handleLastBallMci){
 	);
 }
 
-function getMinRetrievableMci(){
-	return min_retrievable_mci;
-}
 
 function updateMinRetrievableMciAfterStabilizingMci(conn, last_stable_mci, handleMinRetrievableMci){
 	console.log("updateMinRetrievableMciAfterStabilizingMci "+last_stable_mci);
@@ -972,8 +913,6 @@ function archiveJointAndDescendants(from_unit){
 }
 
 
-//_______________________________________________________________________________________________
-// Assets
 
 function readAssetInfo(conn, asset, handleAssetInfo){
 	var objAsset = assocCachedAssetInfos[asset];
@@ -1263,191 +1202,8 @@ function forgetUnit(unit){
 	delete assocStableUnits[unit];
 }
 
-function shrinkCache(){
-	if (Object.keys(assocCachedAssetInfos).length > MAX_ITEMS_IN_CACHE)
-		assocCachedAssetInfos = {};
-	console.log(Object.keys(assocUnstableUnits).length+" unstable units");
-	var arrKnownUnits = Object.keys(assocKnownUnits);
-	var arrPropsUnits = Object.keys(assocCachedUnits);
-	var arrStableUnits = Object.keys(assocStableUnits);
-	var arrAuthorsUnits = Object.keys(assocCachedUnitAuthors);
-	var arrWitnessesUnits = Object.keys(assocCachedUnitWitnesses);
-	if (arrPropsUnits.length < MAX_ITEMS_IN_CACHE && arrAuthorsUnits.length < MAX_ITEMS_IN_CACHE && arrWitnessesUnits.length < MAX_ITEMS_IN_CACHE && arrKnownUnits.length < MAX_ITEMS_IN_CACHE && arrStableUnits.length < MAX_ITEMS_IN_CACHE)
-		return console.log('cache is small, will not shrink');
-	var arrUnits = _.union(arrPropsUnits, arrAuthorsUnits, arrWitnessesUnits, arrKnownUnits, arrStableUnits);
-	console.log('will shrink cache, total units: '+arrUnits.length);
-	readLastStableMcIndex(db, function(last_stable_mci){
-		for (var mci = last_stable_mci-constants.COUNT_MC_BALLS_FOR_PAID_WITNESSING-10-1; true; mci--){
-			if (assocStableUnitsByMci[mci])
-				delete assocStableUnitsByMci[mci];
-			else
-				break;
-		}
-		var CHUNK_SIZE = 500; // there is a limit on the number of query params
-		for (var offset=0; offset<arrUnits.length; offset+=CHUNK_SIZE){
-			// filter units that became stable more than 100 MC indexes ago
-			db.query(
-				"SELECT unit FROM units WHERE unit IN(?) AND main_chain_index<? AND main_chain_index!=0", 
-				[arrUnits.slice(offset, offset+CHUNK_SIZE), last_stable_mci-constants.COUNT_MC_BALLS_FOR_PAID_WITNESSING-10], 
-				function(rows){
-					console.log('will remove '+rows.length+' units from cache');
-					rows.forEach(function(row){
-						delete assocKnownUnits[row.unit];
-						delete assocCachedUnits[row.unit];
-						delete assocBestChildren[row.unit];
-						delete assocStableUnits[row.unit];
-						delete assocCachedUnitAuthors[row.unit];
-						delete assocCachedUnitWitnesses[row.unit];
-					});
-				}
-			);
-		}
-	});
-}
-setInterval(shrinkCache, 300*1000);
-
-
-
-function initUnstableUnits(conn, onDone){
-	var conn = conn || db;
-	conn.query(
-		"SELECT unit, level, latest_included_mc_index, main_chain_index, is_on_main_chain, is_free, is_stable, witnessed_level, headers_commission, payload_commission, sequence, GROUP_CONCAT(address) AS author_addresses, COALESCE(witness_list_unit, unit) AS witness_list_unit, best_parent_unit \n\
-			FROM units \n\
-			JOIN unit_authors USING(unit) \n\
-			WHERE is_stable=0 \n\
-			GROUP BY +unit \n\
-			ORDER BY +level",
-		function(rows){
-		//	assocUnstableUnits = {};
-			rows.forEach(function(row){
-				var best_parent_unit = row.best_parent_unit;
-				delete row.best_parent_unit;
-				row.author_addresses = row.author_addresses.split(',');
-				assocUnstableUnits[row.unit] = row;
-				if (assocUnstableUnits[best_parent_unit]){
-					if (!assocBestChildren[best_parent_unit])
-						assocBestChildren[best_parent_unit] = [];
-					assocBestChildren[best_parent_unit].push(row);
-				}
-			});
-			console.log('initUnstableUnits 1 done');
-			if (Object.keys(assocUnstableUnits).length === 0)
-				return onDone ? onDone() : null;
-			initParenthoodAndHeadersComissionShareForUnits(conn, assocUnstableUnits, onDone);
-		}
-	);
-}
-
-function initStableUnits(conn, onDone){
-	var conn = conn || db;
-	readLastStableMcIndex(conn, function(last_stable_mci){
-		conn.query(
-			"SELECT unit, level, latest_included_mc_index, main_chain_index, is_on_main_chain, is_free, is_stable, witnessed_level, headers_commission, payload_commission, sequence, GROUP_CONCAT(address) AS author_addresses, COALESCE(witness_list_unit, unit) AS witness_list_unit \n\
-			FROM units \n\
-			JOIN unit_authors USING(unit) \n\
-			WHERE is_stable=1 AND main_chain_index>=? \n\
-			GROUP BY +unit \n\
-			ORDER BY +level", [last_stable_mci-constants.COUNT_MC_BALLS_FOR_PAID_WITNESSING-10],
-			function(rows){
-				rows.forEach(function(row){
-					row.author_addresses = row.author_addresses.split(',');
-					assocStableUnits[row.unit] = row;
-					if (!assocStableUnitsByMci[row.main_chain_index])
-						assocStableUnitsByMci[row.main_chain_index] = [];
-					assocStableUnitsByMci[row.main_chain_index].push(row);
-				});
-				console.log('initStableUnits 1 done');
-				if (Object.keys(assocStableUnits).length === 0)
-					return onDone ? onDone() : null;
-				initParenthoodAndHeadersComissionShareForUnits(conn, assocStableUnits, onDone);
-			}
-		);
-	});
-}
-
-function initParenthoodAndHeadersComissionShareForUnits(conn, assocUnits, onDone) {
-	async.series([
-		function(cb){ // parenthood
-			conn.query(
-				"SELECT parent_unit, child_unit FROM parenthoods WHERE child_unit IN("+Object.keys(assocUnits).map(db.escape).join(', ')+")", 
-				function(prows){
-					prows.forEach(function(prow){
-						if (!assocUnits[prow.child_unit].parent_units)
-							assocUnits[prow.child_unit].parent_units = [];
-						assocUnits[prow.child_unit].parent_units.push(prow.parent_unit);
-					});
-					cb();
-				}
-			);
-		},
-		function(cb){ // headers_commision_share
-			conn.query(
-				"SELECT unit, address, earned_headers_commission_share FROM earned_headers_commission_recipients WHERE unit IN("+Object.keys(assocUnits).map(db.escape).join(', ')+")",
-				function(prows){
-					prows.forEach(function(prow){
-						if (!assocUnits[prow.unit].earned_headers_commission_recipients)
-							assocUnits[prow.unit].earned_headers_commission_recipients = {};
-						assocUnits[prow.unit].earned_headers_commission_recipients[prow.address] = prow.earned_headers_commission_share;
-					});
-					cb();
-				}
-			);
-		}],
-		function() {
-			if (onDone)
-				onDone();
-		}
-	);
-}
-
-function resetUnstableUnits(conn, onDone){
-	Object.keys(assocBestChildren).forEach(function(unit){
-		delete assocBestChildren[unit];
-	});
-	Object.keys(assocUnstableUnits).forEach(function(unit){
-		delete assocUnstableUnits[unit];
-	});
-	initUnstableUnits(conn, onDone);
-}
-
-function resetStableUnits(conn, onDone){
-	Object.keys(assocStableUnits).forEach(function(unit){
-		delete assocStableUnits[unit];
-	});
-	Object.keys(assocStableUnitsByMci).forEach(function(mci){
-		delete assocStableUnitsByMci[mci];
-	});
-	initStableUnits(conn, onDone);
-}
-
-function resetMemory(conn, onDone){
-	resetUnstableUnits(conn, function(){
-		resetStableUnits(conn, function(){
-			min_retrievable_mci = null;
-			initializeMinRetrievableMci(conn, onDone);
-		});
-	});
-}
-
-function initCaches(){
-	console.log('initCaches');
-	db.executeInTransaction(function(conn, onDone){
-		mutex.lock(['write'], function(unlock) {
-			initUnstableUnits(conn, initStableUnits.bind(this, conn, function(){
-				console.log('initCaches done');
-				unlock();
-				onDone();
-			}));
-		});
-	});
-}
-
-if (!conf.bLight)
-	archiveJointAndDescendantsIfExists('N6QadI9yg3zLxPMphfNGJcPfddW4yHPkoGMbbGZsWa0=');
-
 
 exports.isGenesisUnit = isGenesisUnit;
-exports.isGenesisBall = isGenesisBall;
 
 exports.readWitnesses = readWitnesses;
 exports.readWitnessList = readWitnessList;
@@ -1459,31 +1215,25 @@ exports.readPropsOfUnits = readPropsOfUnits;
 
 exports.readJoint = readJoint;
 exports.readJointWithBall = readJointWithBall;
-exports.readFreeJoints = readFreeJoints;
 
 exports.readDefinitionByAddress = readDefinitionByAddress;
 exports.readDefinition = readDefinition;
 
 
-exports.readLastStableMcUnitProps = readLastStableMcUnitProps;
 exports.readLastStableMcIndex = readLastStableMcIndex;
 
 
-exports.findLastBallMciOfMci = findLastBallMciOfMci;
-exports.getMinRetrievableMci = getMinRetrievableMci;
 exports.updateMinRetrievableMciAfterStabilizingMci = updateMinRetrievableMciAfterStabilizingMci;
 
 exports.archiveJointAndDescendantsIfExists = archiveJointAndDescendantsIfExists;
 
 exports.readAsset = readAsset;
-exports.readAssetInfo = readAssetInfo;
 exports.filterAttestedAddresses = filterAttestedAddresses;
 exports.loadAssetWithListOfAttestedAuthors = loadAssetWithListOfAttestedAuthors;
 
 exports.filterNewOrUnstableUnits = filterNewOrUnstableUnits;
 
 exports.determineWitnessedLevelAndBestParent = determineWitnessedLevelAndBestParent;
-exports.determineBestParent = determineBestParent;
 exports.determineIfHasWitnessListMutationsAlongMc = determineIfHasWitnessListMutationsAlongMc;
 
 exports.readStaticUnitProps = readStaticUnitProps;
@@ -1493,11 +1243,9 @@ exports.isKnownUnit = isKnownUnit;
 exports.setUnitIsKnown = setUnitIsKnown;
 exports.forgetUnit = forgetUnit;
 
-exports.sliceAndExecuteQuery = sliceAndExecuteQuery;
 
 exports.assocUnstableUnits = assocUnstableUnits;
 exports.assocStableUnits = assocStableUnits;
 exports.assocStableUnitsByMci = assocStableUnitsByMci;
 exports.assocBestChildren = assocBestChildren;
-exports.initCaches = initCaches;
-exports.resetMemory = resetMemory;
+
