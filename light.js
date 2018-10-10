@@ -207,7 +207,8 @@ async function iniTranList(addresses) {
 function findTranList(wallet,cb) {
     db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?)) order by creation_date desc", [wallet, wallet,wallet],function (row) {
-        if(row.length > 0) {
+
+        if(row != null && row.length > 0) {
             cb(row);
         }else{
             cb([]);
@@ -225,7 +226,7 @@ async function findStable(wallet){
 function findStable2(wallet,cb){
     db.query("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", [wallet, wallet] ,function (rows) {
-        if(rows.length > 0) {
+        if(rows != null && rows.length > 0) {
             cb(rows[0].stable);
         }else {
             cb(0);
