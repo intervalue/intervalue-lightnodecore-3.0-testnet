@@ -1,14 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-var Mnemonic = require('bitcore-mnemonic');
-var crypto = require('crypto');
-var ecdsaSig = require('./signature');
-var Bitcore = require('bitcore-lib');
-var base58 = require('base-58');
-
-
-var version = new Buffer([0x00]);
+let version = new Buffer([0x00]);
 /**
  *  生成比特币钱包地址
  * @param xprikey 扩展主私钥
@@ -19,6 +12,9 @@ var version = new Buffer([0x00]);
  * m / purpose' / coin_type' / account' / change / address_index
  */
 function getBitAddress(xprikey,account,change,address_index) {
+    let crypto = require('crypto');
+    let base58 = require('base-58');
+    let Bitcore = require('bitcore-lib');
     var hdPriKey = Bitcore.HDPrivateKey.fromString(xprikey);
     var path = "m/44'/0'/"+ account +"'/"+ change +"/"+ address_index;
     var publicKey = hdPriKey.derive(path);
