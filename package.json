@@ -34,7 +34,7 @@
     "superagent": "^3.8.3",
     "thirty-two": "^1.0.1",
     "ws": "^1.0.1",
-    "base-58":"0.0.1"
+    "base-58": "0.0.1"
   },
   "scripts": {
     "test": "yarn ava"
