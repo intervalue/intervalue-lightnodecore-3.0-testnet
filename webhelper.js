@@ -4,7 +4,7 @@ let sa = require("superagent");
 // let request = require("request");
 let timeout = 5 * 1000;
 class WebHelper {
-    static httpGet(url, headers) {
+    static httpGet(url, headers ,cb) {
         return new Promise(function (resolve, reject) {
             sa
                 .get(url)
@@ -14,7 +14,10 @@ class WebHelper {
                         reject(err);
                         return;
                     }
-                    console.log(JSON.stringify(res.text));
+                    // console.log(JSON.stringify(res.text));
+                    if(cb != null) {
+                        cb(res.text);
+                    }
                     resolve(res.text);
                 });
         });
