@@ -1,10 +1,25 @@
 "use strict";
+let base58 = require('base-58');
+let crypto = require('crypto');
 
 class SecretHelper {
+
+    /**
+     * base64 decode
+     * @param base64str
+     * @returns {Buffer}
+     * @constructor
+     */
     static FromBase64StringToBytes(base64str) {
         return new Buffer(base64str, "base64");
     }
 
+    /**
+     * base64 decode
+     * @param base64str
+     * @returns {string}
+     * @constructor
+     */
     static FromBase64String(base64str) {
         let bytes = SecretHelper.FromBase64StringToBytes(base64str);
         return bytes.toString();
@@ -32,6 +47,12 @@ class SecretHelper {
         return crypto.createHash("md5").update(source).digest("hex").toUpperCase();
     }
 
+    /**
+     * sha1 hash
+     * @param source
+     * @returns {string}
+     * @constructor
+     */
     static ToSHA1(source) {
         var crypto = require("crypto");
         return crypto.createHash("sha1").update(source).digest("hex").toUpperCase();
@@ -61,9 +82,51 @@ class SecretHelper {
         return pwd;
     }
 
+    /**
+     * 随机数
+     * @param min
+     * @param max
+     * @returns {*}
+     */
     static random(min, max) {
         return min + parseInt(Math.random() * (max - min + 1), 10);
     }
+
+    /**
+     * base58编码
+     * @param buf
+     * @returns {*}
+     */
+    static base58encode(buf) {
+        return base58.encode(buf);
+    }
+
+    /**
+     * base58编码
+     * @param buf
+     * @returns {*}
+     */
+    static base58decode(str) {
+        return base58.decode(str);
+    }
+
+    /**
+     * sha256hash
+     * @param buf
+     */
+    static sha256hash(buf) {
+        return crypto.createHash("sha256").update(buf).digest();
+    }
+
+    /**
+     * ripemd160 hash
+     * @param buf
+     * @returns {PromiseLike<ArrayBuffer>}
+     */
+    static ripemd160hash(buf) {
+        return crypto.createHash("ripemd160").update(buf).digest();
+    }
+
 }
 
 

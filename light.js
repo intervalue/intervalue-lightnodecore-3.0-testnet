@@ -56,7 +56,7 @@ async function updateHistory(addresses) {
         if (trans == null) {
             return;
         }
-        console.log("共识网拉取交易信息:");
+        // console.log("共识网拉取交易信息:");
         // console.log(trans);
 
 

@@ -72,7 +72,7 @@ function getWalletsInfo(cb) {
         left join \n\
         (select addressFrom ,sum(amount + fee) total from transactions where (result = 'good' or result = 'pending') and id <>'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ' group by addressFrom) sumfrom \n\
         on my_addresses.address = sumfrom.addressFrom",function (result) {
-        if(result.length > 0 ) {
+        if(result != null && result.length > 0 ) {
             let trans = [];
             result.forEach(function(tran){
                 trans.push({address : tran.address,
