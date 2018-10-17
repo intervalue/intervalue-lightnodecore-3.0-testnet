@@ -29,13 +29,8 @@ var assocUnitsInWork = {};
 var assocRequestedUnits = {};
 var bCatchingUp = false;
 var bWaitingForCatchupChain = false;
-var bWaitingTillIdle = false;
-var coming_online_time = Date.now();
 var assocReroutedConnectionsByTag = {};
-var arrWatchedAddresses = []; // does not include my addresses, therefore always empty
-var last_hearbeat_wake_ts = Date.now();
 var peer_events_buffer = [];
-var assocKnownPeers = {};
 var exchangeRates = {};
 
 if (process.browser) { // browser
@@ -93,12 +88,6 @@ function sendMessage(ws, type, content) {
 //TODO delete
 function sendJustsaying(ws, subject, body) {
     sendMessage(ws, 'justsaying', {subject: subject, body: body});
-}
-
-function sendAllInboundJustsaying(subject, body) {
-    wss.clients.forEach(function (ws) {
-        sendMessage(ws, 'justsaying', {subject: subject, body: body});
-    });
 }
 
 function sendError(ws, error) {
@@ -184,9 +173,6 @@ function sendRequest(ws, command, params, bReroutable, responseHandler) {
     }
 }
 
-
-// peers
-
 function findNextPeer(ws, handleNextPeer) {
     tryFindNextPeer(ws, function (next_ws) {
         if (next_ws)
@@ -218,7 +204,6 @@ function tryFindNextPeer(ws, handleNextPeer) {
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max + 1 - min)) + min;
 }
-
 
 //TODO delete 底层
 function findRandomInboundPeer(handleInboundPeer) {
@@ -252,38 +237,6 @@ function findRandomInboundPeer(handleInboundPeer) {
             handleInboundPeer(ws);
         }
     );
-}
-
-
-
-//TODO delete 底层
-function getHostByPeer(peer) {
-    var matches = peer.match(/^wss?:\/\/(.*)$/i);
-    if (matches)
-        peer = matches[1];
-    matches = peer.match(/^(.*?)[:\/]/);
-    return matches ? matches[1] : peer;
-}
-
-//TODO delete 底层
-function addPeerHost(host, onDone) {
-    db.query("INSERT " + db.getIgnore() + " INTO peer_hosts (peer_host) VALUES (?)", [host], function () {
-        if (onDone)
-            onDone();
-    });
-}
-
-//TODO delete
-function addPeer(peer) {
-    return;
-    if (assocKnownPeers[peer])
-        return;
-    assocKnownPeers[peer] = true;
-    var host = getHostByPeer(peer);
-    addPeerHost(host, function () {
-        console.log("will insert peer " + peer);
-        db.query("INSERT " + db.getIgnore() + " INTO peers (peer_host, peer) VALUES (?,?)", [host, peer]);
-    });
 }
 
 //TODO delete 底层
@@ -340,7 +293,6 @@ function findOutboundPeerOrConnect(url, onOpen) {
     console.log("will connect to " + url);
 }
 
-
 function requestFromLightVendor(command, params, responseHandler) {
     if (!exports.light_vendor_url) {
         console.log("light_vendor_url not set yet");
@@ -349,19 +301,6 @@ function requestFromLightVendor(command, params, responseHandler) {
         }, 1000);
     }
 }
-
-function requestFromLightVendorForJoint(command, params, responseHandler) {
-    if (!exports.light_vendor_url) {
-        console.log("light_vendor_url not set yet");
-        return setTimeout(function () {
-            requestFromLightVendorForJoint(command, params, responseHandler);
-        }, 1000);
-    }
-}
-
-
-
-// joints
 
 // sent as justsaying or as response to a request
 function sendJoint(ws, objJoint, tag) {
@@ -376,22 +315,6 @@ function postJointToLightVendor(objJoint, handleResponse) {
         handleResponse(response);
     });
 }
-
-// sent by light clients to their vendors
-function postJointToLightVendorForJoint(objJoint, handleResponse) {
-    console.log('posing joint identified by unit ' + objJoint.unit.unit + ' to light vendor');
-    requestFromLightVendorForJoint('post_joint', objJoint, function (ws, request, response) {
-        handleResponse(response);
-    });
-}
-
-
-
-function requestFreeJointsFromAllOutboundPeers() {
-    for (var i = 0; i < arrOutboundPeers.length; i++)
-        sendJustsaying(arrOutboundPeers[i], 'refresh', null);
-}
-
 
 
 //TODO delete
@@ -496,7 +419,6 @@ function handleResponseToJointRequest(ws, request, response) {
     conf.bLight ? handleLightOnlineJoint(ws, objJoint) : handleOnlineJoint(ws, objJoint);
 }
 
-
 //TODO delete 底层
 function havePendingJointRequest(unit) {
     var arrPeers = wss.clients.concat(arrOutboundPeers);
@@ -510,7 +432,6 @@ function havePendingJointRequest(unit) {
     }
     return false;
 }
-
 
 function purgeJointAndDependenciesAndNotifyPeers(objJoint, error, onDone) {
     if (error.indexOf('is not stable in view of your parents') >= 0) { // give it a chance to be retried after adding other units
@@ -529,7 +450,6 @@ function purgeJointAndDependenciesAndNotifyPeers(objJoint, error, onDone) {
         onDone
     );
 }
-
 
 function forwardJoint(ws, objJoint) {
     wss.clients.concat(arrOutboundPeers).forEach(function (client) {
@@ -630,7 +550,6 @@ function handleJoint(ws, objJoint, bSaved, callbacks) {
     });
 }
 
-
 //TODO delete 可删除
 function handleOnlineJoint(ws, objJoint, onDone) {
     if (!onDone)
@@ -702,7 +621,6 @@ function handleOnlineJoint(ws, objJoint, onDone) {
         }
     });
 }
-
 
 function handleSavedJoint(objJoint, creation_ts, peer) {
 
@@ -783,71 +701,6 @@ function handleLightOnlineJoint(ws, objJoint) {
     });
 }
 
-function setWatchedAddresses(_arrWatchedAddresses) {
-    arrWatchedAddresses = _arrWatchedAddresses;
-}
-
-function addWatchedAddress(address) {
-    arrWatchedAddresses.push(address);
-}
-
-// if any of the watched addresses are affected, notifies:  1. own UI  2. light clients
-function notifyWatchers(objJoint, source_ws) {
-    var objUnit = objJoint.unit;
-    var arrAddresses = objUnit.authors.map(function (author) {
-        return author.address;
-    });
-    if (!objUnit.messages) // voided unit
-        return;
-    for (var i = 0; i < objUnit.messages.length; i++) {
-        var message = objUnit.messages[i];
-        if (message.app !== "payment" || !message.payload)
-            continue;
-        var payload = message.payload;
-        for (var j = 0; j < payload.outputs.length; j++) {
-            var address = payload.outputs[j].address;
-            if (arrAddresses.indexOf(address) === -1)
-                arrAddresses.push(address);
-        }
-    }
-    if (_.intersection(arrWatchedAddresses, arrAddresses).length > 0) {
-        eventBus.emit("new_my_transactions", [objJoint.unit.unit]);
-        eventBus.emit("new_my_unit-" + objJoint.unit.unit, objJoint);
-    }
-    else
-        db.query(
-            "SELECT 1 FROM my_addresses WHERE address IN(?) UNION SELECT 1 FROM shared_addresses WHERE shared_address IN(?)",
-            [arrAddresses, arrAddresses],
-            function (rows) {
-                if (rows.length > 0) {
-                    eventBus.emit("new_my_transactions", [objJoint.unit.unit]);
-                    eventBus.emit("new_my_unit-" + objJoint.unit.unit, objJoint);
-                }
-            }
-        );
-
-    if (conf.bLight)
-        return;
-    if (objJoint.ball) // already stable, light clients will require a proof
-        return;
-    // this is a new unstable joint, light clients will accept it without proof
-    db.query("SELECT peer FROM watched_light_addresses WHERE address IN(?)", [arrAddresses], function (rows) {
-        if (rows.length === 0)
-            return;
-        objUnit.timestamp = Math.round(Date.now() / 1000); // light clients need timestamp
-        rows.forEach(function (row) {
-            var ws = getPeerWebSocket(row.peer);
-            if (ws && ws.readyState === ws.OPEN && ws !== source_ws)
-                sendJoint(ws, objJoint);
-        });
-    });
-}
-
-// eventBus.on('mci_became_stable', notifyWatchersAboutStableJoints);
-
-
-// from_mci is non-inclusive, to_mci is inclusive
-
 
 function addLightWatchedAddress(address) {
     if (!conf.bLight || !exports.light_vendor_url)
@@ -902,64 +755,19 @@ function writeEvent(event, host) {
 //     flushEvents(true)
 // }, 1000 * 60);
 
-
 function findAndHandleJointsThatAreReady(unit) {
     joint_storage.readDependentJointsThatAreReady(unit, handleSavedJoint);
     handleSavedPrivatePayments(unit);
 }
 
-function comeOnline() {
-    bCatchingUp = false;
-    coming_online_time = Date.now();
-    waitTillIdle(function () {
-        requestFreeJointsFromAllOutboundPeers();
-        setTimeout(cleanBadSavedPrivatePayments, 300 * 1000);
-    });
-    eventBus.emit('catching_up_done');
-}
-
-function isIdle() {
-    //console.log(db._freeConnections.length +"/"+ db._allConnections.length+" connections are free, "+mutex.getCountOfQueuedJobs()+" jobs queued, "+mutex.getCountOfLocks()+" locks held, "+Object.keys(assocUnitsInWork).length+" units in work");
-    return (db.getCountUsedConnections() === 0 && mutex.getCountOfQueuedJobs() === 0 && mutex.getCountOfLocks() === 0 && Object.keys(assocUnitsInWork).length === 0);
-}
-
-function waitTillIdle(onIdle) {
-    if (isIdle()) {
-        bWaitingTillIdle = false;
-        onIdle();
-    }
-    else {
-        bWaitingTillIdle = true;
-        setTimeout(function () {
-            waitTillIdle(onIdle);
-        }, 100);
-    }
-}
-
-function broadcastJoint(objJoint) {
-    if (conf.bLight) // the joint was already posted to light vendor before saving
-        return;
-    wss.clients.concat(arrOutboundPeers).forEach(function (client) {
-        if (client.bSubscribed)
-            sendJoint(client, objJoint);
-    });
-    notifyWatchers(objJoint);
-}
-
-
-
-
-
-// hash tree
-
 function requestNextHashTree(ws) {
     eventBus.emit('catchup_next_hash_tree');
     db.query("SELECT ball FROM catchup_chain_balls ORDER BY member_index LIMIT 2", function (rows) {
         if (rows.length === 0)
-            return comeOnline();
+            // return comeOnline();
         if (rows.length === 1) {
             db.query("DELETE FROM catchup_chain_balls WHERE ball=?", [rows[0].ball], function () {
-                comeOnline();
+                // comeOnline();
             });
             return;
         }
@@ -1009,88 +817,6 @@ function waitTillHashTreeFullyProcessedAndRequestNext(ws) {
                 waitTillHashTreeFullyProcessedAndRequestNext(ws);
         });
     }, 1000);
-}
-
-
-
-function sendPrivatePaymentToWs(ws, arrChains) {
-    // each chain is sent as separate ws message
-    arrChains.forEach(function (arrPrivateElements) {
-        sendJustsaying(ws, 'private_payment', arrPrivateElements);
-    });
-}
-
-// sends multiple private payloads and their corresponding chains
-function sendPrivatePayment(peer, arrChains) {
-    var ws = getPeerWebSocket(peer);
-    if (ws)
-        return sendPrivatePaymentToWs(ws, arrChains);
-    findOutboundPeerOrConnect(peer, function (err, ws) {
-        if (!err)
-            sendPrivatePaymentToWs(ws, arrChains);
-    });
-}
-
-// handles one private payload and its chain
-function handleOnlinePrivatePayment(ws, arrPrivateElements, bViaHub, callbacks) {
-    if (!ValidationUtils.isNonemptyArray(arrPrivateElements))
-        return callbacks.ifError("private_payment content must be non-empty array");
-
-    var unit = arrPrivateElements[0].unit;
-    var message_index = arrPrivateElements[0].message_index;
-    var output_index = arrPrivateElements[0].payload.denomination ? arrPrivateElements[0].output_index : -1;
-
-    var savePrivatePayment = function (cb) {
-        // we may receive the same unit and message index but different output indexes if recipient and cosigner are on the same device.
-        // in this case, we also receive the same (unit, message_index, output_index) twice - as cosigner and as recipient.  That's why IGNORE.
-        db.query(
-            "INSERT " + db.getIgnore() + " INTO unhandled_private_payments (unit, message_index, output_index, json, peer) VALUES (?,?,?,?,?)",
-            [unit, message_index, output_index, JSON.stringify(arrPrivateElements), bViaHub ? '' : ws.peer], // forget peer if received via hub
-            function () {
-                callbacks.ifQueued();
-                if (cb)
-                    cb();
-            }
-        );
-    };
-
-    if (conf.bLight && arrPrivateElements.length > 1) {
-        savePrivatePayment(function () {
-            updateLinkProofsOfPrivateChain(arrPrivateElements, unit, message_index, output_index);
-            rerequestLostJointsOfPrivatePayments(); // will request the head element
-        });
-        return;
-    }
-
-    joint_storage.checkIfNewUnit(unit, {
-        ifKnown: function () {
-            //assocUnitsInWork[unit] = true;
-            privatePayment.validateAndSavePrivatePaymentChain(arrPrivateElements, {
-                ifOk: function () {
-                    //delete assocUnitsInWork[unit];
-                    callbacks.ifAccepted(unit);
-                    eventBus.emit("new_my_transactions", [unit]);
-                },
-                ifError: function (error) {
-                    //delete assocUnitsInWork[unit];
-                    callbacks.ifValidationError(unit, error);
-                },
-                ifWaitingForChain: function () {
-                    savePrivatePayment();
-                }
-            });
-        },
-        ifNew: function () {
-            savePrivatePayment();
-            // if received via hub, I'm requesting from the same hub, thus telling the hub that this unit contains a private payment for me.
-            // It would be better to request missing joints from somebody else
-            requestNewMissingJoints(ws, [unit]);
-        },
-        ifKnownUnverified: savePrivatePayment,
-        ifKnownBad: function () {
-            callbacks.ifValidationError(unit, "known bad");
-        }
-    });
 }
 
 // if unit is undefined, find units that are ready
@@ -1166,57 +892,6 @@ function deleteHandledPrivateChain(unit, message_index, output_index, cb) {
     });
 }
 
-// full only
-function cleanBadSavedPrivatePayments() {
-    if (conf.bLight || bCatchingUp)
-        return;
-    db.query(
-        "SELECT DISTINCT unhandled_private_payments.unit FROM unhandled_private_payments LEFT JOIN units USING(unit) \n\
-        WHERE units.unit IS NULL AND unhandled_private_payments.creation_date<" + db.addTime('-1 DAY'),
-        function (rows) {
-            rows.forEach(function (row) {
-                breadcrumbs.add('deleting bad saved private payment ' + row.unit);
-                db.query("DELETE FROM unhandled_private_payments WHERE unit=?", [row.unit]);
-            });
-        }
-    );
-
-}
-
-// light only
-function rerequestLostJointsOfPrivatePayments() {
-    if (!conf.bLight || !exports.light_vendor_url)
-        return;
-    db.query(
-        "SELECT DISTINCT unhandled_private_payments.unit FROM unhandled_private_payments LEFT JOIN units USING(unit) WHERE units.unit IS NULL",
-        function (rows) {
-            if (rows.length === 0)
-                return;
-            var arrUnits = rows.map(function (row) {
-                return row.unit;
-            });
-            findOutboundPeerOrConnect(exports.light_vendor_url, function (err, ws) {
-                if (err)
-                    return;
-                requestNewMissingJoints(ws, arrUnits);
-            });
-        }
-    );
-}
-
-// light only
-function requestUnfinishedPastUnitsOfPrivateChains(arrChains, onDone) {
-    if (!onDone)
-        onDone = function () {
-        };
-    privatePayment.findUnfinishedPastUnitsOfPrivateChains(arrChains, true, function (arrUnits) {
-        if (arrUnits.length === 0)
-            return onDone();
-        breadcrumbs.add(arrUnits.length + " unfinished past units of private chains");
-        requestHistoryFor(arrUnits, [], onDone);
-    });
-}
-
 function requestHistoryFor(arrUnits, arrAddresses, onDone) {
     if (!onDone)
         onDone = function () {
@@ -1271,10 +946,6 @@ async function requestTransactionHistory() {
         return;
     }
     await light.updateHistory(addresses);
-}
-
-function initialLocalfullnodeList() {
-    hashnethelper.initialLocalfullnodeList();
 }
 
 
@@ -1347,18 +1018,11 @@ function initWitnessesIfNecessary(ws, onDone) {
 }
 
 
-
-
-
 /**
  * 定时任务：拉取共识网交易记录
  */
 function startLightClient() {
     wss = {clients: []};
-    // rerequestLostJointsOfPrivatePayments();
-    // setInterval(rerequestLostJointsOfPrivatePayments, 5 * 1000);
-    // setInterval(handleSavedPrivatePayments, 5 * 1000);
-    // setInterval(requestUnfinishedPastUnitsOfSavedPrivateElements, 12 * 1000);
     setInterval(requestTransactionHistory, 5 * 1000);
 }
 
@@ -1368,59 +1032,37 @@ function startLightClient() {
 function start() {
     console.log("starting network");
     startLightClient();
-    // setInterval(printConnectionStatus, 6 * 1000);
-    // if we have exactly same intervals on two clints, they might send heartbeats to each other at the same time
-    // setInterval(heartbeat, 3 * 1000 + getRandomInt(0, 1000));
 }
 
-function closeAllWsConnections() {
-    arrOutboundPeers.forEach(function (ws) {
-        ws.close(1000, 'Re-connect');
-    });
+/**
+ * 初始化局部全节点列表
+ */
+function initialLocalfullnodeList() {
+    hashnethelper.initialLocalfullnodeList();
 }
 
-function isConnected() {
-    return (arrOutboundPeers.length + wss.clients.length);
-}
-
-function isCatchingUp() {
-    return bCatchingUp;
-}
 
 start();
 
 exports.start = start;
+exports.initialLocalfullnodeList = initialLocalfullnodeList;
+
+
 exports.postJointToLightVendor = postJointToLightVendor;
-exports.postJointToLightVendorForJoint = postJointToLightVendorForJoint;
-exports.broadcastJoint = broadcastJoint;
-exports.sendPrivatePayment = sendPrivatePayment;
-exports.requestFromLightVendorForJoint = requestFromLightVendorForJoint;
 
 exports.sendJustsaying = sendJustsaying;
-exports.sendAllInboundJustsaying = sendAllInboundJustsaying;
 exports.sendError = sendError;
 exports.sendRequest = sendRequest;
 exports.findOutboundPeerOrConnect = findOutboundPeerOrConnect;
-exports.handleOnlineJoint = handleOnlineJoint;
 
-exports.handleOnlinePrivatePayment = handleOnlinePrivatePayment;
-exports.requestUnfinishedPastUnitsOfPrivateChains = requestUnfinishedPastUnitsOfPrivateChains;
 exports.requestProofsOfJointsIfNewOrUnstable = requestProofsOfJointsIfNewOrUnstable;
 
 exports.requestFromLightVendor = requestFromLightVendor;
 
-exports.addPeer = addPeer;
 
 exports.initWitnessesIfNecessary = initWitnessesIfNecessary;
-exports.initialLocalfullnodeList = initialLocalfullnodeList;
 exports.setMyDeviceProps = setMyDeviceProps;
 
-exports.setWatchedAddresses = setWatchedAddresses;
-exports.addWatchedAddress = addWatchedAddress;
 exports.addLightWatchedAddress = addLightWatchedAddress;
 exports.sendTransaction = sendTransaction;
-exports.closeAllWsConnections = closeAllWsConnections;
-exports.isConnected = isConnected;
-exports.isCatchingUp = isCatchingUp;
-exports.requestHistoryFor = requestHistoryFor;
 exports.exchangeRates = exchangeRates;

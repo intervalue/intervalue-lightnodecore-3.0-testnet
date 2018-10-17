@@ -26,7 +26,7 @@ var ASSET_METADATA_RETRY_PERIOD = 3600 * 1000;
  */
 function readAddressByWallet(walletId , cb) {
     db.query("select address from my_addresses where wallet = ?" ,[walletId] ,function (rows) {
-        if(rows.length === 1) {
+        if( rows != null && rows.length === 1) {
             cb(rows[0].address);
         }else {
             cb(false);
