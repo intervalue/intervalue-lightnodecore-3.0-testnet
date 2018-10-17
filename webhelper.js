@@ -24,7 +24,7 @@ class WebHelper {
     }
 
 
-    static httpPost(url, headers, data) {
+    static httpPost(url, headers, data ,cb) {
         return new Promise(function (resolve, reject) {
             sa
                 .post(url)
@@ -36,6 +36,9 @@ class WebHelper {
                     if (err) {
                         reject(err);
                         return;
+                    }
+                    if(cb != null){
+                        cb(res);
                     }
                     resolve(res.text);
                 });
