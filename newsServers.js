@@ -4,7 +4,7 @@
 let webHelper = require("./webhelper");
 
 //行情接口
-let coindogUrl = "api.coindog.com";
+let coindog = "api.coindog.com";
 //所有行情
 let currencyUrl  = "/api/v1/currency/ranks";
 //单个行情
@@ -12,7 +12,8 @@ let tickUrl = "/api/v1/tick/";
 
 
 //Fcoin 接口
-let inveCurrencyUrl = "api.coindog.com/api/v1/tick/";
+let fcoin = 'api.fcoin.com';
+let inveCurrencyUrl = "/v2/market/ticker/";
 
 
 /**
@@ -26,7 +27,7 @@ let inveCurrencyUrl = "api.coindog.com/api/v1/tick/";
 function getSymbolData(exchange , symbol , unit ,cb) {
     let ticker = exchange.toUpperCase() + ":" + symbol.toUpperCase();
     let subrul = tickUrl + ticker + (unit==null?"":"?unit="+unit );
-    webHelper.httpGet(getUrl(coindogUrl,subrul),null,cb)
+    webHelper.httpGet(getUrl(coindog,subrul),null,cb)
 
 }
 
@@ -36,8 +37,44 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  */
 function getCurrencyData(cb) {
     let subrul = currencyUrl;
-     webHelper.httpGet(getUrl(coindogUrl,subrul) ,null,  cb);
+    webHelper.httpGet(getUrl(coindog,subrul) ,null,  cb);
 }
+
+function getInveData(cb) {
+    //计算人民币
+    getSymbolData("fcoin",'ethusdt',"cny",function(res) {
+        res = JSON.parse(res);
+        if(res != null) {
+            getSymbolData("fcoin",'ethusdt',"usdt",function(res2) {
+                res2 = JSON.parse(res2);
+                //汇率
+                var rate = res.close / res2.close;
+                let suburul = inveCurrencyUrl + "inveusdt";
+                webHelper.httpGet(getUrl(fcoin,suburul) ,null,  function (res3) {
+                    res3 = JSON.parse(res3);
+                    if(res3.status == 0) {
+                        //最新成交价 usdt
+                        var newPrice = res3.data.ticker[0];
+                        //最新成交价 cny
+                        var cnyPrice = newPrice * rate;
+                        var oldPrice = res3.data.ticker[6]
+
+                        //涨幅
+                        var market = (newPrice - oldPrice) / oldPrice;
+
+                        var data = { newPrice , cnyPrice ,oldPrice ,market}
+                        cb(data);
+                    }
+                });
+
+            });
+        }
+    });
+
+}
+
+
+
 
 //*************************************************************************
 //linker接口
@@ -97,3 +134,4 @@ exports.getNewsData = getNewsData;
 exports.getNewsInfo = getNewsInfo;
 exports.getQuickData = getQuickData;
 exports.getSymbolData = getSymbolData;
+exports.getInveData = getInveData;
