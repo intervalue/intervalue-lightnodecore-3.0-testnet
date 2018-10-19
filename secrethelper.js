@@ -1,5 +1,5 @@
 "use strict";
-let base58 = require('base-58');
+// let base58 = require('base-58');
 let crypto = require('crypto');
 
 class SecretHelper {
@@ -92,23 +92,23 @@ class SecretHelper {
         return min + parseInt(Math.random() * (max - min + 1), 10);
     }
 
-    /**
-     * base58编码
-     * @param buf
-     * @returns {*}
-     */
-    static base58encode(buf) {
-        return base58.encode(buf);
-    }
-
-    /**
-     * base58编码
-     * @param buf
-     * @returns {*}
-     */
-    static base58decode(str) {
-        return base58.decode(str);
-    }
+    // /**
+    //  * base58编码
+    //  * @param buf
+    //  * @returns {*}
+    //  */
+    // static base58encode(buf) {
+    //     return base58.encode(buf);
+    // }
+    //
+    // /**
+    //  * base58编码
+    //  * @param buf
+    //  * @returns {*}
+    //  */
+    // static base58decode(str) {
+    //     return base58.decode(str);
+    // }
 
     /**
      * sha256hash
