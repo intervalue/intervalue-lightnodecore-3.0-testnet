@@ -121,7 +121,15 @@ function getNewsData(limit,page,status,cb) {
  */
 function getNewsInfo(id ,cb) {
     let suburl = newsInfoUrl + id;
-    webHelper.httpGet(getUrl(linkUrl,suburl),null,cb);
+    webHelper.httpGet(getUrl(linkUrl,suburl),null,function(err,res) {
+        if(err) {
+            console.log("error:"+err);
+        }
+        res = JSON.parse(res);
+        if(!!res && res.code == 0) {
+            cb(res);
+        }
+    });
 }
 
 /**
