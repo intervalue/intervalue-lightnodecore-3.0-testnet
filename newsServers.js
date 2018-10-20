@@ -13,12 +13,17 @@ let tickUrl         = "/api/v1/tick/";
 //huobi接口
 let huobi           = "api.huobipro.com";
 //所有行情
-let currencysUrl2   = "market/tickers";
+let currencysUrl2   = "/market/tickers";
 
 //Fcoin 接口
 let fcoin           = 'api.fcoin.com';
 //行情
 let inveCurrencyUrl = "/v2/market/ticker/";
+
+//coinex接口
+let coinex          = "api.coinex.com";
+//所有行情
+let currencysUrl3   = "/v1/market/ticker/all";
 
 
 /**
@@ -41,8 +46,19 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * @param cb
  */
 function getCurrencyData(cb) {
-    let subrul = currencysUrl1;
-    webHelper.httpGet(getUrl(coindog,subrul) ,null,  cb);
+    let subrul = currencysUrl3;
+    webHelper.httpGet(getUrl(coinex,subrul,"https") ,null,  function (err, res) {
+        if(err) {
+            console.log("error:"+err);
+            cb(null);
+            return;
+        }
+        res = JSON.parse(res);
+        if(!!res) {
+            console.log(res);
+            cb(res);
+        }
+    });
 }
 
 function getInveData(cb) {
@@ -79,6 +95,32 @@ function getInveData(cb) {
         }
     });
 
+}
+
+function getInveData2(cb) {
+    let suburul = inveCurrencyUrl + "inveusdt";
+    let rate = 6.9291;
+    webHelper.httpGet(getUrl(fcoin,suburul) ,null,  function (err,res) {
+        if(err) {
+            console.log("error:"+err);
+            cb(null);
+            return;
+        }
+        res = JSON.parse(res);
+        if(res.status == 0) {
+            //最新成交价 usdt
+            var newPrice = res.data.ticker[0];
+            //最新成交价 cny
+            var cnyPrice = newPrice * rate;
+            var oldPrice = res.data.ticker[6]
+
+            //涨幅
+            var market = (newPrice - oldPrice) / oldPrice;
+
+            var data = { newPrice , cnyPrice ,oldPrice ,market}
+            cb(data);
+        }
+    });
 }
 
 
@@ -178,3 +220,4 @@ exports.getNewsInfo = getNewsInfo;
 exports.getQuickData = getQuickData;
 exports.getSymbolData = getSymbolData;
 exports.getInveData = getInveData;
+exports.getInveData2 = getInveData2;
