@@ -104,7 +104,7 @@ function getNewsData(limit,page,status,cb) {
     page = page == null ? 1 : page;
     status = status == null ? 2 : status;
     let subrul = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
-    webHelper.httpGet(getUrl(linkUrl ,subrul) ,null, function(err,res) {
+    webHelper.httpGet(getUrl(linkUrl ,subrul,"https") ,null, function(err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
