@@ -47,15 +47,15 @@ function getCurrencyData(cb) {
 
 function getInveData(cb) {
     //计算人民币
-    getSymbolData("fcoin",'ethusdt',"cny",function(res) {
+    getSymbolData("fcoin",'ethusdt',"cny",function(err ,res) {
         res = JSON.parse(res);
         if(res != null) {
-            getSymbolData("fcoin",'ethusdt',"usdt",function(res2) {
+            getSymbolData("fcoin",'ethusdt',"usdt",function(err2 ,res2) {
                 res2 = JSON.parse(res2);
                 //汇率
                 var rate = res.close / res2.close;
                 let suburul = inveCurrencyUrl + "inveusdt";
-                webHelper.httpGet(getUrl(fcoin,suburul) ,null,  function (res3) {
+                webHelper.httpGet(getUrl(fcoin,suburul) ,null,  function (err3,res3) {
                     res3 = JSON.parse(res3);
                     if(res3.status == 0) {
                         //最新成交价 usdt
@@ -86,7 +86,8 @@ function getInveData(cb) {
 
 //*************************************************************************
 //linker接口
-let linkUrl = 'www.liankeplus.com';
+// let linkUrl = 'www.liankeplus.com';
+let linkUrl = 'test.inve.zhang123.vip';
 let newsDataUrl  = "/linker/content/article/list";
 let newsInfoUrl  = "/linker/content/article/info/";
 let quickdataUrl = "/linker/content/dataquick/list";
@@ -106,6 +107,8 @@ function getNewsData(limit,page,status,cb) {
     webHelper.httpGet(getUrl(linkUrl ,subrul) ,null, function(err,res) {
         if(err) {
             console.log("error:"+err);
+            cb(null);
+            return;
         }
         res = JSON.parse(res);
         if(!!res && res.code == 0) {
@@ -121,12 +124,18 @@ function getNewsData(limit,page,status,cb) {
  */
 function getNewsInfo(id ,cb) {
     let suburl = newsInfoUrl + id;
-    webHelper.httpGet(getUrl(linkUrl,suburl),null,function(err,res) {
+    webHelper.httpGet(getUrl(linkUrl,suburl,"https"),null,function(err,res) {
         if(err) {
             console.log("error:"+err);
+            cb(null);
+            return;
         }
         res = JSON.parse(res);
         if(!!res && res.code == 0) {
+            var content = res.article.content;
+            var reg = /style=\".*?\"/;
+            content = content.replace(reg,"");
+            console.log(content);
             cb(res);
         }
     });
@@ -149,8 +158,8 @@ function getQuickData(limit,sidx,order,cb) {
 
 
 //组装url
-function getUrl(url,suburl){
-    return 'http://' + url + suburl;
+function getUrl(url,suburl ,https){
+    return (!https?'http://':"https://") + url + suburl;
 }
 
 exports.getCurrencyData = getCurrencyData;
