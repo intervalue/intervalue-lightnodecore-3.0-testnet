@@ -43,7 +43,7 @@ function getMyDeviceAddress() {
 
 function uPMyHotDeviceAddress(walletId) {
     db.query("SELECT device_address FROM extended_pubkeys ", function (rows) {
-        setMyHotDeviceAddress(rows[0].device_address);
+        setMyHotDeviceAddress(my_device_address ? my_device_address : rows[0].device_address);
     });
 }
 
