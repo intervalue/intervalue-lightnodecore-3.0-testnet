@@ -153,7 +153,17 @@ function getQuickData(limit,sidx,order,cb) {
     sidx = sidx == null ? "createTime" : sidx;
     order = order == null ? "desc" : order;
     let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order;
-    webHelper.httpGet(getUrl(linkUrl ,suburl),null,cb);
+    webHelper.httpGet(getUrl(linkUrl ,suburl,"https"),null,function(err ,res) {
+        if(err) {
+            console.log("error:"+err);
+            cb(null);
+            return;
+        }
+        res = JSON.parse(res);
+        if(!!res && res.code == 0) {
+            cb(res);
+        }
+    });
 }
 
 
