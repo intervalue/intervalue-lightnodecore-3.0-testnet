@@ -3,16 +3,21 @@
 
 let webHelper = require("./webhelper");
 
-//行情接口
-let coindog = "api.coindog.com";
+//行情接口coindog
+let coindog         = "api.coindog.com";
 //所有行情
-let currencyUrl  = "/api/v1/currency/ranks";
+let currencysUrl1   = "/api/v1/currency/ranks";
 //单个行情
-let tickUrl = "/api/v1/tick/";
+let tickUrl         = "/api/v1/tick/";
 
+//huobi接口
+let huobi           = "api.huobipro.com";
+//所有行情
+let currencysUrl2   = "market/tickers";
 
 //Fcoin 接口
-let fcoin = 'api.fcoin.com';
+let fcoin           = 'api.fcoin.com';
+//行情
 let inveCurrencyUrl = "/v2/market/ticker/";
 
 
@@ -36,7 +41,7 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * @param cb
  */
 function getCurrencyData(cb) {
-    let subrul = currencyUrl;
+    let subrul = currencysUrl1;
     webHelper.httpGet(getUrl(coindog,subrul) ,null,  cb);
 }
 
@@ -69,6 +74,9 @@ function getInveData(cb) {
 
             });
         }
+        else {
+            console.log("connection error ~!")
+        }
     });
 
 }
@@ -95,7 +103,15 @@ function getNewsData(limit,page,status,cb) {
     page = page == null ? 1 : page;
     status = status == null ? 2 : status;
     let subrul = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
-    webHelper.httpGet(getUrl(linkUrl ,subrul) ,null, cb);
+    webHelper.httpGet(getUrl(linkUrl ,subrul) ,null, function(err,res) {
+        if(err) {
+            console.log("error:"+err);
+        }
+        res = JSON.parse(res);
+        if(!!res && res.code == 0) {
+            cb(res);
+        }
+    });
 }
 
 /**

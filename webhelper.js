@@ -9,6 +9,7 @@ class WebHelper {
             sa
                 .get(url)
                 .set(headers == null ? {} : headers)
+                .timeout(timeout)
                 .end(function (err, res) {
                     if (err) {
                         reject(err);
@@ -16,7 +17,7 @@ class WebHelper {
                     }
                     // console.log(JSON.stringify(res.text));
                     if(cb != null) {
-                        cb(res.text);
+                        cb(err,res.text);
                     }
                     resolve(res.text);
                 });
@@ -38,7 +39,7 @@ class WebHelper {
                         return;
                     }
                     if(cb != null){
-                        cb(res);
+                        cb(err,res.text);
                     }
                     resolve(res.text);
                 });
