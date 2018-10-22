@@ -131,6 +131,17 @@ function setDeviceName(device_name) {
     my_device_name = device_name;
 }
 
+
+function setDeviceHub(device_hub){
+    console.log("setDeviceHub", device_hub);
+    var bChanged = (device_hub !== my_device_hub);
+    my_device_hub = device_hub;
+    /*if (bChanged){
+        network.addPeer(conf.WS_PROTOCOL+device_hub);
+        loginToHub();
+    }*/
+}
+
 var pubKey = '';
 var walletId = '';
 var addresses = [];
@@ -821,3 +832,4 @@ exports.getMyHotDeviceAddress = getMyHotDeviceAddress;
 exports.setMyHotDeviceAddress = setMyHotDeviceAddress;
 exports.addresses = addresses;
 exports.my_device_hashnetseed_url = my_device_hashnetseed_url;
+exports.setDeviceHub = setDeviceHub;
