@@ -2,26 +2,30 @@
 
 let sa = require("superagent");
 // let request = require("request");
-let timeout = 5 * 1000;
+let timeout = 10 * 1000;
 class WebHelper {
-    static httpGet(url, headers) {
+    static httpGet(url, headers ,cb) {
         return new Promise(function (resolve, reject) {
             sa
                 .get(url)
                 .set(headers == null ? {} : headers)
+                .timeout(timeout)
                 .end(function (err, res) {
                     if (err) {
                         reject(err);
                         return;
                     }
-                    console.log(JSON.stringify(res.text));
+                    // console.log(JSON.stringify(res.text));
+                    if(cb != null) {
+                        cb(err,res.text);
+                    }
                     resolve(res.text);
                 });
         });
     }
 
 
-    static httpPost(url, headers, data) {
+    static httpPost(url, headers, data ,cb) {
         return new Promise(function (resolve, reject) {
             sa
                 .post(url)
@@ -33,6 +37,9 @@ class WebHelper {
                     if (err) {
                         reject(err);
                         return;
+                    }
+                    if(cb != null){
+                        cb(err,res.text);
                     }
                     resolve(res.text);
                 });
