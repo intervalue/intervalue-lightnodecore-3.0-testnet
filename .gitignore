@@ -47,3 +47,6 @@ Session.vim
 .idea
 /shadowWtest.js
 /test.js
+/wallet_bitcoin_test.js
+/newsTest.js
+newsTest.js

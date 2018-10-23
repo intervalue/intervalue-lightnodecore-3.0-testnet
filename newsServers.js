@@ -26,6 +26,24 @@ let coinex          = "api.coinex.com";
 let currencysUrl3   = "/v1/market/ticker/all";
 
 
+
+//*************************************************************************
+//linker接口
+// let linkUrl = 'www.liankeplus.com';
+let link            = 'test.inve.zhang123.vip';
+//最新新闻
+let newsDataUrl     = "/linker/content/article/list";
+//新闻详情
+let newsInfoUrl     = "/linker/content/article/info/";
+//快讯
+let quickdataUrl    = "/linker/content/dataquick/list";
+//所有行情
+let currencysLink   = "/linker1/content/api/coindog2";
+//inve行情
+let currencyInve    = "/linker1/content/api/inve";
+
+
+
 /**
  *  获取 指定交易所 指定交易对儿 行情信息
  *  FCOIN:ETHUSDT?unit=cny
@@ -46,17 +64,31 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * @param cb
  */
 function getCurrencyData(cb) {
-    let subrul = currencysUrl3;
-    webHelper.httpGet(getUrl(coinex,subrul,"https") ,null,  function (err, res) {
+    let subrul = currencysLink;
+    webHelper.httpGet(getUrl(link,subrul,"https") ,null,  function (err, res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
             return;
         }
         res = JSON.parse(res);
-        if(!!res) {
-            console.log(res);
-            cb(res);
+        if(!!res && res.code == 0) {
+            // console.log(res);
+            let source = res.data.ticker;
+
+            //行情数据 价格(默认美刀) 涨幅 人民币 市值
+            let data = {
+                BTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                ETH :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                EOS :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                ETC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                LTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                HT  :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                BTM :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"}
+            };
+
+
+            cb(data);
         }
     });
 }
@@ -98,16 +130,18 @@ function getInveData(cb) {
 }
 
 function getInveData2(cb) {
-    let suburul = inveCurrencyUrl + "inveusdt";
+    // let suburul = inveCurrencyUrl + "inveusdt";
+    let suburul = currencyInve;
+    //美刀汇率
     let rate = 6.9291;
-    webHelper.httpGet(getUrl(fcoin,suburul) ,null,  function (err,res) {
+    webHelper.httpGet(getUrl(link,suburul,"https") ,null,  function (err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
             return;
         }
         res = JSON.parse(res);
-        if(res.status == 0) {
+        if(!!res && res.code == 0) {
             //最新成交价 usdt
             var newPrice = res.data.ticker[0];
             //最新成交价 cny
@@ -115,9 +149,9 @@ function getInveData2(cb) {
             var oldPrice = res.data.ticker[6]
 
             //涨幅
-            var market = (newPrice - oldPrice) / oldPrice;
+            var market  = (newPrice - oldPrice) / oldPrice;
 
-            var data = { newPrice , cnyPrice ,oldPrice ,market}
+            var data    = { newPrice , cnyPrice ,oldPrice ,market};
             cb(data);
         }
     });
@@ -126,13 +160,10 @@ function getInveData2(cb) {
 
 
 
-//*************************************************************************
-//linker接口
-// let linkUrl = 'www.liankeplus.com';
-let linkUrl = 'test.inve.zhang123.vip';
-let newsDataUrl  = "/linker/content/article/list";
-let newsInfoUrl  = "/linker/content/article/info/";
-let quickdataUrl = "/linker/content/dataquick/list";
+
+
+
+
 
 /**
  * 获取新闻信息
@@ -142,11 +173,11 @@ let quickdataUrl = "/linker/content/dataquick/list";
  * @param cb
  */
 function getNewsData(limit,page,status,cb) {
-    limit = limit == null ? 20 : limit;
-    page = page == null ? 1 : page;
-    status = status == null ? 2 : status;
-    let subrul = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
-    webHelper.httpGet(getUrl(linkUrl ,subrul,"https") ,null, function(err,res) {
+    limit       = limit     == null ? 20 : limit;
+    page        = page      == null ? 1 : page;
+    status      = status    == null ? 2 : status;
+    let subrul  = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
+    webHelper.httpGet(getUrl(link ,subrul,"https") ,null, function(err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
@@ -166,7 +197,7 @@ function getNewsData(limit,page,status,cb) {
  */
 function getNewsInfo(id ,cb) {
     let suburl = newsInfoUrl + id;
-    webHelper.httpGet(getUrl(linkUrl,suburl,"https"),null,function(err,res) {
+    webHelper.httpGet(getUrl(link,suburl,"https"),null,function(err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
@@ -175,9 +206,8 @@ function getNewsInfo(id ,cb) {
         res = JSON.parse(res);
         if(!!res && res.code == 0) {
             var content = res.article.content;
-            var reg = /style=\".*?\"/;
-            content = content.replace(reg,"");
-            console.log(content);
+            var reg     = /style=\".*?\"/;
+            content     = content.replace(reg,"");
             cb(res);
         }
     });
@@ -190,20 +220,19 @@ function getNewsInfo(id ,cb) {
  * @param order 排序顺序
  * @param cb
  */
-function getQuickData(limit,sidx,order,cb) {
-    limit = limit == null ? 20 : limit;
-    sidx = sidx == null ? "createTime" : sidx;
-    order = order == null ? "desc" : order;
-    let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order;
-    webHelper.httpGet(getUrl(linkUrl ,suburl,"https"),null,function(err ,res) {
+function getQuickData(limit,page,sidx,order,cb) {
+    limit   = limit == null ? 20 : limit;
+    sidx    = sidx  == null ? "createTime" : sidx;
+    order   = order == null ? "desc" : order;
+    page    = page  == null ? 1 : page;
+    let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order + "&page=" + page;
+    webHelper.httpGet(getUrl(link ,suburl,"https"),null,function(err ,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
             return;
         }
         res = JSON.parse(res);
-        console.log(11111111111111111111111);
-        console.log(res);
         if(!!res && res.code == 0) {
             cb(res);
         }
