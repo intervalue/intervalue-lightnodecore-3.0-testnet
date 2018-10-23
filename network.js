@@ -1076,6 +1076,12 @@ function addPeer(peer){
     });
 }
 
+
+/**
+ * 连接节点
+ * @param url
+ * @param onOpen
+ */
 function connectToPeer(url, onOpen) {
     addPeer(url);
     var options = {};
@@ -1155,6 +1161,12 @@ function connectToPeer(url, onOpen) {
     console.log('connectToPeer done');
 }
 
+/**
+ * 找到连接
+ * @param url
+ * @param onOpen
+ * @returns {*}
+ */
 function findOutboundPeerOrConnect(url, onOpen){
     if (!url)
         throw Error('no url');
@@ -1186,6 +1198,11 @@ function findOutboundPeerOrConnect(url, onOpen){
     connectToPeer(url, onOpen);
 }
 
+/**
+ * 接收并接收的websocket链接信息
+ * @param message
+ * @returns {*}
+ */
 function onWebsocketMessage(message) {
 
     var ws = this;
@@ -1260,6 +1277,13 @@ function sendVersion(ws){
     });
 }
 
+/**
+ * 聊天通知
+ * @param ws
+ * @param subject
+ * @param body
+ * @returns {*}
+ */
 function handleJustsaying(ws, subject, body){
     switch (subject){
         case 'refresh':
@@ -1551,6 +1575,14 @@ function handleJustsaying(ws, subject, body){
     }
 }
 
+/**
+ * 处理请求
+ * @param ws
+ * @param tag
+ * @param command
+ * @param params
+ * @returns {*}
+ */
 function handleRequest(ws, tag, command, params){
     if (ws.assocInPreparingResponse[tag]) // ignore repeated request while still preparing response to a previous identical request
         return console.log("ignoring identical "+command+" request");
@@ -1942,6 +1974,12 @@ function handleHeartbeatResponse(ws, request, response){
     // as soon as the peer sends a heartbeat himself, we'll think he's woken up and resume our heartbeats too
 }
 
+/**
+ * 处理返回消息
+ * @param ws
+ * @param tag
+ * @param response
+ */
 function handleResponse(ws, tag, response){
     var pendingRequest = ws.assocPendingRequests[tag];
     if (!pendingRequest) // was canceled due to timeout or rerouted and answered by another peer
