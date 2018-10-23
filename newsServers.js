@@ -30,7 +30,7 @@ let currencysUrl3   = "/v1/market/ticker/all";
 //*************************************************************************
 //linker接口
 // let linkUrl = 'www.liankeplus.com';
-let link         = 'test.inve.zhang123.vip';
+let link            = 'test.inve.zhang123.vip';
 //最新新闻
 let newsDataUrl     = "/linker/content/article/list";
 //新闻详情
@@ -149,9 +149,9 @@ function getInveData2(cb) {
             var oldPrice = res.data.ticker[6]
 
             //涨幅
-            var market = (newPrice - oldPrice) / oldPrice;
+            var market  = (newPrice - oldPrice) / oldPrice;
 
-            var data = { newPrice , cnyPrice ,oldPrice ,market};
+            var data    = { newPrice , cnyPrice ,oldPrice ,market};
             cb(data);
         }
     });
@@ -173,10 +173,10 @@ function getInveData2(cb) {
  * @param cb
  */
 function getNewsData(limit,page,status,cb) {
-    limit = limit == null ? 20 : limit;
-    page = page == null ? 1 : page;
-    status = status == null ? 2 : status;
-    let subrul = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
+    limit       = limit     == null ? 20 : limit;
+    page        = page      == null ? 1 : page;
+    status      = status    == null ? 2 : status;
+    let subrul  = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
     webHelper.httpGet(getUrl(link ,subrul,"https") ,null, function(err,res) {
         if(err) {
             console.log("error:"+err);
@@ -206,9 +206,8 @@ function getNewsInfo(id ,cb) {
         res = JSON.parse(res);
         if(!!res && res.code == 0) {
             var content = res.article.content;
-            var reg = /style=\".*?\"/;
-            content = content.replace(reg,"");
-            console.log(content);
+            var reg     = /style=\".*?\"/;
+            content     = content.replace(reg,"");
             cb(res);
         }
     });
@@ -221,11 +220,12 @@ function getNewsInfo(id ,cb) {
  * @param order 排序顺序
  * @param cb
  */
-function getQuickData(limit,sidx,order,cb) {
-    limit = limit == null ? 20 : limit;
-    sidx = sidx == null ? "createTime" : sidx;
-    order = order == null ? "desc" : order;
-    let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order;
+function getQuickData(limit,page,sidx,order,cb) {
+    limit   = limit == null ? 20 : limit;
+    sidx    = sidx  == null ? "createTime" : sidx;
+    order   = order == null ? "desc" : order;
+    page    = page  == null ? 1 : page;
+    let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order + "&page=" + page;
     webHelper.httpGet(getUrl(link ,suburl,"https"),null,function(err ,res) {
         if(err) {
             console.log("error:"+err);
