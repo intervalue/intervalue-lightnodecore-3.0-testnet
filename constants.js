@@ -1,19 +1,27 @@
 /*jslint node: true */
 "use strict";
 
-exports.COUNT_WITNESSES = 12;
+exports.COUNT_WITNESSES = 3;
 exports.MAX_WITNESS_LIST_MUTATIONS = 1;
-exports.TOTAL_WHITEBYTES = 1e15;
+exports.TOTAL_WHITEBYTES = 77e14;
 exports.MAJORITY_OF_WITNESSES = (exports.COUNT_WITNESSES%2===0) ? (exports.COUNT_WITNESSES/2+1) : Math.ceil(exports.COUNT_WITNESSES/2);
 exports.COUNT_MC_BALLS_FOR_PAID_WITNESSING = 100;
 
 exports.version = '1.0';
-exports.alt = '1';
+exports.alt = '2';
 
-exports.bTestnet = (exports.alt === '2' && exports.version === '1.0t');
+//exports.GENESIS_UNIT = 'l0GRkJBahv46hC6/HKIF64nWkIHIihy2TcAI3EuOwk8=';
+//exports.BLACKBYTES_ASSET = 'WqlNRGo+ubt1kxWETTgFv0Xpni5kf3429TewuPnrEh8=';
+//exports.GENESIS_UNIT = 'MCzTuJo+sqX+gC+rV9j2VXucwTvYMcqZRlOadenb2Ck=';
+//exports.BLACKBYTES_ASSET = 'RAfakPUv6pd/vNyXFbgwkUDsmxna+Bs5tWOwbr+PZpM=';
+//exports.GENESIS_UNIT = 'l0GRkJBahv46hC6/HKIF64nWkIHIihy2TcAI3EuOwk8=';
+//exports.BLACKBYTES_ASSET = 'oJ6qnpOzsmrtTnGWFQ6+M78CiCk7kqAwQYn7HyOWJGQ=';
+//exports.GENESIS_UNIT = 'wbqsGFQItHVD19R2YkZJMZWshaYXunjMKf7EdxiRUeE=';
+//exports.BLACKBYTES_ASSET = 'iSyQIBz720LGc0jfW3Z0fpqY5siR7mDNTxRfxDu9zNo=';
+exports.GENESIS_UNIT = '+FCgcJOI0EfjOltXHi5WGD5NHesL8odNLqM/BD7uraE=';
+exports.BLACKBYTES_ASSET = 'I3dylsRqSdOUp2IbmQILW+G9i5xhg6voI7yKTW3IPgc=';
 
-exports.GENESIS_UNIT = exports.bTestnet ? 'TvqutGPz3T4Cs6oiChxFlclY92M2MvCvfXR5/FETato=' : 'oj8yEksX9Ubq7lLc+p6F2uyHUuynugeVq4+ikT67X6E=';
-exports.BLACKBYTES_ASSET = exports.bTestnet ? 'LUQu5ik4WLfCrr8OwXezqBa+i3IlZLqxj2itQZQm8WY=' : 'qO2JsiuDMh/j+pqJYZw3u82O71WjCDf0vTNvsnntr8o=';
+
 
 exports.HASH_LENGTH = 44;
 exports.PUBKEY_LENGTH = 44;
@@ -34,21 +42,3 @@ exports.MAX_DATA_FEED_VALUE_LENGTH = 64;
 exports.MAX_AUTHENTIFIER_LENGTH = 4096;
 exports.MAX_CAP = 9e15;
 exports.MAX_COMPLEXITY = 100;
-
-exports.MAX_PROFILE_FIELD_LENGTH = 50;
-exports.MAX_PROFILE_VALUE_LENGTH = 100;
-
-exports.TEXTCOIN_CLAIM_FEE = 548;
-exports.TEXTCOIN_ASSET_CLAIM_FEE = 750;
-exports.TEXTCOIN_ASSET_CLAIM_HEADER_FEE = 391;
-exports.TEXTCOIN_ASSET_CLAIM_MESSAGE_FEE = 209;
-exports.TEXTCOIN_ASSET_CLAIM_BASE_MSG_FEE = 158;
-exports.TEXTCOIN_PRIVATE_ASSET_CLAIM_MESSAGE_FEE = 99;
-
-exports.minCoreVersion = exports.bTestnet ? '0.2.89' : '0.2.92';
-
-exports.spendUnconfirmedUpgradeMci = exports.bTestnet ? 589000 : 2909000;
-exports.branchedMinMcWlUpgradeMci = exports.bTestnet ? 593000 : 2909000;
-exports.otherAddressInDefinitionUpgradeMci = exports.bTestnet ? 602000 : 2909000;
-exports.attestedInDefinitionUpgradeMci = exports.bTestnet ? 616000 : 2909000;
-exports.altBranchByBestParentUpgradeMci = exports.bTestnet ? 642000 : 3009824;

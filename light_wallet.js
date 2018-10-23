@@ -2,7 +2,7 @@
 "use strict";
 var db = require('./db.js');
 var conf = require('./conf.js');
-// var myWitnesses = require('./my_witnesses.js');
+//var myWitnesses = require('./my_witnesses.js');
 var network = require('./network.js');
 var storage = require('./storage.js');
 var walletGeneral = require('./wallet_general.js');
@@ -87,7 +87,7 @@ function prepareRequestForHistory(handleResult){
 var bFirstRefreshStarted = false;
 
 function refreshLightClientHistory(){
-	if (!conf.bLight)
+	/*if (!conf.bLight)
 		return;
 	if (!network.light_vendor_url)
 		return console.log('refreshLightClientHistory called too early: light_vendor_url not set yet');
@@ -139,7 +139,7 @@ function refreshLightClientHistory(){
 				});
 			});
 		});
-	});
+	});*/
 }
 
 function archiveDoublespendUnits(){

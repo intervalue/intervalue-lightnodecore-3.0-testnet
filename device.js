@@ -136,10 +136,10 @@ function setDeviceHub(device_hub){
     console.log("setDeviceHub", device_hub);
     var bChanged = (device_hub !== my_device_hub);
     my_device_hub = device_hub;
-    /*if (bChanged){
+    if (bChanged){
         network.addPeer(conf.WS_PROTOCOL+device_hub);
         loginToHub();
-    }*/
+    }
 }
 
 var pubKey = '';
@@ -787,6 +787,33 @@ function setMyHotDeviceAddress(addr) {
 }
 
 
+function loginToHub(){
+    if (!objMyPermanentDeviceKey)
+        return console.log("objMyPermanentDeviceKey not set yet, can't log in");
+    if (!objMyTempDeviceKey)
+        return console.log("objMyTempDeviceKey not set yet, can't log in");
+    if (!my_device_hub)
+        return console.log("my_device_hub not set yet, can't log in");
+    console.log("logging in to hub "+my_device_hub);
+    network.findOutboundPeerOrConnect(conf.WS_PROTOCOL+my_device_hub, function onLocatedHubForLogin(err, ws){
+        if (err)
+            return;
+        if (ws.bLoggedIn)
+            return;
+        if (ws.received_challenge)
+            sendLoginCommand(ws, ws.received_challenge);
+        else
+            ws.bLoggingIn = true;
+        console.log('done loginToHub');
+    });
+}
+
+
+
+
+
+
+
 exports.getMyDevicePubKey = getMyDevicePubKey;
 exports.getMyDeviceAddress = getMyDeviceAddress;
 exports.isValidPubKey = isValidPubKey;
@@ -833,3 +860,4 @@ exports.setMyHotDeviceAddress = setMyHotDeviceAddress;
 exports.addresses = addresses;
 exports.my_device_hashnetseed_url = my_device_hashnetseed_url;
 exports.setDeviceHub = setDeviceHub;
+exports.loginToHub = loginToHub;
