@@ -76,7 +76,19 @@ function getCurrencyData(cb) {
             // console.log(res);
             let source = res.data.ticker;
 
-            cb(res);
+            //行情数据 价格(默认美刀) 涨幅 人民币 市值
+            let data = {
+                BTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                ETH :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                EOS :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                ETC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                LTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                HT  :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+                BTM :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"}
+            };
+
+
+            cb(data);
         }
     });
 }
@@ -120,6 +132,7 @@ function getInveData(cb) {
 function getInveData2(cb) {
     // let suburul = inveCurrencyUrl + "inveusdt";
     let suburul = currencyInve;
+    //美刀汇率
     let rate = 6.9291;
     webHelper.httpGet(getUrl(link,suburul,"https") ,null,  function (err,res) {
         if(err) {
@@ -138,7 +151,7 @@ function getInveData2(cb) {
             //涨幅
             var market = (newPrice - oldPrice) / oldPrice;
 
-            var data = { newPrice , cnyPrice ,oldPrice ,market}
+            var data = { newPrice , cnyPrice ,oldPrice ,market};
             cb(data);
         }
     });
