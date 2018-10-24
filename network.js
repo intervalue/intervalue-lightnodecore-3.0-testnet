@@ -932,7 +932,7 @@ function requestProofsOfJointsIfNewOrUnstable(arrUnits, onDone) {
     storage.filterNewOrUnstableUnits(arrUnits, function (arrNewOrUnstableUnits) {
         if (arrNewOrUnstableUnits.length === 0)
             return onDone();
-        requestHistoryFor(arrUnits, [], onDone);
+        //requestHistoryFor(arrUnits, [], onDone);
     });
 }
 
@@ -1076,13 +1076,8 @@ function addPeer(peer){
     });
 }
 
-
-/**
- * 连接节点
- * @param url
- * @param onOpen
- */
 function connectToPeer(url, onOpen) {
+    console.log(4);
     addPeer(url);
     var options = {};
     if (socks && conf.socksHost && conf.socksPort) {
@@ -1115,7 +1110,8 @@ function connectToPeer(url, onOpen) {
         if (ws.url !== url && ws.url !== url + "/") // browser implementatin of Websocket might add /
             throw Error("url is different: "+ws.url);
         var another_ws_to_same_peer = getOutboundPeerWsByUrl(url);
-        if (another_ws_to_same_peer){ // duplicate connection.  May happen if we abondoned a connection attempt after timeout but it still succeeded while we opened another connection
+        if (another_ws_to_same_peer){
+            console.log(5);// duplicate connection.  May happen if we abondoned a connection attempt after timeout but it still succeeded while we opened another connection
             console.log('already have a connection to '+url+', will keep the old one and close the duplicate');
             ws.close(1000, 'duplicate connection');
             if (onOpen)
@@ -1161,24 +1157,23 @@ function connectToPeer(url, onOpen) {
     console.log('connectToPeer done');
 }
 
-/**
- * 找到连接
- * @param url
- * @param onOpen
- * @returns {*}
- */
 function findOutboundPeerOrConnect(url, onOpen){
+    console.log(1);
     if (!url)
         throw Error('no url');
     if (!onOpen)
         onOpen = function(){};
     url = url.toLowerCase();
     var ws = getOutboundPeerWsByUrl(url);
-    if (ws)
+    if (ws){
+        console.log(2);
         return onOpen(null, ws);
+    }
+
     // check if we are already connecting to the peer
     ws = assocConnectingOutboundWebsockets[url];
     if (ws){ // add second event handler
+        console.log(3);
         breadcrumbs.add('already connecting to '+url);
         return eventBus.once('open-'+url, function secondOnOpen(err){
             console.log('second open '+url+", err="+err);
@@ -1198,11 +1193,6 @@ function findOutboundPeerOrConnect(url, onOpen){
     connectToPeer(url, onOpen);
 }
 
-/**
- * 接收并接收的websocket链接信息
- * @param message
- * @returns {*}
- */
 function onWebsocketMessage(message) {
 
     var ws = this;
@@ -1277,13 +1267,6 @@ function sendVersion(ws){
     });
 }
 
-/**
- * 聊天通知
- * @param ws
- * @param subject
- * @param body
- * @returns {*}
- */
 function handleJustsaying(ws, subject, body){
     switch (subject){
         case 'refresh':
@@ -1575,14 +1558,6 @@ function handleJustsaying(ws, subject, body){
     }
 }
 
-/**
- * 处理请求
- * @param ws
- * @param tag
- * @param command
- * @param params
- * @returns {*}
- */
 function handleRequest(ws, tag, command, params){
     if (ws.assocInPreparingResponse[tag]) // ignore repeated request while still preparing response to a previous identical request
         return console.log("ignoring identical "+command+" request");
@@ -1974,12 +1949,6 @@ function handleHeartbeatResponse(ws, request, response){
     // as soon as the peer sends a heartbeat himself, we'll think he's woken up and resume our heartbeats too
 }
 
-/**
- * 处理返回消息
- * @param ws
- * @param tag
- * @param response
- */
 function handleResponse(ws, tag, response){
     var pendingRequest = ws.assocPendingRequests[tag];
     if (!pendingRequest) // was canceled due to timeout or rerouted and answered by another peer

@@ -64,6 +64,9 @@ function setDevicePrivateKey(priv_key) {
         pub_b64: ecdsa.publicKeyCreate(priv_key, true).toString('base64')
     };
     var new_my_device_address = objectHash.getDeviceAddress(objMyPermanentDeviceKey.pub_b64);
+    console.log(objMyPermanentDeviceKey.pub_b64);
+    console.log(new_my_device_address);
+
     if (my_device_address && my_device_address !== new_my_device_address) {
         return;
         breadcrumbs.add('different device address: old ' + my_device_address + ', new ' + new_my_device_address);
@@ -214,7 +217,7 @@ function sendLoginCommand(ws, challenge) {
     network.sendJustsaying(ws, 'hub/login', objLogin);
     ws.bLoggedIn = true;
     sendTempPubkey(ws, objMyTempDeviceKey.pub_b64);
-    network.initWitnessesIfNecessary(ws);
+    //network.initWitnessesIfNecessary(ws);
     resendStalledMessages(1);
 }
 
@@ -796,12 +799,15 @@ function loginToHub(){
         return console.log("my_device_hub not set yet, can't log in");
     console.log("logging in to hub "+my_device_hub);
     network.findOutboundPeerOrConnect(conf.WS_PROTOCOL+my_device_hub, function onLocatedHubForLogin(err, ws){
+        console.log(10);
         if (err)
             return;
         if (ws.bLoggedIn)
             return;
-        if (ws.received_challenge)
+        if (ws.received_challenge){
+            console.log("11");
             sendLoginCommand(ws, ws.received_challenge);
+        }
         else
             ws.bLoggingIn = true;
         console.log('done loginToHub');
