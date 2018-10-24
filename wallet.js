@@ -3,6 +3,8 @@
 var async = require('async');
 var _ = require('lodash');
 var db = require('./db.js');
+var ecdsaSig = require('./signature.js');
+var mutex = require('./mutex.js');
 var constants = require('./constants.js');
 var conf = require('./conf.js');
 var objectHash = require('./object_hash.js');
@@ -903,7 +905,22 @@ function signMessage(from_address, message, arrSigningDeviceAddresses, signWithL
     composer.signMessage(from_address, message, signer, handleResult);
 }
 
+function readDeviceAddressesUsedInSigningPaths(onDone){
 
+    var sql = "SELECT DISTINCT device_address FROM shared_address_signing_paths ";
+    sql += "UNION SELECT DISTINCT device_address FROM wallet_signing_paths ";
+    sql += "UNION SELECT DISTINCT device_address FROM pending_shared_address_signing_paths";
+
+    db.query(
+        sql,
+        function(rows){
+
+            var arrDeviceAddress = rows.map(function(r) { return r.device_address; });
+
+            onDone(arrDeviceAddress);
+        }
+    );
+}
 
 
 exports.readSharedBalance = readSharedBalance;
@@ -914,3 +931,4 @@ exports.sendMultiPayment = sendMultiPayment;
 exports.signMessage = signMessage;
 exports.getWalletsInfo = getWalletsInfo ;
 exports.readAddressByWallet = readAddressByWallet;
+exports.readDeviceAddressesUsedInSigningPaths = readDeviceAddressesUsedInSigningPaths;
