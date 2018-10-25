@@ -16,6 +16,8 @@ var ValidationUtils = require("./validation_utils.js");
 var composer = require('./composer.js');
 var balances = require('./balances');
 var light = require('./light.js');
+
+var message_counter = 0;//統計接受消息數
 var assocLastFailedAssetMetadataTimestamps = {};
 var ASSET_METADATA_RETRY_PERIOD = 3600 * 1000;
 
