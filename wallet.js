@@ -924,6 +924,14 @@ function readDeviceAddressesUsedInSigningPaths(onDone){
     );
 }
 
+function determineIfDeviceCanBeRemoved(device_address, handleResult) {
+    device.readCorrespondent(device_address, function (correspondent) {
+        if (!correspondent) return handleResult(false);
+        readDeviceAddressesUsedInSigningPaths(function (arrDeviceAddresses) {
+            handleResult(arrDeviceAddresses.indexOf(device_address) === -1);
+        });
+    });
+};
 
 exports.readSharedBalance = readSharedBalance;
 exports.readBalance = readBalance;
@@ -934,3 +942,4 @@ exports.signMessage = signMessage;
 exports.getWalletsInfo = getWalletsInfo ;
 exports.readAddressByWallet = readAddressByWallet;
 exports.readDeviceAddressesUsedInSigningPaths = readDeviceAddressesUsedInSigningPaths;
+exports.determineIfDeviceCanBeRemoved =  determineIfDeviceCanBeRemoved;
