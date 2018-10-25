@@ -63,7 +63,7 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * 获取行情信息
  * @param cb
  */
-function getCurrencyData(cb) {
+function getCurrencyData(limit,page ,fields,cb) {
     let data = {
         totalPages:100,
         page:{
