@@ -68,16 +68,17 @@ function getCurrencyData(cb) {
         totalPages:100,
         page:{
             list:{
-                BTC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                ETH :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                EOS :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                ETC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                LTC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                HT  :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                BTM :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"}
+                BTC :{name:"比特币",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"4524", sname: 'btc'},
+                ETH :{name:"以太坊",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"368", sname: 'h'},
+                EOS :{name:"瑞博币",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"6/9", sname: 'bt3r2c'},
+                ETC :{name:"以太坊",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"35", sname: 'we'},
+                LTC :{name:"比特币",newPrice:"100" , market:"-7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"10990", sname: 'btewrwc'},
+                HT  :{name:"瑞博币",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"63859", sname: 'fdsf'},
+                BTM :{name:"比特币",newPrice:"100" , market:"+7.89%" ,cnyPrice: "46,789", oldPrice:"100",value:"83", sname: 'hjyj'}
             }
         }
     };
+
 
     cb(data);
     // let subrul = currencysLink;
