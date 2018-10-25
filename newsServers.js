@@ -64,33 +64,49 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * @param cb
  */
 function getCurrencyData(cb) {
-    let subrul = currencysLink;
-    webHelper.httpGet(getUrl(link,subrul,"https") ,null,  function (err, res) {
-        if(err) {
-            console.log("error:"+err);
-            cb(null);
-            return;
+    let data = {
+        totalPages:100,
+        page:{
+            list:{
+                BTC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
+                ETH :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
+                EOS :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
+                ETC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
+                LTC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
+                HT  :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100},
+                BTM :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"}
+            }
         }
-        res = JSON.parse(res);
-        if(!!res && res.code == 0) {
-            // console.log(res);
-            let source = res.data.ticker;
+    };
 
-            //行情数据 价格(默认美刀) 涨幅 人民币 市值
-            let data = {
-                BTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                ETH :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                EOS :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                ETC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                LTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                HT  :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
-                BTM :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"}
-            };
-
-
-            cb(data);
-        }
-    });
+    cb(data);
+    // let subrul = currencysLink;
+    // webHelper.httpGet(getUrl(link,subrul,"https") ,null,  function (err, res) {
+    //     if(err) {
+    //         console.log("error:"+err);
+    //         cb(null);
+    //         return;
+    //     }
+    //     res = JSON.parse(res);
+    //     if(!!res && res.code == 0) {
+    //         // console.log(res);
+    //         let source = res.data.ticker;
+    //
+    //         //行情数据 价格(默认美刀) 涨幅 人民币 市值
+    //         let data = {
+    //             BTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             ETH :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             EOS :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             ETC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             LTC :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             HT  :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"},
+    //             BTM :{newPrice:"-" , market:"-" ,cnyPrice: "-", oldPrice:"-",value:"-"}
+    //         };
+    //
+    //
+    //         cb(data);
+    //     }
+    // });
 }
 
 function getInveData(cb) {
@@ -130,6 +146,16 @@ function getInveData(cb) {
 }
 
 function getInveData2(cb) {
+    let data = {
+        totalPages:100,
+        page:{
+            list:{
+                INVE :{naem:"INVE",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"}
+            }
+        }
+    };
+    cb(data);
+
     // let suburul = inveCurrencyUrl + "inveusdt";
     let suburul = currencyInve;
     //美刀汇率
