@@ -123,14 +123,14 @@ function getCurrencyData(cb) {
                 EtTC :{name:"BTC",price:"100" , quote_change:"7.89%" ,   cnyPrice: "46,789", volume:"100",value:"35",   quantity:"10000000", c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
                 LrTC :{name:"BTC",price:"100" , quote_change:"-7.89%",   cnyPrice: "46,789", volume:"100",value:"10990",quantity:"10000000", c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
                 HeT  :{name:"BTC",price:"100" , quote_change:"7.89%" ,   cnyPrice: "46,789", volume:"100",value:"63859",quantity:"10000000", c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-                BTwM :{name:"BTC",price:"100" , quote_change:"7.89%" ,   cnyPrice: "46,789", volume:"100",value:"83",   quantity:"10000000", c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
+                BTwM :{name:"BTC",price:"100" , quote_change:"7.89%" ,   cnyPrice: "46,789", volume:"100",value:"83",   quantity:"10000000", c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"}
             }
             }
-        }
-    };
-
+        };
 
     cb(data);
+
+
     // let subrul = currencysLink;
     // webHelper.httpGet(getUrl(link,subrul,"https") ,null,  function (err, res) {
     //     if(err) {
