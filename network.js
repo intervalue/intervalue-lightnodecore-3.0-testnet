@@ -80,7 +80,12 @@ exports.light_vendor_url = null;
 
 // general network functions
 
-//TODO delete底层
+/**
+ * 发送消息
+ * @param ws
+ * @param type
+ * @param content
+ */
 function sendMessage(ws, type, content) {
     var message = JSON.stringify([type, content]);
     if (ws.readyState !== ws.OPEN)
@@ -90,7 +95,12 @@ function sendMessage(ws, type, content) {
 }
 
 
-//TODO delete
+/**
+ * 发送消息  justsaying
+ * @param ws
+ * @param subject
+ * @param body
+ */
 function sendJustsaying(ws, subject, body) {
     sendMessage(ws, 'justsaying', {subject: subject, body: body});
 }
