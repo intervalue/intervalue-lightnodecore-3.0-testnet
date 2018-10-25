@@ -73,7 +73,7 @@ function getCurrencyData(cb) {
                 EOS :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
                 ETC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
                 LTC :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
-                HT  :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100},
+                HT  :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"},
                 BTM :{naem:"比特币",newPrice:"100" , market:"+100%" ,cnyPrice: "100", oldPrice:"100",value:"100"}
             }
         }
