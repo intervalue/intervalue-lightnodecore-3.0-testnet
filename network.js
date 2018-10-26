@@ -1038,6 +1038,7 @@ function initWitnessesIfNecessary(ws, onDone) {
  */
 function startLightClient() {
     wss = {clients: []};
+    startHub();
     setInterval(requestTransactionHistory, 5 * 1000);
 }
 
@@ -1927,7 +1928,6 @@ function startHub(){
     setInterval(heartbeat, 3*1000 + getRandomInt(0, 1000));
 }
 
-startHub();
 
 
 function heartbeat(){
