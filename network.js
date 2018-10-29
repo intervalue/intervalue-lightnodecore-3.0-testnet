@@ -255,7 +255,7 @@ function findRandomInboundPeer(handleInboundPeer) {
 }
 
 //TODO delete 底层
-function getOutboundPeerWsByUrl(url) {
+function qgetOutboundPeerWsByUrl(url) {
     console.log("outbound peers: " + arrOutboundPeers.map(function (o) {
         return o.peer;
     }).join(", "));
@@ -1038,7 +1038,6 @@ function initWitnessesIfNecessary(ws, onDone) {
  */
 function startLightClient() {
     wss = {clients: []};
-
     setInterval(requestTransactionHistory, 5 * 1000);
 }
 
@@ -1169,7 +1168,6 @@ function connectToPeer(url, onOpen) {
 }
 
 function findOutboundPeerOrConnect(url, onOpen){
-    console.log(1);
     if (!url)
         throw Error('no url');
     if (!onOpen)
@@ -1177,14 +1175,12 @@ function findOutboundPeerOrConnect(url, onOpen){
     url = url.toLowerCase();
     var ws = getOutboundPeerWsByUrl(url);
     if (ws){
-        console.log(2);
         return onOpen(null, ws);
     }
 
     // check if we are already connecting to the peer
     ws = assocConnectingOutboundWebsockets[url];
     if (ws){ // add second event handler
-        console.log(3);
         breadcrumbs.add('already connecting to '+url);
         return eventBus.once('open-'+url, function secondOnOpen(err){
             console.log('second open '+url+", err="+err);
@@ -1930,6 +1926,7 @@ function startHub(){
 
 startHub();
 
+
 function heartbeat(){
     // just resumed after sleeping
     var bJustResumed = (typeof window !== 'undefined' && window && window.cordova && Date.now() - last_hearbeat_wake_ts > 2*HEARTBEAT_TIMEOUT);
@@ -1985,6 +1982,15 @@ function handleResponse(ws, tag, response){
         });
         delete assocReroutedConnectionsByTag[tag];
     }
+}
+
+
+function getOutboundPeerWsByUrl(url){
+    console.log("outbound peers: "+arrOutboundPeers.map(function(o){ return o.peer; }).join(", "));
+    for (var i=0; i<arrOutboundPeers.length; i++)
+        if (arrOutboundPeers[i].peer === url)
+            return arrOutboundPeers[i];
+    return null;
 }
 
 exports.sendVersion = sendVersion;

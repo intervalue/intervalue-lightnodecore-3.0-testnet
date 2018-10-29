@@ -630,6 +630,10 @@ function startWaitingForPairing(handlePairingInfo) {
     });
 }
 
+function getDevicePubkey() {
+    return objMyPermanentDeviceKey.pub_b64;
+}
+
 // {pairing_secret: "random string", device_name: "Bob's MacBook Pro", reverse_pairing_secret: "random string"}
 function handlePairingMessage(json, device_pubkey, callbacks) {
     var body = json.body;
@@ -867,3 +871,4 @@ exports.addresses = addresses;
 exports.my_device_hashnetseed_url = my_device_hashnetseed_url;
 exports.setDeviceHub = setDeviceHub;
 exports.loginToHub = loginToHub;
+exports.getDevicePubkey = getDevicePubkey ;
