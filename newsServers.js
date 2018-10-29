@@ -208,30 +208,30 @@ function getInveData2(cb) {
     cb(data);
 
     // let suburul = inveCurrencyUrl + "inveusdt";
-    let suburul = currencyInve;
-    //美刀汇率
-    let rate = 6.9291;
-    webHelper.httpGet(getUrl(link,suburul,"https") ,null,  function (err,res) {
-        if(err) {
-            console.log("error:"+err);
-            cb(null);
-            return;
-        }
-        res = JSON.parse(res);
-        if(!!res && res.code == 0) {
-            //最新成交价 usdt
-            var newPrice = res.data.ticker[0];
-            //最新成交价 cny
-            var cnyPrice = newPrice * rate;
-            var oldPrice = res.data.ticker[6]
-
-            //涨幅
-            var market  = (newPrice - oldPrice) / oldPrice;
-
-            var data    = { newPrice , cnyPrice ,oldPrice ,market};
-            cb(data);
-        }
-    });
+    // let suburul = currencyInve;
+    // //美刀汇率
+    // let rate = 6.9291;
+    // webHelper.httpGet(getUrl(link,suburul,"https") ,null,  function (err,res) {
+    //     if(err) {
+    //         console.log("error:"+err);
+    //         cb(null);
+    //         return;
+    //     }
+    //     res = JSON.parse(res);
+    //     if(!!res && res.code == 0) {
+    //         //最新成交价 usdt
+    //         var newPrice = res.data.ticker[0];
+    //         //最新成交价 cny
+    //         var cnyPrice = newPrice * rate;
+    //         var oldPrice = res.data.ticker[6]
+    //
+    //         //涨幅
+    //         var market  = (newPrice - oldPrice) / oldPrice;
+    //
+    //         var data    = { newPrice , cnyPrice ,oldPrice ,market};
+    //         cb(data);
+    //     }
+    // });
 }
 
 
