@@ -193,28 +193,28 @@ function getInveData(cb) {
 }
 
 function getInveData2(cb) {
-    let data = {
-        totalPages:100,
-        page:{
-            list:{
-                INVE :{name:"INVE",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"}
-            }
-        }
-    };
-    cb(data);
+    // let data = {
+    //     totalPages:100,
+    //     page:{
+    //         list:{
+    //             INVE :{name:"INVE",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, c_name: '比特币',time_stamp:"1123123",source:"www.baidu.com"}
+    //         }
+    //     }
+    // };
+    // cb(data);
 
     let suburul = inveCurrencyUrl + "inveusdt";
     // let suburul = currencyInve;
     //美刀汇率
     let rate = 6.9291;
-    webHelper.httpGet(getUrl(link,suburul,"https") ,null,  function (err,res) {
+    webHelper.httpGet(getUrl(fcoin,suburul,"https") ,null,  function (err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
             return;
         }
         res = JSON.parse(res);
-        if(!!res && res.code == 0) {
+        if(!!res && res.status == 0) {
             //最新成交价 usdt
             var newPrice = res.data.ticker[0];
             //最新成交价 cny
@@ -224,7 +224,15 @@ function getInveData2(cb) {
             //涨幅
             var market  = (newPrice - oldPrice) / oldPrice;
 
-            var data    = { newPrice , cnyPrice ,oldPrice ,market};
+            var list    = { newPrice , cnyPrice ,oldPrice ,market};
+            let data = {
+                totalPages: 1,
+                page: [//name:名称 price:价格 quote_change:涨跌幅 volume:交易量 quantity:流通数量 value:流通市值 time_stamp:时间戳(10位int保存) source:来源网站
+                    {name:"INVE",price:newPrice , quote_change:market , cnyPrice: cnyPrice, volume:"-",value:"-", quantity:"-", c_name: 'INVE币',time_stamp:"-",source:"www.fcoin.com"}
+                ]
+            };
+
+
             cb(data);
         }
     });
