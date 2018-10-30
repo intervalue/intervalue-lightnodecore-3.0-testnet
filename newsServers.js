@@ -238,7 +238,7 @@ function getInveData2(cb) {
             //涨幅
             var market  = (newPrice - oldPrice) / oldPrice;
 
-            var list    = { INVE:{name:"INVE",price:newPrice , quote_change:market , cnyPrice: cnyPrice, volume:"-",value:"-", quantity:"-", c_name: 'INVE币',time_stamp:"-",source:"www.fcoin.com"} };
+            var list    = { INVE:{name:"INVE",price:newPrice , quoteChange:market , cnyPrice: cnyPrice, volume:"-",value:"-", quantity:"-", c_name: 'INVE币',time_stamp:"-",source:"www.fcoin.com"} };
             let data = {
                 totalPages: 1,
                 page: {//name:名称 price:价格 quote_change:涨跌幅 volume:交易量 quantity:流通数量 value:流通市值 time_stamp:时间戳(10位int保存) source:来源网站
