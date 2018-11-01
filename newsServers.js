@@ -47,10 +47,13 @@ let currencyInve    = "/linker1/content/api/inve";
 /**美元汇率*/
 let rate = 6.9645;
 /**美元显示规则*/
-let k = 1000;               //千
-let m = 1000000;            //百万
-let b = 1000000000;         //十亿
-let t = 1000000000000;      //万亿
+let k   = 1000;               //千
+let m   = 1000000;            //百万
+let b   = 1000000000;         //十亿
+let t   = 1000000000000;      //万亿
+/**软妹币显示规则*/
+let wan = 10000;
+let yi  = 100000000;
 
 
 
@@ -156,21 +159,34 @@ function getCurrencyData(limit,page ,fields,cb) {
             for(let i in list) {
                 //处理value
                 let value = list[i].value;
-                let a = value/b;
+                let x = value/b;
                 let unit = "b";
-                if(a < 1){
-                    a = value /m;
+                if(x < 1){
+                    x = value /m;
                     unit = "m";
                 }
-                list[i].value = a.toFixed(2);
+                list[i].value = x.toFixed(2);
                 list[i].unit = unit;
 
                 //处理cnyValue
-                list[i].cnyValue = value * rate;
+                let cnyValue = value * rate;
+                let cnyUnit = "亿";
+                let y = cnyValue/yi;
+                if(y < 0) {
+                    y = cnyValue/wan;
+                    cnyUnit = "万";
+                }
+                list[i].cnyValue = y.toFixed(2);
+                list[i].cnyUnit = cnyUnit;
+
 
                 //处理cnyPrice
                 let price = list[i].price;
                 list[i].cnyPrice = price * rate;
+
+
+                //处理涨幅 qupteChange
+
 
             }
 
