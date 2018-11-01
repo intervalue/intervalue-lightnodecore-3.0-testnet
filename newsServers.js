@@ -339,9 +339,9 @@ function getNewsInfo(id ,cb) {
         }
         res = JSON.parse(res);
         if(!!res && res.code == 0) {
-            var content = res.article.content;
-            var reg     = /style=\".*?\"/;
-            content     = content.replace(reg,"");
+            // var content = res.article.content;
+            // var reg     = /style=\".*?\"/;
+            // content     = content.replace(reg,"");
             cb(res);
         }else {
             cb(false)
