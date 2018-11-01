@@ -42,6 +42,16 @@ let currencysLink   = "/linker1/content/api/coindog";
 //inve行情
 let currencyInve    = "/linker1/content/api/inve";
 
+/**----------------------------------------------------------------------*/
+
+/**美元汇率*/
+let rate = 6.9645;
+/**美元显示规则*/
+let k = 1000;               //千
+let m = 1000000;            //百万
+let b = 1000000000;         //十亿
+let t = 1000000000000;      //万亿
+
 
 
 /**
@@ -143,6 +153,29 @@ function getCurrencyData(limit,page ,fields,cb) {
             // console.log(res);
             let list = res.list;
 
+            for(let i in list) {
+                //处理value
+                let value = list[i].value;
+                let a = value/b;
+                let unit = "b";
+                if(a < 1){
+                    a = value /m;
+                    unit = "m";
+                }
+                list[i].value = a.toFixed(2);
+                list[i].unit = unit;
+
+                //处理cnyValue
+                list[i].cnyValue = value * rate;
+
+                //处理cnyPrice
+                let price = list[i].price;
+                list[i].cnyPrice = price * rate;
+
+            }
+
+
+
             //行情数据 价格(默认美刀) 涨幅 人民币 市值
             let data = {
                 totalPages: list.length,
@@ -208,7 +241,7 @@ function getInveData2(cb) {
     let suburul = inveCurrencyUrl + "inveusdt";
     // let suburul = currencyInve;
     //美刀汇率
-    let rate = 6.9291;
+
     webHelper.httpGet(getUrl(fcoin,suburul,"https") ,null,  function (err,res) {
         if(err) {
             console.log("error:"+err);
