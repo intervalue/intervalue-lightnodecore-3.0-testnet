@@ -32,11 +32,11 @@ let currencysUrl3   = "/v1/market/ticker/all";
 // let linkUrl = 'www.liankeplus.com';
 let link            = 'test.inve.zhang123.vip';
 //最新新闻
-let newsDataUrl     = "/linker/content/article/list";
+let newsDataUrl     = "/linker1/content/article/list";
 //新闻详情
 let newsInfoUrl     = "/linker/content/article/info/";
 //快讯
-let quickdataUrl    = "/linker/content/dataquick/list";
+let quickdataUrl    = "/linker1/content/dataquick/list";
 //所有行情
 let currencysLink   = "/linker1/content/api/coindog";
 //inve行情
@@ -287,11 +287,34 @@ function getInveData2(cb) {
             var oldPrice = res.data.ticker[6];
 
             var value = 10000000000 * newPrice;
+
+
+
+            //处理value
+            let x = value/b;
+            let unit = "b";
+            if(x < 1){
+                x = value /m;
+                unit = "m";
+            }
+            value = x.toFixed(2);
+
+            //处理cnyValue
             var cnyValue = 10000000000 * cnyPrice;
+            let cnyUnit = "亿";
+            let y = cnyValue/yi;
+            if(y < 0) {
+                y = cnyValue/wan;
+                cnyUnit = "万";
+            }
+            cnyValue = y.toFixed(2);
+
+
+
             //涨幅
             var market  = (newPrice - oldPrice) / oldPrice;
 
-            var list    = { INVE:{name:"INVE",price:newPrice , quoteChange:market , cnyPrice: cnyPrice, volume:"-",value:value, cnyValue:cnyValue , quantity:"-", cName: 'INVE币',time_stamp:"-",source:"www.fcoin.com"} };
+            var list    = { INVE:{ unit:unit,cnyUnit:cnyUnit ,name:"INVE",price:newPrice , quoteChange:market , cnyPrice: cnyPrice, volume:"-",value:value, cnyValue:cnyValue , quantity:"-", cName: 'INVE币',time_stamp:"-",source:"www.fcoin.com"} };
             let data = {
                 totalPages: 1,
                 page: {//name:名称 price:价格 quote_change:涨跌幅 volume:交易量 quantity:流通数量 value:流通市值 time_stamp:时间戳(10位int保存) source:来源网站
