@@ -34,7 +34,7 @@ let link            = 'test.inve.zhang123.vip';
 //最新新闻
 let newsDataUrl     = "/linker1/content/article/list";
 //新闻详情
-let newsInfoUrl     = "/linker/content/article/info/";
+let newsInfoUrl     = "/linker1/content/article/info/";
 //快讯
 let quickdataUrl    = "/linker1/content/dataquick/list";
 //所有行情
@@ -312,7 +312,7 @@ function getInveData2(cb) {
 
 
             //涨幅
-            var market  = (newPrice - oldPrice) / oldPrice;
+            var market  = (newPrice - oldPrice) / oldPrice * 100;
 
             var list    = { INVE:{ unit:unit,cnyUnit:cnyUnit ,name:"INVE",price:newPrice , quoteChange:market , cnyPrice: cnyPrice, volume:"-",value:value, cnyValue:cnyValue , quantity:"-", cName: 'INVE币',time_stamp:"-",source:"www.fcoin.com"} };
             let data = {
