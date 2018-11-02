@@ -157,6 +157,7 @@ function getCurrencyData(limit,page ,fields,cb) {
             let list = res.list;
 
             for(let i in list) {
+                list[i].values = list[i].value;
                 //处理value
                 let value = list[i].value;
                 let x = value/b;
