@@ -29,18 +29,18 @@ let currencysUrl3   = "/v1/market/ticker/all";
 
 //*************************************************************************
 //linker接口
-// let linkUrl = 'www.liankeplus.com';
-let link            = 'test.inve.zhang123.vip';
+let link            = 'www.liankeplus.com';
+// let link            = 'test.inve.zhang123.vip';
 //最新新闻
-let newsDataUrl     = "/linker1/content/article/list";
+let newsDataUrl     = "/linker/content/article/list";
 //新闻详情
-let newsInfoUrl     = "/linker1/content/article/info/";
+let newsInfoUrl     = "/linker/content/article/info/";
 //快讯
-let quickdataUrl    = "/linker1/content/dataquick/list";
+let quickdataUrl    = "/linker/content/dataquick/list";
 //所有行情
-let currencysLink   = "/linker1/content/api/coindog";
+let currencysLink   = "/linker/content/api/coindog";
 //inve行情
-let currencyInve    = "/linker1/content/api/inve";
+let currencyInve    = "/linker/content/api/inve";
 
 /**----------------------------------------------------------------------*/
 
