@@ -37,13 +37,15 @@ async function updateHistory(addresses) {
 
     //存储此次交易记录的数组
     let trans = null;
+
+    let data;
     try {
         for (var address of addresses) {
             let tableIndex      = 0;
             let offset          = 0;
 
             //从共识网拉取交易记录
-            let data = await hashnethelper.getTransactionHistory(address,tableIndex,offset);
+            data = await hashnethelper.getTransactionHistory(address,tableIndex,offset);
             let result = data.result;
             //如果交易记录不为空，需要加入到待处理的数组中。
             if (result != null) {
@@ -77,6 +79,7 @@ async function updateHistory(addresses) {
                 // console.log(JSON.stringify(tranList));
 
                 let my_tran = _.find(tranList, { id: tran.hash });
+                console.log(!my_tran);
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
                     await updateTran(tran,data);
@@ -300,7 +303,8 @@ async function badTran(tran,data) {
     let id = tran.hash;
     let cmds = [];
     db.addCmd(cmds, "update transactions set result = 'final-bad' where id = ?", id);
-    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
+    db.addCmd(cmds, "UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
+    // await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {
@@ -329,10 +333,11 @@ async function insertTran(tran,data) {
     // console.log(JSON.stringify(tran));
     var cmds = [];
     var fields = "id, creation_date, amount, fee, addressFrom, addressTo, result ,remark";
-    var values = "?,?,?,?,?,?,?";
+    var values = "?,?,?,?,?,?,?,?";
     var params = [tran.hash, tran.time, tran.amount,tran.fee || 0, tran.fromAddress, tran.toAddress, getResultFromTran(tran),tran.remark];
     db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
-    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
+    db.addCmd(cmds, "UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
+    // await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {

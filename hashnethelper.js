@@ -166,44 +166,52 @@ class HashnetHelper {
         }
     }
     //获取交易记录
-    static async getTransactionHistory(address) {
+    static async getTransactionHistory(address,tableIndex,offset) {
         //获取局部全节点
         let localfullnode   = await HashnetHelper.buildSingleLocalfullnode();
-        let tableIndex      = 0;
-        let offset          = 0;
 
         let rows = await db.execute("SELECT ti.tableIndex ,ti.offsets FROM transactions_index ti WHERE ti.address = ?",address);
-        console.log("==============");
-        // console.log(rows[0].tableIndex);
-        // console.log(rows[0].offsets);
-        if(rows != null) {
+
+
+        if(rows != null && rows.length == 1) {
+            // console.log("------------------");
+            // console.log(rows[0].tableIndex);
+            // console.log(rows[0].offsets);
             tableIndex  = rows[0].tableIndex;
             offset      = rows[0].offsets;
         }else {
-            await db.execute("INSERT INTO transactions_index (address ,tableIndex,offsets) VALUES(?,0,0);",address);
+            await db.execute("INSERT INTO transactions_index (address ,tableIndex,offsets) VALUES(?,0,0)",address);
         }
 
         try {
             if (!localfullnode) {
                 throw new Error('network error, please try again.');
             }
+
+            // localfullnode = {ip:'172.17.2.124',httpPort:25003};
+
             //从共识网拉取交易记录
             let result = await webHelper.httpPost(getUrl(localfullnode, '/getTransactionHistory/'), null, buildData({ address,tableIndex,offset }));
+            // alert(result);
             if(result) {
-                console.log("==============");
-                console.log(result);
+                // console.log("==============");
+                // console.log(result);
                 result = JSON.parse(result);
                 if(result.status == 1) {
-                    console.log(result.list);
-                    console.log(result.tableIndex);
-                    console.log(result.offsets);
-                    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",result.tableIndex,result.offsets,address);
-                    return result.list;
-                }else
-                    return [];
+                    // console.log(result.list);
+                    // console.log(result.tableIndex);
+                    // console.log(result.offset);
+                    tableIndex = result.tableIndex?result.tableIndex:0;
+                    offset     = result.offset?result.offset:0;
 
-            }{
-                return []
+                    // await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",tableIndex,offset,address);
+
+                    return result.list ? {result:result.list,tableIndex,offset,address}:{result:[],tableIndex,offset,address};
+                }else
+                    return {result:[],tableIndex,offset,address};
+
+            }else {
+                return {result:[],tableIndex,offset,address}
             }
             // return result ? JSON.parse(result) : [];
         } catch (e) {
@@ -211,7 +219,7 @@ class HashnetHelper {
             if (localfullnode) {
                 await HashnetHelper.reloadLocalfullnode(localfullnode);
             }
-            return null;
+            return {result:[],tableIndex,offset,address};
         }
     }
 
