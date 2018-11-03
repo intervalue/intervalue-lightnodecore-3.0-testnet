@@ -39,8 +39,12 @@ async function updateHistory(addresses) {
     let trans = null;
     try {
         for (var address of addresses) {
+            let tableIndex      = 0;
+            let offset          = 0;
+
             //从共识网拉取交易记录
-            let result = await hashnethelper.getTransactionHistory(address);
+            let data = await hashnethelper.getTransactionHistory(address,tableIndex,offset);
+            let result = data.result;
             //如果交易记录不为空，需要加入到待处理的数组中。
             if (result != null) {
                 if (trans == null) {
@@ -75,15 +79,15 @@ async function updateHistory(addresses) {
                 let my_tran = _.find(tranList, { id: tran.hash });
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
-                    await updateTran(tran);
+                    await updateTran(tran,data);
                 }
                 //本地存在交易记录，共识网判定交易非法，需要更新交易状态到本地
                 else if (my_tran && tran.isStable && !tran.isValid && my_tran.result != 'final-bad') {
-                    await badTran(tran);
+                    await badTran(tran,data);
                 }
                 //本地不存在此交易记录，需往本地插入交易记录
                 else if (!my_tran && tran.isValid) {
-                    await insertTran(tran);
+                    await insertTran(tran,data);
                     eventBus.emit('newtransaction', tran);
                 }
 
@@ -189,17 +193,17 @@ async function iniTranList(addresses) {
     var rs2 = tranAddr != addresses;
     var rs3 = !tranList;
     // if (tranAddr == [] || tranAddr != addresses || !tranList) {
-        tranAddr = addresses;
-        //余额 = 收到 - 发送
-        stable = parseInt( await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
+    tranAddr = addresses;
+    //余额 = 收到 - 发送
+    stable = parseInt( await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'good') - \n\
 			(select (amount + fee) from transactions where addressFrom in (?) and (result = 'good' or result = 'pending')) as stable", addresses, addresses));
-        //待确认
-        pending = parseInt(await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
+    //待确认
+    pending = parseInt(await db.single("select (select sum(amount) from transactions where addressTo in (?) and result = 'pending') + \n\
 			(select sum(amount + fee) from transactions where addressFrom in (?) and result = 'pending') as pending", addresses, addresses));
-        //交易列表
-        tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
+    //交易列表
+    tranList = await db.toList("select *,case when result = 'final-bad' then 'invalid' when addressFrom = ? then 'sent' else 'received' end as action \n\
 		 from transactions where(addressFrom in (?) or addressTo in (?))", addresses[0], addresses, addresses);
-        // console.log(tranList);
+    // console.log(tranList);
     // }
 }
 
@@ -265,13 +269,16 @@ async function truncateTran(addresses) {
     }
 }
 //更新已有交易记录的状态
-async function updateTran(tran) {
+async function updateTran(tran,data) {
     let id = tran.hash;
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {
             //更新数据库
             let u_result = await db.execute("update transactions set result = 'good' where id = ?", id);
+            await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
+
+
             if (u_result.affectedRows) {
                 //更新列表
                 refreshTranList(tran);
@@ -289,10 +296,11 @@ async function updateTran(tran) {
     });
 }
 //失败的交易
-async function badTran(tran) {
+async function badTran(tran,data) {
     let id = tran.hash;
     let cmds = [];
     db.addCmd(cmds, "update transactions set result = 'final-bad' where id = ?", id);
+    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {
@@ -316,7 +324,7 @@ async function badTran(tran) {
 }
 
 //新增一条交易记录
-async function insertTran(tran) {
+async function insertTran(tran,data) {
     console.log("\nsaving unit:");
     // console.log(JSON.stringify(tran));
     var cmds = [];
@@ -324,6 +332,7 @@ async function insertTran(tran) {
     var values = "?,?,?,?,?,?,?";
     var params = [tran.hash, tran.time, tran.amount,tran.fee || 0, tran.fromAddress, tran.toAddress, getResultFromTran(tran),tran.remark];
     db.addCmd(cmds, "INSERT INTO transactions (" + fields + ") VALUES (" + values + ")", ...params);
+    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {
