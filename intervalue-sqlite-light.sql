@@ -748,5 +748,12 @@ CREATE TABLE original_addresses (
 	FOREIGN KEY (unit) REFERENCES units(unit)
 );
 
+-- Describe TRANSACTIONS_INDEX
+CREATE TABLE "transactions_index" (
+"address"  CHAR NOT NULL,
+"tableIndex"  INT,
+"offsets"  INT,
+PRIMARY KEY ("address" ASC)
+)
 
 PRAGMA user_version=21;
