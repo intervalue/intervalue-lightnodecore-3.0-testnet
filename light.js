@@ -39,10 +39,10 @@ async function updateHistory(addresses) {
     let trans = null;
 
     let data;
+    let tableIndex      = 0;
+    let offset          = 0;
     try {
         for (var address of addresses) {
-            let tableIndex      = 0;
-            let offset          = 0;
 
             //从共识网拉取交易记录
             data = await hashnethelper.getTransactionHistory(address,tableIndex,offset);
@@ -68,7 +68,8 @@ async function updateHistory(addresses) {
 
         //如果交易记录长度为零，需要清空本地的交易记录。
         if (trans.length === 0) {
-            await truncateTran(addresses);
+            // await truncateTran(addresses);
+            await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
         }
         else {
             //初始化交易列表

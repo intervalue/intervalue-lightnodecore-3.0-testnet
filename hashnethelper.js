@@ -201,7 +201,7 @@ class HashnetHelper {
                     // console.log(result.list);
                     // console.log(result.tableIndex);
                     // console.log(result.offset);
-                    tableIndex = result.tableIndex?result.tableIndex:0;
+                    tableIndex = result.index?result.index:0;
                     offset     = result.offset?result.offset:0;
 
                     // await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",tableIndex,offset,address);
