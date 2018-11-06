@@ -38,6 +38,9 @@ async function updateHistory(addresses) {
     //存储此次交易记录的数组
     let trans = null;
 
+    if(tranList == null) {
+
+    }
     let data;
     let tableIndex      = 0;
     let offset          = 0;
@@ -68,7 +71,7 @@ async function updateHistory(addresses) {
 
         //如果交易记录长度为零，需要清空本地的交易记录。
         if (trans.length === 0) {
-            await truncateTran(addresses);
+            // await truncateTran(addresses);
             await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
         }
         else {
@@ -93,6 +96,8 @@ async function updateHistory(addresses) {
                 else if (!my_tran && tran.isValid) {
                     await insertTran(tran,data);
                     eventBus.emit('newtransaction', tran);
+                }else {
+                    await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
                 }
 
 
@@ -218,7 +223,7 @@ function findTranList(wallet,cb) {
         "from transactions where(addressFrom in (select address from my_addresses where wallet = ?) ) \n" +
         "union all\n" +
         "\n" +
-        "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" +
+        "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'received' else 'sent' end as action \n" +
         "\n" +
         "from transactions where addressTo in (select address from my_addresses where wallet = ?) and result<>'pending'\n" +
         "\n" +
