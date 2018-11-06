@@ -68,7 +68,7 @@ async function updateHistory(addresses) {
 
         //如果交易记录长度为零，需要清空本地的交易记录。
         if (trans.length === 0) {
-            // await truncateTran(addresses);
+            await truncateTran(addresses);
             await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
         }
         else {
@@ -259,6 +259,7 @@ async function truncateTran(addresses) {
     let cmds = [];
     if (count > 0) {
         db.addCmd(cmds, "delete from transactions where addressFrom in (?) or addressTo in (?)", addresses, addresses);
+        db.addCmd(cmds, "DELETE FROM transactions_index WHERE  address IN (?)",addresses);
         //用队列的方式更新数据库
         await mutex.lock(["write"], async function (unlock) {
             try {
