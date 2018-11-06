@@ -80,7 +80,7 @@ async function updateHistory(addresses) {
                 // console.log(JSON.stringify(tranList));
 
                 let my_tran = _.find(tranList, { id: tran.hash });
-                console.log(!my_tran);
+                // console.log(!my_tran);
                 //本地存在交易记录，状态是待确认，需要进行状态的更新。
                 if (my_tran && tran.isStable && tran.isValid && my_tran.result == 'pending') {
                     await updateTran(tran,data);
@@ -213,8 +213,16 @@ async function iniTranList(addresses) {
 
 //交易列表
 function findTranList(wallet,cb) {
-    db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n\
-		 from transactions where(addressFrom in (select address from my_addresses where wallet = ?) or addressTo in (select address from my_addresses where wallet = ?)) order by creation_date desc", [wallet, wallet,wallet],function (row) {
+    db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" +
+        "\n" +
+        "from transactions where(addressFrom in (select address from my_addresses where wallet = ?) ) \n" +
+        "union all\n" +
+        "\n" +
+        "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" +
+        "\n" +
+        "from transactions where addressTo in (select address from my_addresses where wallet = ?) and result<>'pending'\n" +
+        "\n" +
+        " order by creation_date desc", [wallet, wallet,wallet,wallet],function (row) {
 
         if(row != null && row.length > 0) {
             cb(row);
@@ -361,9 +369,9 @@ async function insertTran(tran,data) {
     });
 }
 
-exports.stable = stable;
-exports.pending = pending;
-exports.tranList = tranList;
+exports.stable = function() {return stable};
+exports.pending = function() {return pending};
+exports.tranList = function () {return tranList};
 
 exports.updateHistory = updateHistory;
 exports.refreshTranList = refreshTranList;
