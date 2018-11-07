@@ -138,6 +138,14 @@ function handleMessageFromHub(ws, json, device_pubkey, bIndirectCorrespondent, c
             callbacks.ifOk();
             break;
 
+        case "transaction":
+            message_counter++;
+            if (!ValidationUtils.isNonemptyString(body)) return callbacks.ifError("transaction body must be string");
+            // the wallet should have an event handler that displays the text to the user
+            eventBus.emit("transaction", from_address, body, message_counter);
+            callbacks.ifOk();
+            break;
+
         case "removed_paired_device":
             if(conf.bIgnoreUnpairRequests) {
                 // unpairing is ignored
