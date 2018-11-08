@@ -45,7 +45,7 @@ async function writeTran(params, handleResult) {
     var isHot = params.name;
     var obj;
     var signature;
-    var deviceAddress = params.deviceAddress;
+    // var deviceAddress = params.deviceAddress;
     if (isHot != "isHot") {
         var timestamp = Math.round(Date.now() / 1000);
         //isStable代表交易是否发送成功
@@ -104,10 +104,10 @@ async function writeTran(params, handleResult) {
                 obj.isStable = 1;
                 obj.isValid = 0;
                 light.refreshTranList(obj);
-                if(deviceAddress) {
-                    let eventBus = require('./event_bus.js');
-                    eventBus.emit('chat_transfer_notification', deviceAddress , obj.id);
-                }
+                // if(deviceAddress) {
+                //     let eventBus = require('./event_bus.js');
+                //     eventBus.emit('chat_transfer_notification', deviceAddress , obj.id);
+                // }
                 //返回到界面
                 // alert("交易完成个");
                 handleResult(null,obj,null);
