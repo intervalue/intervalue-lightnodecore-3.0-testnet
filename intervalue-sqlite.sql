@@ -767,5 +767,13 @@ CREATE TABLE original_addresses (
 	FOREIGN KEY (unit) REFERENCES units(unit)
 );
 
+--设别地址与交易关联关系表
+CREATE TABLE "transactions_device_address" (
+"id"  CHAR NOT NULL,
+"device"  CHAR NOT NULL,
+"result"  TEXT,
+"status"  TEXT,
+PRIMARY KEY ("id", "device")
+);
 
 PRAGMA user_version=21;

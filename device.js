@@ -182,6 +182,46 @@ function setWalletId(walletId) {
     walletId = '';
 }
 
+/**
+ * 获取聊天交易信息
+ * @param id
+ * @returns {Promise<*>}
+ */
+async function getDeviceChatTran(id) {
+    let rows = await db.execute("SELECT * FROM transactions_device_address t WHERE t.id = ?",id);
+    if(rows!=null && rows.length > 0)
+        return rows;
+    else
+        return 0;
+}
+
+/**
+ * 添加聊天交易信息
+ * @param b64_pubkey
+ * @returns {*}
+ */
+async function setDeviceChatTran(id,device) {
+    let rows = await db.execute("INSERT INTO transactions_device_address(id,device) values(?,?);",id, device);
+    if(rows!=null && rows.length)
+        return rows;
+    else
+        return 0;
+}
+
+
+/**
+ * 根据id删除聊天交易信息
+ * @param b64_pubkey
+ * @returns {*}
+ */
+async function delDeviceChatTran(id) {
+    let rows = await db.execute("DELETE FROM transactions_device_address WHERE id = ?;",id);
+    console.log(rows);
+    return rows;
+}
+
+
+
 
 function isValidPubKey(b64_pubkey) {
     return ecdsa.publicKeyVerify(new Buffer(b64_pubkey, 'base64'));
@@ -827,6 +867,7 @@ function loginToHub(){
 exports.getMyDevicePubKey = getMyDevicePubKey;
 exports.getMyDeviceAddress = getMyDeviceAddress;
 exports.isValidPubKey = isValidPubKey;
+exports.getDeviceChatTran = getDeviceChatTran;
 
 exports.genPrivKey = genPrivKey;
 

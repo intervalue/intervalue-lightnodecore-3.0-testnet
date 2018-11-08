@@ -265,6 +265,16 @@ async function findTranInfoById(id) {
 }
 
 
+//查询聊天中未确认的交易
+async function findPendingWithChat() {
+    let rows = await db.toList("SELECT tran.*,tda.device FROM transactions_device_address tda LEFT JOIN transactions tran ON tda.id = tran.id");
+    if(rows!=null && rows.length > 0)
+        return rows;
+    else
+        return 0;
+}
+
+
 
 
 //将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
@@ -385,13 +395,15 @@ async function insertTran(tran,data) {
     });
 }
 
-exports.stable = function() {return stable};
-exports.pending = function() {return pending};
-exports.tranList = function () {return tranList};
+exports.stable                  = function() {return stable};
+exports.pending                 = function() {return pending};
+exports.tranList                = function () {return tranList};
 
-exports.updateHistory = updateHistory;
-exports.refreshTranList = refreshTranList;
-exports.iniTranList = iniTranList;
-exports.findStable = findStable;
-exports.findTranList = findTranList;
-exports.findStable2 = findStable2;
+exports.updateHistory           = updateHistory;
+exports.refreshTranList         = refreshTranList;
+exports.iniTranList             = iniTranList;
+exports.findStable              = findStable;
+exports.findTranList            = findTranList;
+exports.findStable2             = findStable2;
+exports.findTranInfoById        = findTranInfoById;
+exports.findPendingWithChat     = findPendingWithChat
