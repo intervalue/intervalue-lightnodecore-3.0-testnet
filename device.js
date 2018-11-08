@@ -868,6 +868,8 @@ exports.getMyDevicePubKey = getMyDevicePubKey;
 exports.getMyDeviceAddress = getMyDeviceAddress;
 exports.isValidPubKey = isValidPubKey;
 exports.getDeviceChatTran = getDeviceChatTran;
+exports.setDeviceChatTran = setDeviceChatTran;
+exports.delDeviceChatTran = delDeviceChatTran;
 
 exports.genPrivKey = genPrivKey;
 
