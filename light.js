@@ -255,6 +255,16 @@ function findStable2(wallet,cb){
     });
 }
 
+//根据余额查询交易信息
+async function findTranInfoById(id) {
+    let rows = await db.execute("SELECT * FROM transactions where id = ?",id);
+    if(rows!=null && rows.length == 1)
+        return {id:rows[0].id,amount:rows[0].amount,result:rows[0].result};
+    else
+        return 0;
+}
+
+
 
 
 //将交易列表(包括数据库中的交易记录)清空，发生的主要场景是共识网重启后，之前的交易记录会清空，本地需要同步。
