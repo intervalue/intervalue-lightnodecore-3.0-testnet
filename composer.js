@@ -45,7 +45,7 @@ async function writeTran(params, handleResult) {
     var isHot = params.name;
     var obj;
     var signature;
-    // var deviceAddress = params.deviceAddress;
+    var deviceAddress = params.deviceAddress;
     if (isHot != "isHot") {
         var timestamp = Math.round(Date.now() / 1000);
         //isStable代表交易是否发送成功
@@ -98,16 +98,17 @@ async function writeTran(params, handleResult) {
         await mutex.lock(["write"], async function (unlock) {
             try {
                 //更新数据库
-                await db.execute("insert into transactions (id,creation_date,amount,fee,addressFrom,addressTo,result) values (?,?,?,?,?,?,?)",
+                await db.execute("INSERT INTO transactions (id,creation_date,amount,fee,addressFrom,addressTo,result) VALUES (?,?,?,?,?,?,?)",
                     obj.id, obj.timestamp, obj.amount, obj.fee, obj.fromAddress, obj.toAddress,"pending");
                 //更新列表
                 obj.isStable = 1;
                 obj.isValid = 0;
                 light.refreshTranList(obj);
-                // if(deviceAddress) {
-                //     let eventBus = require('./event_bus.js');
-                //     eventBus.emit('chat_transfer_notification', deviceAddress , obj.id);
-                // }
+                if(deviceAddress) {
+                    // let eventBus = require('./event_bus.js');
+                    // eventBus.emit('chat_transfer_notification', deviceAddress , obj.id);
+                    require("./device").setDeviceChatTran(obj.id,deviceAddress)
+                }
                 //返回到界面
                 // alert("交易完成个");
                 handleResult(null,obj,null);
