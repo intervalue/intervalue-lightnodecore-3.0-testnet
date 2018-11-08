@@ -38,6 +38,7 @@ function readMyAddresses(handleAddresses){
 	db.query("SELECT address FROM my_addresses \n\
 		UNION SELECT shared_address AS address FROM shared_addresses \n\
 		UNION SELECT address FROM sent_mnemonics LEFT JOIN unit_authors USING(address) WHERE unit_authors.unit IS NULL", function(rows){
+        if(!rows) readMyAddresses(handleAddresses);
 		var arrAddresses = rows.map(function(row){ return row.address; });
 		handleAddresses(arrAddresses);
 	});

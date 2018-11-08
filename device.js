@@ -665,8 +665,15 @@ function startWaitingForPairing(handlePairingInfo) {
         device_address: my_device_address,
         hub: my_device_hub
     };
-    db.query("INSERT INTO pairing_secrets (pairing_secret, expiry_date) VALUES(?, " + db.addTime("+1 MONTH") + ")", [pairing_secret], function () {
-        handlePairingInfo(pairingInfo);
+    db.query('SELECT pairing_secret FROM pairing_secrets',function (rows) {
+        if(rows.length){
+            pairingInfo.pairing_secret = rows[0].pairing_secret;
+            handlePairingInfo(pairingInfo);
+        }else {
+            db.query("INSERT OR IGNORE INTO pairing_secrets (pairing_secret, expiry_date) VALUES(?, " + db.addTime("+1 MONTH") + ")", [pairing_secret], function () {
+                handlePairingInfo(pairingInfo);
+            });
+        }
     });
 }
 
@@ -705,7 +712,7 @@ function handlePairingMessage(json, device_pubkey, callbacks) {
                         function () {
                             eventBus.emit("paired", from_address, body.pairing_secret);
                             if (pairing_rows[0].is_permanent === 0) { // multiple peers can pair through permanent secret
-                                db.query("DELETE FROM pairing_secrets WHERE pairing_secret=?", [body.pairing_secret], function () { });
+                                //db.query("DELETE FROM pairing_secrets WHERE pairing_secret=?", [body.pairing_secret], function () { });
                                 eventBus.emit('paired_by_secret-' + body.pairing_secret, from_address);
                             }
                             if (body.reverse_pairing_secret)
