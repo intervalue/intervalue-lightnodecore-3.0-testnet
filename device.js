@@ -795,6 +795,7 @@ function removeCorrespondentDevice(device_address, onDone) {
     var arrQueries = [];
     db.addQuery(arrQueries, "DELETE FROM outbox WHERE `to`=?", [device_address]);
     db.addQuery(arrQueries, "DELETE FROM correspondent_devices WHERE device_address=?", [device_address]);
+    db.addQuery(arrQueries, "DELETE FROM chat_messages WHERE correspondent_address=?", [device_address]);
     async.series(arrQueries, onDone);
 }
 
