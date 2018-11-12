@@ -29,18 +29,20 @@ let currencysUrl3   = "/v1/market/ticker/all";
 
 //*************************************************************************
 //linker接口
-let link            = 'www.liankeplus.com';
+let link            = 'openapi.chenhaninfo.com';
 // let link            = 'test.inve.zhang123.vip';
 //最新新闻
-let newsDataUrl     = "/linker/content/article/list";
+let newsDataUrl     = "/openapi/v2/content/article/list";
 //新闻详情
-let newsInfoUrl     = "/linker/content/article/info/";
+let newsInfoUrl     = "/openapi/v2/content/article/info/";
 //快讯
-let quickdataUrl    = "/linker/content/dataquick/list";
+let quickdataUrl    = "/openapi/v2/content/dataquick/list";
 //所有行情
-let currencysLink   = "/linker/content/api/coindog";
+let currencysLink   = "/openapi/v2/dcmarket/hq/list";
 //inve行情
 let currencyInve    = "/linker/content/api/inve";
+
+let https = null;
 
 /**----------------------------------------------------------------------*/
 
@@ -77,75 +79,9 @@ function getSymbolData(exchange , symbol , unit ,cb) {
  * @param cb
  */
 function getCurrencyData(limit,page ,fields,cb) {
-    // let data = {
-    //     totalPages:100,
-    //     page:{
-    //         list:{ //name:名称 price:价格 quote_change:涨跌幅 volume:交易量 quantity:流通数量 value:流通市值 time_stamp:时间戳(10位int保存) source:来源网站
-    //             BTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETH :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EOS :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LTC :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HT  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTC1 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETH2 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EOS3 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETC4 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LTC5 :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HT6  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTM7 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTC8 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETH9 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EOS0 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETC11 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LTC22 :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HT33  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTM44 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTC55 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETH66 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EOS77 :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             E1TC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LT2C :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             H3T  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             B44TM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BT3C :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ET45H :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EO34S :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ET54C :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LT765C :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HasdT  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTsdM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTsC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             ETsdH :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EqOS :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EhTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LhTC :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HhT  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BhTM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BhTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EhTH :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EghOS :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EgTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LfTC :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HddT  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BdTM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BsTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:4524, quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EzTH :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:368,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EaOS :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:6.9,  quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             EtTC :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:35,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             LrTC :{name:"BTC",price:100 , quote_change:-7.89,   cnyPrice: 46.789, volume:"100",value:10990,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             HeT  :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:63859,quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"},
-    //             BTwM :{name:"BTC",price:100 , quote_change:7.89 ,   cnyPrice: 46.789, volume:"100",value:83,   quantity:10000000, cname: '比特币',time_stamp:"1123123",source:"www.baidu.com"}
-    //         }
-    //         }
-    //     };
-    //
-    // cb(data);
-
 
     let subrul = currencysLink;
-    webHelper.httpGet(getUrl(link,subrul,"https") ,null,  function (err, res) {
+    webHelper.httpGet(getUrl(link,subrul,https) ,null,  function (err, res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
@@ -320,7 +256,7 @@ function getInveData2(cb) {
                 totalPages: 1,
                 page: {//name:名称 price:价格 quote_change:涨跌幅 volume:交易量 quantity:流通数量 value:流通市值 time_stamp:时间戳(10位int保存) source:来源网站
                     list
-                 }
+                }
             };
 
 
@@ -351,7 +287,7 @@ function getNewsData(limit,page,status,cb) {
     page        = page      == null ? 1 : page;
     status      = status    == null ? 2 : status;
     let subrul  = newsDataUrl + "?" + "limit=" + limit +"&page="+page + "&status=" + status;
-    webHelper.httpGet(getUrl(link ,subrul,"https") ,null, function(err,res) {
+    webHelper.httpGet(getUrl(link ,subrul,https) ,null, function(err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
@@ -373,7 +309,7 @@ function getNewsData(limit,page,status,cb) {
  */
 function getNewsInfo(id ,cb) {
     let suburl = newsInfoUrl + id;
-    webHelper.httpGet(getUrl(link,suburl,"https"),null,function(err,res) {
+    webHelper.httpGet(getUrl(link,suburl,https),null,function(err,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
@@ -404,7 +340,7 @@ function getQuickData(limit,page,sidx,order,cb) {
     order   = order == null ? "desc" : order;
     page    = page  == null ? 1 : page;
     let suburl =  quickdataUrl + "?" + "limit=" + limit +"&sidx="+sidx + "&order=" + order + "&page=" + page;
-    webHelper.httpGet(getUrl(link ,suburl,"https"),null,function(err ,res) {
+    webHelper.httpGet(getUrl(link ,suburl,https),null,function(err ,res) {
         if(err) {
             console.log("error:"+err);
             cb(null);
