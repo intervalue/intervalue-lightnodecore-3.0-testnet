@@ -25,7 +25,7 @@ exports.BLACKBYTES_ASSET = 'I3dylsRqSdOUp2IbmQILW+G9i5xhg6voI7yKTW3IPgc=';
 
 exports.HASH_LENGTH = 44;
 exports.PUBKEY_LENGTH = 44;
-exports.SIG_LENGTH = 88;
+exports.SIG_LENGTH = 90;
 
 // anti-spam limits
 exports.MAX_AUTHORS_PER_UNIT = 16;
