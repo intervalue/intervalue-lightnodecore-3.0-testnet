@@ -925,8 +925,8 @@ function readDeviceAddressesUsedInSigningPaths(onDone){
         sql,
         function(rows){
             if(!rows) return;
-            var arrDeviceAddress = rows.map(function(r) { return r.device_address; });
-
+            //var arrDeviceAddress = rows.map(function(r) { return r.device_address; });
+            var arrDeviceAddress =[rows[0].device_address];
             onDone(arrDeviceAddress);
         }
     );
