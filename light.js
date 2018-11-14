@@ -11,7 +11,7 @@ var _ = require("lodash");
 //判断上次拉取/更新交易列表是否完成
 var u_finished = true;
 //交易记录列表
-var tranList = null;
+var tranList = [];
 //钱包收款地址
 var tranAddr = [];
 //可用余额

@@ -779,13 +779,13 @@ function requestNextHashTree(ws) {
     eventBus.emit('catchup_next_hash_tree');
     db.query("SELECT ball FROM catchup_chain_balls ORDER BY member_index LIMIT 2", function (rows) {
         if (rows.length === 0)
-            // return comeOnline();
-        if (rows.length === 1) {
-            db.query("DELETE FROM catchup_chain_balls WHERE ball=?", [rows[0].ball], function () {
-                // comeOnline();
-            });
-            return;
-        }
+        // return comeOnline();
+            if (rows.length === 1) {
+                db.query("DELETE FROM catchup_chain_balls WHERE ball=?", [rows[0].ball], function () {
+                    // comeOnline();
+                });
+                return;
+            }
         var from_ball = rows[0].ball;
         var to_ball = rows[1].ball;
 
@@ -960,7 +960,19 @@ async function requestTransactionHistory() {
     if(addresses.length == 0) {
         return;
     }
-    await light.updateHistory(addresses);
+    // await light.updateHistory(addresses);
+    let wallet = require("./wallet");
+    wallet.getWalletsInfo(function(res) {
+        if(res && res.length > 0) {
+            let len = res.length;
+            let arr = [];
+            for(let i = 0 ;i < len ;i++) {
+                arr.push(res[i].address);
+            }
+            light.updateHistory(arr);
+        }
+    });
+
 }
 
 

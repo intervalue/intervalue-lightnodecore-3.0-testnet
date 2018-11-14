@@ -463,7 +463,7 @@ function resendStalledMessages(delay) {
 			FROM outbox JOIN correspondent_devices ON `to`=device_address \n\
 			WHERE outbox.creation_date<="+ db.addTime("-" + delay + " MINUTE") + " ORDER BY outbox.creation_date",
             function (rows) {
-                console.log(rows.length + " stalled messages");
+                //console.log(rows.length + " stalled messages");
                 async.eachSeries(
                     rows,
                     function (row, cb) {
