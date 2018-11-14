@@ -183,26 +183,29 @@ function createWallet(xPubKey, account, arrWalletDefinitionTemplate, walletName,
 	var wallet = crypto.createHash("sha256").update(xPubKey, "utf8").digest("base64");
 	console.log('will create wallet ' + wallet);
 	var arrDeviceAddresses = getDeviceAddresses(arrWalletDefinitionTemplate);
-	addWallet(wallet, xPubKey, account, arrWalletDefinitionTemplate, function () {
-		handleWallet(wallet);
-		if (arrDeviceAddresses.length === 1) // single sig
-			return;
-		console.log("will send offers");
-		// this continues in parallel while the callback handleWallet was already called
-		// We need arrOtherCosigners to make sure all cosigners know the pubkeys of all other cosigners, even when they were not paired.
-		// For example, there are 3 cosigners: A (me), B, and C. A is paired with B, A is paired with C, but B is not paired with C.
-		device.readCorrespondentsByDeviceAddresses(arrDeviceAddresses, function (arrOtherCosigners) {
-			if (arrOtherCosigners.length !== arrDeviceAddresses.length - 1)
-				throw Error("incorrect length of other cosigners");
-			arrDeviceAddresses.forEach(function (device_address) {
-				if (device_address === device.getMyDeviceAddress())
-					return;
-				console.log("sending offer to " + device_address);
-				sendOfferToCreateNewWallet(device_address, wallet, arrWalletDefinitionTemplate, walletName, arrOtherCosigners, isSingleAddress, null);
-				sendMyXPubKey(device_address, wallet, xPubKey);
-			});
-		});
-	});
+	setTimeout(function () {
+        addWallet(wallet, xPubKey, account, arrWalletDefinitionTemplate, function () {
+            handleWallet(wallet);
+            if (arrDeviceAddresses.length === 1) // single sig
+                return;
+            console.log("will send offers");
+            // this continues in parallel while the callback handleWallet was already called
+            // We need arrOtherCosigners to make sure all cosigners know the pubkeys of all other cosigners, even when they were not paired.
+            // For example, there are 3 cosigners: A (me), B, and C. A is paired with B, A is paired with C, but B is not paired with C.
+            device.readCorrespondentsByDeviceAddresses(arrDeviceAddresses, function (arrOtherCosigners) {
+                if (arrOtherCosigners.length !== arrDeviceAddresses.length - 1)
+                    throw Error("incorrect length of other cosigners");
+                arrDeviceAddresses.forEach(function (device_address) {
+                    if (device_address === device.getMyDeviceAddress())
+                        return;
+                    console.log("sending offer to " + device_address);
+                    sendOfferToCreateNewWallet(device_address, wallet, arrWalletDefinitionTemplate, walletName, arrOtherCosigners, isSingleAddress, null);
+                    sendMyXPubKey(device_address, wallet, xPubKey);
+                });
+            });
+        });
+    });
+
 }
 
 function createMultisigWallet(xPubKey, account, count_required_signatures, arrDeviceAddresses, walletName, isSingleAddress, handleWallet) {
