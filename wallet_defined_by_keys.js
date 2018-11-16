@@ -116,66 +116,68 @@ function checkAndFullyApproveWallet(wallet, onDone) {
 function addWallet(wallet, xPubKey, account, arrWalletDefinitionTemplate, onDone) {
 	var assocDeviceAddressesBySigningPaths = getDeviceAddressesBySigningPaths(arrWalletDefinitionTemplate);
 	var arrDeviceAddresses = _.uniq(_.values(assocDeviceAddressesBySigningPaths));
+	setTimeout(function () {
+        async.series([
+            function (cb) {
+                var fields = "wallet, account, definition_template";
+                var values = "?,?,?";
+                if (arrDeviceAddresses.length === 1) { // single sig
+                    fields += ", full_approval_date, ready_date";
+                    values += ", " + db.getNow() + ", " + db.getNow();
+                }
+                db.query("INSERT INTO wallets (" + fields + ") VALUES (" + values + ")", [wallet, account, JSON.stringify(arrWalletDefinitionTemplate)], function () {
+                    cb();
+                });
+            },
+            function (cb) {
+                async.eachSeries(
+                    arrDeviceAddresses,
+                    function (device_address, cb2) {
+                        console.log("adding device " + device_address + ' to wallet ' + wallet);
+                        var fields = "wallet, device_address";
+                        var values = "?,?";
+                        var arrParams = [wallet, device_address];
+                        // arrDeviceAddresses.length === 1 works for singlesig with external priv key
+                        if (device_address === device.getMyDeviceAddress() || arrDeviceAddresses.length === 1) {
+                            fields += ", extended_pubkey, approval_date";
+                            values += ",?," + db.getNow();
+                            arrParams.push(xPubKey);
+                            if (arrDeviceAddresses.length === 1) {
+                                fields += ", member_ready_date";
+                                values += ", " + db.getNow();
+                            }
+                        }
+                        db.query("INSERT " + db.getIgnore() + " INTO extended_pubkeys (" + fields + ") VALUES (" + values + ")", arrParams, function () {
+                            cb2();
+                        });
+                    },
+                    cb
+                );
+            },
+            function (cb) {
+                var arrSigningPaths = Object.keys(assocDeviceAddressesBySigningPaths);
+                async.eachSeries(
+                    arrSigningPaths,
+                    function (signing_path, cb2) {
+                        console.log("adding signing path " + signing_path + ' to wallet ' + wallet);
+                        var device_address = assocDeviceAddressesBySigningPaths[signing_path];
+                        db.query(
+                            "INSERT INTO wallet_signing_paths (wallet, signing_path, device_address) VALUES (?,?,?)",
+                            [wallet, signing_path, device_address],
+                            function () {
+                                cb2();
+                            }
+                        );
+                    },
+                    cb
+                );
+            }
+        ], function () {
+            console.log("addWallet done " + wallet);
+            (arrDeviceAddresses.length === 1) ? onDone() : checkAndFullyApproveWallet(wallet, onDone);
+        });
+    });
 
-	async.series([
-		function (cb) {
-			var fields = "wallet, account, definition_template";
-			var values = "?,?,?";
-			if (arrDeviceAddresses.length === 1) { // single sig
-				fields += ", full_approval_date, ready_date";
-				values += ", " + db.getNow() + ", " + db.getNow();
-			}
-			db.query("INSERT INTO wallets (" + fields + ") VALUES (" + values + ")", [wallet, account, JSON.stringify(arrWalletDefinitionTemplate)], function () {
-				cb();
-			});
-		},
-		function (cb) {
-			async.eachSeries(
-				arrDeviceAddresses,
-				function (device_address, cb2) {
-					console.log("adding device " + device_address + ' to wallet ' + wallet);
-					var fields = "wallet, device_address";
-					var values = "?,?";
-					var arrParams = [wallet, device_address];
-					// arrDeviceAddresses.length === 1 works for singlesig with external priv key
-					if (device_address === device.getMyDeviceAddress() || arrDeviceAddresses.length === 1) {
-						fields += ", extended_pubkey, approval_date";
-						values += ",?," + db.getNow();
-						arrParams.push(xPubKey);
-						if (arrDeviceAddresses.length === 1) {
-							fields += ", member_ready_date";
-							values += ", " + db.getNow();
-						}
-					}
-					db.query("INSERT " + db.getIgnore() + " INTO extended_pubkeys (" + fields + ") VALUES (" + values + ")", arrParams, function () {
-						cb2();
-					});
-				},
-				cb
-			);
-		},
-		function (cb) {
-			var arrSigningPaths = Object.keys(assocDeviceAddressesBySigningPaths);
-			async.eachSeries(
-				arrSigningPaths,
-				function (signing_path, cb2) {
-					console.log("adding signing path " + signing_path + ' to wallet ' + wallet);
-					var device_address = assocDeviceAddressesBySigningPaths[signing_path];
-					db.query(
-						"INSERT INTO wallet_signing_paths (wallet, signing_path, device_address) VALUES (?,?,?)",
-						[wallet, signing_path, device_address],
-						function () {
-							cb2();
-						}
-					);
-				},
-				cb
-			);
-		}
-	], function () {
-		console.log("addWallet done " + wallet);
-		(arrDeviceAddresses.length === 1) ? onDone() : checkAndFullyApproveWallet(wallet, onDone);
-	});
 }
 
 // initiator of the new wallet creates records about itself and sends requests to other devices
