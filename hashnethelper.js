@@ -60,10 +60,10 @@ class HashnetHelper {
         });
     }
     //从种子节点获取局部全节点列表
-    static async getLocalfullnodeList(pubKey) {
+    static async getLocalfullnodeList(pubkey) {
         try {
             //从种子节点那里拉取局部全节点列表
-            let localfullnodeList = await webHelper.httpPost(device.my_device_hashnetseed_url + '/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
+            let localfullnodeList = await webHelper.httpPost(device.my_device_hashnetseed_url + '/v1/getlocalfullnodes', null, buildData({ pubkey }));
             // let localfullnodeList = await webHelper.httpPost('http://132.124.218.43:20002/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
             if (localfullnodeList) {
                 localfullnodeList = JSON.parse(localfullnodeList);
@@ -134,7 +134,7 @@ class HashnetHelper {
         if (retry > 1) {
             for (var i = 0; i < retry; i++) {
                 result = await HashnetHelper.sendMessageTry(unit);
-                if (!result) {
+                if (result.code == 200) {
                     break;
                 }
             }
@@ -154,7 +154,7 @@ class HashnetHelper {
             unit = JSON.stringify(unit);
             console.log(unit);
             //往共识网发送交易
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/sendMessage/'), null, buildData({ unit }));
+            let result = await webHelper.httpPost(getUrl(localfullnode, '/v1/sendmsg'), null, buildData({ unit }));
             return result;
         }
         catch (e) {
@@ -191,9 +191,9 @@ class HashnetHelper {
             // localfullnode = {ip:'172.17.2.124',httpPort:25003};
 
             //从共识网拉取交易记录
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/getTransactionHistory/'), null, buildData({ address,tableIndex,offset }));
+            let result = await webHelper.httpPost(getUrl(localfullnode, '/v1/gettransactionlist'), null, buildData({ address,tableIndex,offset }));
             // alert(result);
-            if(result) {
+            if(result.code == 200) {
                 // console.log("==============");
                 // console.log(result);
                 result = JSON.parse(result);
@@ -230,7 +230,7 @@ class HashnetHelper {
             if (!localfullnode) {
                 throw new Error('network error, please try again.');
             }
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/getUnitInfo/'), null, buildData({ unitId }));
+            let result = await webHelper.httpPost(getUrl(localfullnode, '/getUnitInfo'), null, buildData({ unitId }));
             return result ? JSON.parse(result) : null;
         }
         catch (e) {
@@ -248,7 +248,9 @@ let getUrl = (localfullnode, suburl) => {
 }
 //组装往共识网发送数据的对象
 let buildData = (data) => {
-    return { data: JSON.stringify(data) };
+    //console.log({ data: JSON.stringify(data) });
+    return JSON.parse(JSON.stringify(data));
+    //return {JSON.stringify(data)};
 }
 
 module.exports = HashnetHelper;
