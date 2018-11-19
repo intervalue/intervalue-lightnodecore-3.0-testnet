@@ -28,7 +28,7 @@ class HashnetHelper {
             else {
                 //从种子节点处获取局部全节点列表
                 let { pubKey } = await device.getInfo();
-                localfullnodes = await HashnetHelper.getLocalfullnodeList(pubKey);
+                let localfullnodes = await HashnetHelper.getLocalfullnodeList(pubKey);
             }
         }
         if (localfullnodes.length > 0) {
@@ -63,9 +63,10 @@ class HashnetHelper {
     static async getLocalfullnodeList(pubkey) {
         try {
             //从种子节点那里拉取局部全节点列表
-            let localfullnodeList = await webHelper.httpPost(device.my_device_hashnetseed_url + '/v1/getlocalfullnodes', null, buildData({ pubkey }));
+            let localfullnodeListMessage = JSON.parse(await webHelper.httpPost(device.my_device_hashnetseed_url + '/v1/getlocalfullnodes', null, buildData({pubkey})));
             // let localfullnodeList = await webHelper.httpPost('http://132.124.218.43:20002/getLocalfullnodeListInShard/', null, buildData({ pubKey }));
-            if (localfullnodeList) {
+            let localfullnodeList = localfullnodeListMessage.data;
+            if (localfullnodeListMessage.code == 200) {
                 localfullnodeList = JSON.parse(localfullnodeList);
                 let cmds = [];
                 //清空数据库中的局部全节点列表，将拉取到的新的局部全节点列表放入其中。
@@ -121,24 +122,25 @@ class HashnetHelper {
         //如果局部全节点列表个数小于3个，需要重新初始化局部全节点列表。
         if (localfullnodes.length < 3) {
             let { pubKey } = await device.getInfo();
-            let localfullnodeList = await HashnetHelper.getLocalfullnodeList(pubKey);
-            if (localfullnodeList.length > 0) {
+            let localfullnodeListMessage = await HashnetHelper.getLocalfullnodeList(pubKey);
+            let localfullnodeList = localfullnodeListMessage.data;
+            if (localfullnodeListMessage.code = 200) {
                 localfullnodes = localfullnodeList;
             }
         }
     }
     //发送交易，会尝试3次
     static async sendMessage(unit, retry) {
-        let result = '';
+        let resultMessage = '';
         retry = retry || 3;
         if (retry > 1) {
             for (var i = 0; i < retry; i++) {
-                result = await HashnetHelper.sendMessageTry(unit);
-                if (result.code == 200) {
+                let resultMessage = JSON.parse( await HashnetHelper.sendMessageTry(unit));
+                if (resultMessage.code == 200) {
                     break;
                 }
             }
-            return result;
+            return resultMessage;
         }
         return await HashnetHelper.sendMessageTry(unit);
     }
@@ -151,10 +153,9 @@ class HashnetHelper {
                 throw new Error('network error, please try again.');
             }
             console.log("sending unit:");
-            unit = JSON.stringify(unit);
-            console.log(unit);
+            let message = JSON.stringify(unit);
             //往共识网发送交易
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/v1/sendmsg'), null, buildData({ unit }));
+            let result = await webHelper.httpPost(getUrl(localfullnode, '/v1/sendmsg'), null, buildData({message}));
             return result;
         }
         catch (e) {
@@ -191,13 +192,14 @@ class HashnetHelper {
             // localfullnode = {ip:'172.17.2.124',httpPort:25003};
 
             //从共识网拉取交易记录
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/v1/gettransactionlist'), null, buildData({ address,tableIndex,offset }));
+            let resultMessage = JSON.parse(await webHelper.httpPost(getUrl(localfullnode, '/v1/gettransactionlist'), null, buildData({ address,tableIndex,offset })));
             // alert(result);
-            if(result.code == 200) {
+            let result = resultMessage.data;
+            if(resultMessage.code == 200) {
                 // console.log("==============");
                 // console.log(result);
                 result = JSON.parse(result);
-                if(result.status == 1) {
+                //if(resultMessage.data.list) {
                     // console.log(result.list);
                     // console.log(result.tableIndex);
                     // console.log(result.offset);
@@ -207,8 +209,8 @@ class HashnetHelper {
                     // await db.execute("UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",tableIndex,offset,address);
 
                     return result.list ? {result:result.list,tableIndex,offset,address}:{result:[],tableIndex,offset,address};
-                }else
-                    return {result:[],tableIndex,offset,address};
+                // }else
+                //     return {result:[],tableIndex,offset,address};
 
             }else {
                 return {result:[],tableIndex,offset,address}
@@ -230,7 +232,7 @@ class HashnetHelper {
             if (!localfullnode) {
                 throw new Error('network error, please try again.');
             }
-            let result = await webHelper.httpPost(getUrl(localfullnode, '/getUnitInfo'), null, buildData({ unitId }));
+            let result = await webHelper.httpPost(getUrl(localfullnode, '/getUnitInfo/'), null, buildData({ unitId }));
             return result ? JSON.parse(result) : null;
         }
         catch (e) {
@@ -248,9 +250,8 @@ let getUrl = (localfullnode, suburl) => {
 }
 //组装往共识网发送数据的对象
 let buildData = (data) => {
-    //console.log({ data: JSON.stringify(data) });
     return JSON.parse(JSON.stringify(data));
-    //return {JSON.stringify(data)};
 }
+
 
 module.exports = HashnetHelper;

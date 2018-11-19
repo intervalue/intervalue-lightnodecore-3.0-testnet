@@ -83,18 +83,18 @@ async function writeTran(params, handleResult) {
 
     var network = require('./network.js');
     //往共识网发送交易
-    let result = await network.sendTransaction(obj);
-
+    let resultMessage = await network.sendTransaction(obj);
 
     //通过签名获取ID(44位)
     obj.id = crypto.createHash("sha256").update(signature, "utf8").digest("base64");
 
-    if (result) {
+    if (resultMessage.code != 200) {
         //如果发送失败，则马上返回到界面
-        return handleResult(result);
+        return handleResult(resultMessage.data);
     }
     else {
         //通过队列进行数据库更新
+        let result = resultMessage.data;
         await mutex.lock(["write"], async function (unlock) {
             try {
                 //更新数据库
