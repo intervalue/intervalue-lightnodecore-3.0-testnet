@@ -135,7 +135,7 @@ class HashnetHelper {
         retry = retry || 3;
         if (retry > 1) {
             for (var i = 0; i < retry; i++) {
-                let resultMessage = JSON.parse( await HashnetHelper.sendMessageTry(unit));
+                resultMessage = JSON.parse( await HashnetHelper.sendMessageTry(unit));
                 if (resultMessage.code == 200) {
                     break;
                 }
