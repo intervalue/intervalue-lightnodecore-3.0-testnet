@@ -163,7 +163,7 @@ class HashnetHelper {
             if (localfullnode) {
                 await HashnetHelper.reloadLocalfullnode(localfullnode);
             }
-            return 'network error,please try again.';
+            return JSON.stringify({"code":500,"data":"network error,please try again."});
         }
     }
     //获取交易记录
