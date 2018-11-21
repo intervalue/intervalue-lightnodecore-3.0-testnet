@@ -218,23 +218,22 @@ async function iniTranList(addresses) {
 
 //交易列表
 function findTranList(wallet,cb) {
-    db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" +
-        "\n" +
-        "from transactions where(addressFrom in (select address from my_addresses where wallet = ?) ) \n" +
-        "union all\n" +
-        "\n" +
-        "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'received' else 'sent' end as action \n" +
-        "\n" +
-        "from transactions where addressTo in (select address from my_addresses where wallet = ?) and result<>'pending'\n" +
-        "\n" +
-        " order by creation_date desc", [wallet, wallet,wallet,wallet],function (row) {
-
-        if(row != null && row.length > 0) {
-            cb(row);
-        }else{
-            cb([]);
+    var timesRun = 0;
+    var interval = setInterval(function () {
+        timesRun += 1;
+        db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" + "\n" + "from transactions where(addressFrom in (select address from my_addresses where wallet = ?) ) \n" + "union all\n" + "\n" + "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'received' else 'sent' end as action \n" + "\n" + "from transactions where addressTo in (select address from my_addresses where wallet = ?) and result<>'pending'\n" + "\n" + " order by creation_date desc", [wallet, wallet, wallet, wallet], function (row) {
+            if (row != null && row.length > 0) {
+                cb(row);
+            } else {
+                cb([]);
+            }
+        });
+        if (timesRun === 3) {
+            clearInterval(interval);
         }
-    });
+        //do whatever here..
+    }, 300);
+
 }
 
 //余额
