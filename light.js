@@ -228,11 +228,11 @@ function findTranList(wallet,cb) {
                 cb([]);
             }
         });
-        if (timesRun === 3) {
+        if (timesRun === 5) {
             clearInterval(interval);
         }
         //do whatever here..
-    }, 300);
+    }, 500);
 
 }
 
