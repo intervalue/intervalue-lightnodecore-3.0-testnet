@@ -222,7 +222,7 @@ function findTranList(wallet,cb) {
     var interval = setInterval(function () {
         timesRun += 1;
         db.query("select *,case when result = 'final-bad' then 'invalid' when addressFrom in (select address from my_addresses where wallet = ?) then 'sent' else 'received' end as action \n" + "\n" + "from transactions where(addressFrom in (select address from my_addresses where wallet = ?) ) \n" + "union all\n" + "\n" + "select *,case when result = 'final-bad' then 'invalid' when addressTo in (select address from my_addresses where wallet = ?) then 'received' else 'sent' end as action \n" + "\n" + "from transactions where addressTo in (select address from my_addresses where wallet = ?) and result<>'pending'\n" + "\n" + " order by creation_date desc", [wallet, wallet, wallet, wallet], function (row) {
-            if (row != null && row.length > 0) {
+            if (row != undefined && row.length > 0) {
                 cb(row);
             } else {
                 cb([]);
@@ -246,7 +246,7 @@ async function findStable(wallet){
 function findStable2(wallet,cb){
     db.query("select (select ifnull(sum(amount),0) from transactions where addressTo in (select address from my_addresses where wallet = ?) and result = 'good') - \n\
 			(select ifnull(sum(amount + fee),0) from transactions where addressFrom in (select address from my_addresses where wallet = ?) and (result = 'good' or result = 'pending')) as stable", [wallet, wallet] ,function (rows) {
-        if(rows != null && rows.length > 0) {
+        if(rows != undefined && rows.length > 0) {
             cb(rows[0].stable);
         }else {
             cb(0);
@@ -257,7 +257,7 @@ function findStable2(wallet,cb){
 //根据余额查询交易信息
 async function findTranInfoById(id) {
     let rows = await db.execute("SELECT * FROM transactions where id = ?",id);
-    if(rows!=null && rows.length == 1)
+    if(rows!= undefined && rows.length == 1)
         return {id:rows[0].id,amount:rows[0].amount,result:rows[0].result};
     else
         return 0;
