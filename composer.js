@@ -86,7 +86,8 @@ async function writeTran(params, handleResult) {
     let resultMessage = await network.sendTransaction(obj);
 
     //通过签名获取ID(44位)
-    obj.id = crypto.createHash("sha256").update(signature.substring(2), "utf8").digest("base64");
+    //obj.id = crypto.createHash("sha256").update(signature.substring(2), "utf8").digest("base64");
+    obj.id = signature;
 
     if (resultMessage.code != 200) {
         //如果发送失败，则马上返回到界面
