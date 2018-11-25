@@ -4,9 +4,9 @@ var db = require('./db.js');
 
 function store(correspondent_address, message, is_incoming, type) {
     var type = type || 'text';
-    let msg = message.substring(-1,44);
+    let msg = message.substring(-1,90);
     db.query("SELECT id FROM chat_messages WHERE message like ?",['%'+msg+'%'],function (rows) {
-        if (rows != undefined && rows.length == 1 && msg.length == 44 && type == 'transaction') {
+        if (rows != undefined && rows.length == 1 && msg.length == 90 && type == 'transaction') {
             db.query("UPDATE chat_messages set message =? WHERE id = ?",[message,rows[0].id]);
         }else {
             db.query("INSERT INTO chat_messages ('correspondent_address', 'message', 'is_incoming', 'type') VALUES (?, ?, ?, ?)", [correspondent_address, message, is_incoming, type]);
