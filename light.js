@@ -307,7 +307,7 @@ async function truncateTran(addresses) {
 }
 //更新已有交易记录的状态
 async function updateTran(tran,data) {
-    let id = tran.signature;
+    let id = tran.hash;
     //用队列的方式更新数据库
     await mutex.lock(["write"], async function (unlock) {
         try {
@@ -334,7 +334,7 @@ async function updateTran(tran,data) {
 }
 //失败的交易
 async function badTran(tran,data) {
-    let id = tran.signature;
+    let id = tran.hash;
     let cmds = [];
     db.addCmd(cmds, "update transactions set result = 'final-bad' where id = ?", id);
     db.addCmd(cmds, "UPDATE transactions_index SET tableIndex= ?,offsets= ? WHERE address = ?",data.tableIndex,data.offset,data.address);
